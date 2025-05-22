@@ -1,0 +1,65 @@
+{
+  "expo": {
+    "name": "PICK2PLAY",
+    "slug": "pick2play",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "pick2play",
+    "userInterfaceStyle": "automatic",
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.pick2play.app",
+      "config": {
+        "googleMobileAdsAppId": "ca-app-pub-XXXXXXXX~XXXXXXXXXX"
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.pick2play.app",
+      "config": {
+        "googleMobileAdsAppId": "ca-app-pub-XXXXXXXX~XXXXXXXXXX"
+      },
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS"
+      ]
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/images/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "react-native-google-mobile-ads",
+        {
+          "androidAppId": "ca-app-pub-XXXXXXXX~XXXXXXXXXX",
+          "iosAppId": "ca-app-pub-XXXXXXXX~XXXXXXXXXX"
+        }
+      ],
+      "expo-audio"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "splash": {
+      "image": "./assets/images/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#f3efff"
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "f0bc31ec-97be-4d2c-88d5-41b8d3d5b242"
+      }
+    }
+  }
+}

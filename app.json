@@ -12,10 +12,7 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.pick2play.app",
-      "config": {
-        "googleMobileAdsAppId": "ca-app-pub-XXXXXXXX~XXXXXXXXXX"
-      }
+      "bundleIdentifier": "com.pick2play.app"
     },
     "android": {
       "adaptiveIcon": {
@@ -23,9 +20,6 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.pick2play.app",
-      "config": {
-        "googleMobileAdsAppId": "ca-app-pub-XXXXXXXX~XXXXXXXXXX"
-      },
       "permissions": [
         "android.permission.RECORD_AUDIO",
         "android.permission.MODIFY_AUDIO_SETTINGS"
@@ -38,13 +32,6 @@
     },
     "plugins": [
       "expo-router",
-      [
-        "react-native-google-mobile-ads",
-        {
-          "androidAppId": "ca-app-pub-XXXXXXXX~XXXXXXXXXX",
-          "iosAppId": "ca-app-pub-XXXXXXXX~XXXXXXXXXX"
-        }
-      ],
       "expo-audio"
     ],
     "experiments": {

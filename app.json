@@ -20,6 +20,7 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.creativekang.pick2play",
+      "versionCode": 1,
       "permissions": [
         "android.permission.RECORD_AUDIO",
         "android.permission.MODIFY_AUDIO_SETTINGS"

@@ -6,7 +6,7 @@ import { RouletteWheel } from '@/components/RouletteWheel';
 import { ThemedText } from '@/components/ThemedText';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useEffect, useState } from 'react';
-import { LayoutChangeEvent, ScrollView, StyleSheet, View } from 'react-native';
+import { LayoutChangeEvent, StyleSheet, View } from 'react-native';
 import { initializeInterstitialAd, showInterstitialAd } from '../utils/adMobUtils';
 import { getEmoji } from '../utils/emojiUtils';
 import { initSounds, unloadSounds } from '../utils/soundUtils';
@@ -176,17 +176,19 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.mainContainer}>
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContentContainer}>
-        <View style={styles.container} onLayout={onLayout}>
+      <View style={styles.contentContainer} onLayout={onLayout}>
+        <View style={styles.headerSection}>
           <ThemedText type="title" style={styles.title}>PICK2PLAY</ThemedText>
           <ThemedText style={styles.subtitle}>Spin the wheel for your next adventure!</ThemedText>
-          
-          <ActivityInput
-            onAddActivity={handleAddActivity}
-            existingActivities={activities.map(a => a.name)}
-            isLoading={isAddingActivity}
-          />
+        </View>
+        
+        <ActivityInput
+          onAddActivity={handleAddActivity}
+          existingActivities={activities.map(a => a.name)}
+          isLoading={isAddingActivity}
+        />
 
+        <View style={styles.wheelSection}>
           {containerWidth > 0 ? (
             <RouletteWheel
               activities={activities}
@@ -198,16 +200,16 @@ export default function HomeScreen() {
           ) : (
             <ThemedText style={{textAlign: 'center', marginVertical: 20}}>Loading wheel...</ThemedText>
           )}
-
-          {showCelebration && <Celebration onComplete={handleCelebrationComplete} />}
-
-          <View style={styles.footer}>
-            <ThemedText style={styles.copyright}>
-              © {new Date().getFullYear()} Creative Kang - All rights reserved
-            </ThemedText>
-          </View>
         </View>
-      </ScrollView>
+
+        {showCelebration && <Celebration onComplete={handleCelebrationComplete} />}
+
+        <View style={styles.footer}>
+          <ThemedText style={styles.copyright}>
+            © {new Date().getFullYear()} Creative Kang - All rights reserved
+          </ThemedText>
+        </View>
+      </View>
       
       {/* Banner Ad at the bottom */}
       <AdBanner />
@@ -220,44 +222,49 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f3efff',
   },
-  scrollView: {
+  contentContainer: {
     flex: 1,
-  },
-  scrollContentContainer: {
-    flexGrow: 1,
     alignItems: 'center',
-    padding: 16,
-    paddingTop: 40,
-    paddingBottom: 100, // Extra padding to account for banner ad
+    justifyContent: 'space-between',
   },
-  container: {
+  headerSection: {
     width: '100%',
     alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingTop: 20,
+    paddingBottom: 8,
   },
   title: {
-    fontSize: 48,
+    fontSize: 42,
     fontWeight: 'bold',
     textAlign: 'center',
-    marginTop: 20,
     marginBottom: 5,
     color: '#4e4370',
     fontFamily: FONTS.gamjaFlower,
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 14,
     textAlign: 'center',
-    marginBottom: 20,
+    marginBottom: 8,
     color: '#666',
     fontFamily: FONTS.nunito,
   },
+  wheelSection: {
+    flex: 1,
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 16,
+  },
   footer: {
-    marginTop: 'auto',
-    padding: 10,
+    width: '100%',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
     alignItems: 'center',
     justifyContent: 'center',
   },
   copyright: {
-    fontSize: 12,
+    fontSize: 10,
     color: '#888',
     textAlign: 'center',
   },

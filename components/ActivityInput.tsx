@@ -84,11 +84,11 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
+    padding: 12,
     backgroundColor: '#fff',
     borderRadius: 12,
     marginHorizontal: 16,
-    marginVertical: 8,
+    marginVertical: 4,
     elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
@@ -105,8 +105,8 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    height: 40,
-    fontSize: 16,
+    height: 36,
+    fontSize: 15,
     fontFamily: 'Nunito',
     color: '#333',
     paddingRight: 30, // Make room for the character counter
@@ -114,7 +114,7 @@ const styles = StyleSheet.create({
   charCounter: {
     position: 'absolute',
     right: 5,
-    fontSize: 12,
+    fontSize: 11,
     fontFamily: 'Nunito',
     color: '#999',
   },

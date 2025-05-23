@@ -7,14 +7,6 @@ import { useEffect } from 'react';
 import { useColorScheme } from 'react-native';
 import { initSounds, unloadSounds } from '../utils/soundUtils';
 
-// Conditional import for AdMob
-let mobileAds: any = null;
-try {
-  mobileAds = require('react-native-google-mobile-ads').default;
-} catch (error) {
-  console.log('AdMob module not available - running in Expo Go mode');
-}
-
 // Keep splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
 
@@ -35,20 +27,13 @@ export default function RootLayout() {
     [FONTS.gamjaFlower]: require('../assets/fonts/GamjaFlower-Regular.ttf'),
   });
 
-  // Initialize sounds and AdMob when app loads
+  // Initialize sounds when app loads
   useEffect(() => {
     const initialize = async () => {
       try {
-        // Initialize AdMob (if available)
-        if (mobileAds) {
-          await mobileAds.initialize();
-          console.log('AdMob initialized');
-        } else {
-          console.log('AdMob not available - skipping initialization');
-        }
-        
         // Initialize sounds
         initSounds();
+        console.log('App initialization complete');
       } catch (error) {
         console.error('Error during initialization:', error);
       }

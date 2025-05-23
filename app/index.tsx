@@ -176,11 +176,9 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.mainContainer}>
-      <View style={styles.contentContainer} onLayout={onLayout}>
-        <View style={styles.headerSection}>
-          <ThemedText type="title" style={styles.title}>PICK2PLAY</ThemedText>
-          <ThemedText style={styles.subtitle}>Spin the wheel for your next adventure!</ThemedText>
-        </View>
+      <View style={styles.container} onLayout={onLayout}>
+        <ThemedText type="title" style={styles.title}>PICK2PLAY</ThemedText>
+        <ThemedText style={styles.subtitle}>Spin the wheel for your next adventure!</ThemedText>
         
         <ActivityInput
           onAddActivity={handleAddActivity}
@@ -188,19 +186,17 @@ export default function HomeScreen() {
           isLoading={isAddingActivity}
         />
 
-        <View style={styles.wheelSection}>
-          {containerWidth > 0 ? (
-            <RouletteWheel
-              activities={activities}
-              onActivitySelect={handleActivitySelect}
-              onActivityDelete={handleDeleteActivity}
-              parentWidth={containerWidth}
-              selectedActivity={selectedActivity}
-            />
-          ) : (
-            <ThemedText style={{textAlign: 'center', marginVertical: 20}}>Loading wheel...</ThemedText>
-          )}
-        </View>
+        {containerWidth > 0 ? (
+          <RouletteWheel
+            activities={activities}
+            onActivitySelect={handleActivitySelect}
+            onActivityDelete={handleDeleteActivity}
+            parentWidth={containerWidth}
+            selectedActivity={selectedActivity}
+          />
+        ) : (
+          <ThemedText style={{textAlign: 'center', marginVertical: 20}}>Loading wheel...</ThemedText>
+        )}
 
         {showCelebration && <Celebration onComplete={handleCelebrationComplete} />}
 
@@ -222,49 +218,38 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f3efff',
   },
-  contentContainer: {
+  container: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  headerSection: {
     width: '100%',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingTop: 20,
-    paddingBottom: 8,
+    padding: 16,
+    paddingTop: 40,
+    paddingBottom: 60,
   },
   title: {
-    fontSize: 42,
+    fontSize: 48,
     fontWeight: 'bold',
     textAlign: 'center',
+    marginTop: 20,
     marginBottom: 5,
     color: '#4e4370',
     fontFamily: FONTS.gamjaFlower,
   },
   subtitle: {
-    fontSize: 14,
+    fontSize: 16,
     textAlign: 'center',
-    marginBottom: 8,
+    marginBottom: 20,
     color: '#666',
     fontFamily: FONTS.nunito,
   },
-  wheelSection: {
-    flex: 1,
-    width: '100%',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 16,
-  },
   footer: {
-    width: '100%',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    marginTop: 'auto',
+    padding: 10,
     alignItems: 'center',
     justifyContent: 'center',
   },
   copyright: {
-    fontSize: 10,
+    fontSize: 12,
     color: '#888',
     textAlign: 'center',
   },

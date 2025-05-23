@@ -203,7 +203,7 @@ export default function HomeScreen() {
 
           <View style={styles.footer}>
             <ThemedText style={styles.copyright}>
-              © {new Date().getFullYear()} PICK2PLAY - All rights reserved
+              © {new Date().getFullYear()} Creative Kang - All rights reserved
             </ThemedText>
           </View>
         </View>

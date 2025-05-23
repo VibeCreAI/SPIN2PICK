@@ -1,4 +1,16 @@
-import { createAudioPlayer } from 'expo-audio';
+// Check if expo-audio is available
+let isAudioAvailable = false;
+let createAudioPlayer: any = null;
+
+try {
+  const audioModule = require('expo-audio');
+  createAudioPlayer = audioModule.createAudioPlayer;
+  isAudioAvailable = true;
+  console.log('Expo Audio module loaded successfully');
+} catch (error) {
+  console.log('Expo Audio not available - sound will be disabled');
+  isAudioAvailable = false;
+}
 
 // Sound objects using the new expo-audio API
 let clickSound: any = null;
@@ -7,6 +19,11 @@ let successSound: any = null;
 
 // Initialize sounds
 export const initSounds = async () => {
+  if (!isAudioAvailable || !createAudioPlayer) {
+    console.log('Audio not available - skipping sound initialization');
+    return;
+  }
+
   try {
     console.log('Loading sounds...');
     

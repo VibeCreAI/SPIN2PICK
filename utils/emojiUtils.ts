@@ -1,4 +1,3 @@
-
 // API key for OpenRouter
 const API_KEY = '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';
 
@@ -59,7 +58,7 @@ const emojiCache: Record<string, string> = {
   // Preset mappings for common activities
   'Sing Songs': '🎤',
   'Craft Corner': '🎨',
-  'Jump Trampoline': '🏂',
+  'Jump Trampoline': '🤸',
   'Plant Seeds': '🌱',
   'Hide and Seek': '🙈',
   'Dance Party': '💃',

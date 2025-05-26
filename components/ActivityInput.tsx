@@ -1,3 +1,4 @@
+import { FONTS } from '@/app/_layout';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
@@ -107,7 +108,7 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 40,
     fontSize: 16,
-    fontFamily: 'Nunito',
+    fontFamily: FONTS.jua,
     color: '#333',
     paddingRight: 30, // Make room for the character counter
   },
@@ -115,7 +116,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: 5,
     fontSize: 12,
-    fontFamily: 'Nunito',
+    fontFamily: FONTS.jua,
     color: '#999',
   },
   charCounterNearLimit: {

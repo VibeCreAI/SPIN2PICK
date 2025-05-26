@@ -6,41 +6,60 @@ import { RouletteWheel } from '@/components/RouletteWheel';
 import { ThemedText } from '@/components/ThemedText';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useEffect, useState } from 'react';
-import { LayoutChangeEvent, StyleSheet, View } from 'react-native';
+import { KeyboardAvoidingView, LayoutChangeEvent, Platform, StyleSheet, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { initializeInterstitialAd, showInterstitialAd } from '../utils/adMobUtils';
+import { PASTEL_COLORS, reassignAllColors, type Activity } from '../utils/colorUtils';
 import { getEmoji } from '../utils/emojiUtils';
 import { initSounds, unloadSounds } from '../utils/soundUtils';
 
-// Updated pastel colors to match reference image
-const PASTEL_COLORS = [
-  '#9fe7f5', // Light Blue (Sing Songs)
-  '#94c4f5', // Blue (Craft Corner)
-  '#b79ff5', // Purple (Jump Trampoline)
-  '#f59fdc', // Pink (Plant Seeds)
-  '#f59f9f', // Coral (Hide and Seek)
-  '#f5c09f', // Light Orange (Dance Party)
-  '#f5ea9f', // Light Yellow (Puzzle Time)
-  '#c4f59f', // Light Green (Read a Book)
-];
-
-const DEFAULT_ACTIVITIES = [
-  { id: '1', name: 'Sing Songs', color: PASTEL_COLORS[0], emoji: '🎤' },
-  { id: '2', name: 'Craft Corner', color: PASTEL_COLORS[1], emoji: '🎨' },
-  { id: '3', name: 'Jump Trampoline', color: PASTEL_COLORS[2], emoji: '🏂' },
-  { id: '4', name: 'Plant Seeds', color: PASTEL_COLORS[3], emoji: '🌱' },
-  { id: '5', name: 'Hide and Seek', color: PASTEL_COLORS[4], emoji: '🙈' },
-  { id: '6', name: 'Dance Party', color: PASTEL_COLORS[5], emoji: '💃' },
-  { id: '7', name: 'Puzzle Time', color: PASTEL_COLORS[6], emoji: '🧩' },
-  { id: '8', name: 'Read a Book', color: PASTEL_COLORS[7], emoji: '📚' },
+const DEFAULT_ACTIVITIES: Activity[] = [
+  { id: '1', name: 'Sing Songs', color: PASTEL_COLORS[0], emoji: '🎤' },      // Light Blue
+  { id: '2', name: 'Craft Corner', color: PASTEL_COLORS[1], emoji: '🎨' },   // Pink
+  { id: '3', name: 'Jump Trampoline', color: PASTEL_COLORS[2], emoji: '🤸' }, // Light Green
+  { id: '4', name: 'Plant Seeds', color: PASTEL_COLORS[3], emoji: '🌱' },     // Light Orange
+  { id: '5', name: 'Hide and Seek', color: PASTEL_COLORS[4], emoji: '🙈' },  // Purple
+  { id: '6', name: 'Dance Party', color: PASTEL_COLORS[5], emoji: '💃' },    // Light Yellow
+  { id: '7', name: 'Puzzle Time', color: PASTEL_COLORS[6], emoji: '🧩' },    // Blue
+  { id: '8', name: 'Read a Book', color: PASTEL_COLORS[7], emoji: '📚' },    // Coral
 ];
 
 const STORAGE_KEY = 'PICK2PLAY_ACTIVITIES';
 const SPIN_COUNT_KEY = 'PICK2PLAY_SPIN_COUNT';
 
+// Error Boundary Component to prevent black screens
+class ErrorBoundary extends React.Component {
+  constructor(props: any) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error: any) {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: any, errorInfo: any) {
+    console.error('RouletteWheel Error:', error, errorInfo);
+  }
+
+  render() {
+    if ((this.state as any).hasError) {
+      return (
+        <View style={{ padding: 20, alignItems: 'center' }}>
+          <ThemedText>Something went wrong with the wheel. Please restart the app.</ThemedText>
+        </View>
+      );
+    }
+
+    return (this.props as any).children;
+  }
+}
+
 export default function HomeScreen() {
-  const [activities, setActivities] = useState<Array<{ id: string; name: string; color: string; emoji?: string }>>(DEFAULT_ACTIVITIES);
+  const [activities, setActivities] = useState<Activity[]>(DEFAULT_ACTIVITIES);
   const [showCelebration, setShowCelebration] = useState(false);
-  const [selectedActivity, setSelectedActivity] = useState<{ id: string; name: string; color: string; emoji?: string } | null>(null);
+  const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
+  const [previousSelectedActivity, setPreviousSelectedActivity] = useState<Activity | null>(null);
   const [containerWidth, setContainerWidth] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(true);
   const [isAddingActivity, setIsAddingActivity] = useState(false);
@@ -59,7 +78,10 @@ export default function HomeScreen() {
         // Load saved activities from storage
         const savedActivities = await AsyncStorage.getItem(STORAGE_KEY);
         if (savedActivities) {
-          setActivities(JSON.parse(savedActivities));
+          const parsedActivities = JSON.parse(savedActivities);
+          // Reassign colors to ensure optimal distribution
+          const recoloredActivities = reassignAllColors(parsedActivities);
+          setActivities(recoloredActivities);
         }
         
         // Load saved spin count
@@ -87,6 +109,7 @@ export default function HomeScreen() {
     const saveActivities = async () => {
       try {
         if (!isLoading) {
+          console.log('💾 Saving activities to storage:', activities.map(a => ({ name: a.name, color: a.color })));
           await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(activities));
         }
       } catch (error) {
@@ -124,37 +147,45 @@ export default function HomeScreen() {
       // Get emoji for the activity
       const emoji = await getEmoji(name);
       
-      // Create new activity with emoji
-      const newActivity = {
+      // Create new activity (color will be assigned when we reassign all colors)
+      const newActivity: Activity = {
         id: Date.now().toString(),
         name,
-        color: PASTEL_COLORS[activities.length % PASTEL_COLORS.length],
+        color: PASTEL_COLORS[0], // Temporary color, will be reassigned
         emoji,
       };
       
-      setActivities([...activities, newActivity]);
+      // Add the new activity and reassign all colors optimally
+      const updatedActivities = [...activities, newActivity];
+      const recoloredActivities = reassignAllColors(updatedActivities);
+      setActivities(recoloredActivities);
     } catch (error) {
       console.error('Error adding activity with emoji:', error);
       
       // Fallback to adding without emoji if there's an error
-      const newActivity = {
+      const newActivity: Activity = {
         id: Date.now().toString(),
         name,
-        color: PASTEL_COLORS[activities.length % PASTEL_COLORS.length],
+        color: PASTEL_COLORS[0], // Temporary color, will be reassigned
         emoji: '🎲', // Default fallback
       };
       
-      setActivities([...activities, newActivity]);
+      // Add the new activity and reassign all colors optimally
+      const updatedActivities = [...activities, newActivity];
+      const recoloredActivities = reassignAllColors(updatedActivities);
+      setActivities(recoloredActivities);
     } finally {
       setIsAddingActivity(false);
     }
   };
 
   const handleDeleteActivity = (id: string) => {
-    setActivities(activities.filter(activity => activity.id !== id));
+    const activitiesAfterDeletion = activities.filter(activity => activity.id !== id);
+    const recoloredActivities = reassignAllColors(activitiesAfterDeletion);
+    setActivities(recoloredActivities);
   };
 
-  const handleActivitySelect = async (activity: { id: string; name: string; color: string; emoji?: string }) => {
+  const handleActivitySelect = async (activity: Activity) => {
     setSelectedActivity(activity);
     setShowCelebration(true);
     
@@ -174,46 +205,70 @@ export default function HomeScreen() {
     setSelectedActivity(null);
   };
 
+  const handlePreviousActivityChange = (activity: Activity | null) => {
+    setPreviousSelectedActivity(activity);
+  };
+
   return (
-    <View style={styles.mainContainer}>
-      <View style={styles.container} onLayout={onLayout}>
-        <ThemedText type="title" style={styles.title}>PICK2PLAY</ThemedText>
-        <ThemedText style={styles.subtitle}>Spin the wheel for your next adventure!</ThemedText>
-        
-        <ActivityInput
-          onAddActivity={handleAddActivity}
-          existingActivities={activities.map(a => a.name)}
-          isLoading={isAddingActivity}
-        />
+    <SafeAreaView style={styles.safeArea}>
+      <KeyboardAvoidingView 
+        style={styles.keyboardAvoidingView}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={0}
+      >
+        <View style={styles.mainContainer}>
+          <View style={styles.container} onLayout={onLayout}>
+            <ThemedText type="title" style={styles.title}>PICK2PLAY</ThemedText>
+            <ThemedText style={styles.subtitle}>Spin the wheel for your next adventure!</ThemedText>
+            
+            <ActivityInput
+              onAddActivity={handleAddActivity}
+              existingActivities={activities.map(a => a.name)}
+              isLoading={isAddingActivity}
+            />
 
-        {containerWidth > 0 ? (
-          <RouletteWheel
-            activities={activities}
-            onActivitySelect={handleActivitySelect}
-            onActivityDelete={handleDeleteActivity}
-            parentWidth={containerWidth}
-            selectedActivity={selectedActivity}
-          />
-        ) : (
-          <ThemedText style={{textAlign: 'center', marginVertical: 20}}>Loading wheel...</ThemedText>
-        )}
+            {containerWidth > 0 ? (
+              (() => {
+                console.log('🎯 Rendering RouletteWheel with activities:', activities.map(a => ({ name: a.name, color: a.color })));
+                return (
+                  <ErrorBoundary>
+                    <RouletteWheel
+                      activities={activities}
+                      onActivitySelect={handleActivitySelect}
+                      onActivityDelete={handleDeleteActivity}
+                      parentWidth={containerWidth}
+                      selectedActivity={selectedActivity}
+                      onPreviousActivityChange={handlePreviousActivityChange}
+                    />
+                  </ErrorBoundary>
+                );
+              })()
+            ) : (
+              <ThemedText style={{textAlign: 'center', marginVertical: 20}}>Loading wheel...</ThemedText>
+            )}
 
-        {showCelebration && <Celebration onComplete={handleCelebrationComplete} />}
-
-        <View style={styles.footer}>
-          <ThemedText style={styles.copyright}>
-            © {new Date().getFullYear()} Creative Kang - All rights reserved
-          </ThemedText>
+            {showCelebration && <Celebration onComplete={handleCelebrationComplete} />}
+          </View>
         </View>
-      </View>
+      </KeyboardAvoidingView>
       
-      {/* Banner Ad at the bottom */}
-      <AdBanner />
-    </View>
+      {/* Fixed elements that shouldn't move with keyboard */}
+      <View style={styles.fixedBottomContainer}>
+        {/* Banner Ad at the bottom */}
+        <AdBanner />
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#f3efff',
+  },
+  keyboardAvoidingView: {
+    flex: 1,
+  },
   mainContainer: {
     flex: 1,
     backgroundColor: '#f3efff',
@@ -223,34 +278,25 @@ const styles = StyleSheet.create({
     width: '100%',
     alignItems: 'center',
     padding: 16,
-    paddingTop: 40,
-    paddingBottom: 60,
+    paddingTop: 0,
+    paddingBottom: 20,
   },
   title: {
-    fontSize: 48,
-    fontWeight: 'bold',
+    fontSize: 52,
     textAlign: 'center',
-    marginTop: 20,
+    marginTop: 10,
     marginBottom: 5,
     color: '#4e4370',
-    fontFamily: FONTS.gamjaFlower,
+    fontFamily: FONTS.jua,
   },
   subtitle: {
     fontSize: 16,
     textAlign: 'center',
-    marginBottom: 20,
+    marginBottom: 0,
     color: '#666',
-    fontFamily: FONTS.nunito,
+    fontFamily: FONTS.jua,
   },
-  footer: {
-    marginTop: 'auto',
-    padding: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  copyright: {
-    fontSize: 12,
-    color: '#888',
-    textAlign: 'center',
+  fixedBottomContainer: {
+    backgroundColor: '#f3efff',
   },
 }); 

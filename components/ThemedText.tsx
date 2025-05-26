@@ -26,19 +26,19 @@ export function ThemedText({ style, type = 'default', ...props }: ThemedTextProp
 
 const styles = StyleSheet.create({
   default: {
-    fontFamily: FONTS.nunito,
+    fontFamily: FONTS.jua,
     fontSize: 16,
   },
   defaultSemiBold: {
-    fontFamily: FONTS.nunitoBold,
+    fontFamily: FONTS.jua,
     fontSize: 16,
   },
   title: {
-    fontFamily: FONTS.nunitoBold,
+    fontFamily: FONTS.jua,
     fontSize: 32,
   },
   subtitle: {
-    fontFamily: FONTS.nunitoBold,
+    fontFamily: FONTS.jua,
     fontSize: 24,
   },
 });

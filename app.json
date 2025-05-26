@@ -1,8 +1,8 @@
 {
   "expo": {
     "name": "PICK2PLAY",
-    "slug": "pick2play",
-    "version": "1.0.0",
+    "slug": "pick2play-app",
+    "version": "1.0.5",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "pick2play",
@@ -12,19 +12,23 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.creativekang.pick2play"
+      "bundleIdentifier": "com.vibecreai.pick2play"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.creativekang.pick2play",
-      "versionCode": 1,
+      "package": "com.vibecreai.pick2play",
       "permissions": [
         "android.permission.RECORD_AUDIO",
         "android.permission.MODIFY_AUDIO_SETTINGS"
-      ]
+      ],
+      "splash": {
+        "image": "./assets/images/splash.png",
+        "resizeMode": "contain",
+        "backgroundColor": "#000000"
+      }
     },
     "web": {
       "bundler": "metro",
@@ -33,7 +37,16 @@
     },
     "plugins": [
       "expo-router",
-      "expo-audio"
+      "expo-audio",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/splash.png",
+          "imageWidth": 350,
+          "resizeMode": "contain",
+          "backgroundColor": "#000000"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
@@ -41,13 +54,14 @@
     "splash": {
       "image": "./assets/images/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#f3efff"
+      "backgroundColor": "#000000"
     },
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "f0bc31ec-97be-4d2c-88d5-41b8d3d5b242"
+        "projectId": "f168140c-7490-44c4-9993-e9711ba09919"
       }
-    }
+    },
+    "owner": "vibecreai"
   }
 }

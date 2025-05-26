@@ -1,5 +1,5 @@
 import * as Haptics from 'expo-haptics';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, Easing, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Svg, { Circle, G, Path, Text as SvgText } from 'react-native-svg';
 import { FONTS } from '../app/_layout';
@@ -29,6 +29,7 @@ interface RouletteWheelProps {
   activities: Activity[];
   onActivitySelect: (activity: Activity) => void;
   onActivityDelete: (activityId: string) => void;
+  onPreviousActivityChange: (activity: Activity | null) => void;
   parentWidth: number;
   selectedActivity: Activity | null;
 }
@@ -37,6 +38,7 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
   activities,
   onActivitySelect,
   onActivityDelete,
+  onPreviousActivityChange,
   parentWidth,
   selectedActivity,
 }) => {
@@ -52,30 +54,38 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
   // Animation values
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const bounceAnim = useRef(new Animated.Value(0)).current;
-  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const fadeAnim = useRef(new Animated.Value(0.7)).current;
   const scaleAnim = useRef(new Animated.Value(0.9)).current;
 
-  // The actual rotation value in degrees, used for slice positioning
-  const [currentRotationDegrees, setCurrentRotationDegrees] = useState(0);
+  // Optimized rotation tracking - use ref instead of state to avoid re-renders
+  const currentRotationDegrees = useRef(0);
+  const lastFrameTime = useRef(0);
+  const animationFrameId = useRef<number | null>(null);
+  const pulseAnimationRef = useRef<any>(null);
 
-  // Update current rotation when animation runs
-  rotation.addListener(({ value }) => {
-    setCurrentRotationDegrees(value % 360);
-  });
-
-  // Initialize animations when component mounts
-  useEffect(() => {
-    // Start scale animation for wheel appearance
-    Animated.spring(scaleAnim, {
-      toValue: 1,
-      friction: 7,
-      tension: 40,
-      useNativeDriver: true,
-    }).start();
-    
-    // Start the pulsing animation
-    startPulseAnimation();
+  // Optimize rotation listener with throttling to reduce flickering
+  const updateRotation = useCallback((value: number) => {
+    const now = Date.now();
+    // Throttle updates to ~60fps (16.67ms intervals) for better performance
+    if (now - lastFrameTime.current >= 16) {
+      currentRotationDegrees.current = value % 360;
+      lastFrameTime.current = now;
+    }
   }, []);
+
+  // Improved rotation listener with cleanup
+  useEffect(() => {
+    const listener = rotation.addListener(({ value }) => {
+      updateRotation(value);
+    });
+
+    return () => {
+      rotation.removeListener(listener);
+      if (animationFrameId.current) {
+        cancelAnimationFrame(animationFrameId.current);
+      }
+    };
+  }, [rotation, updateRotation]);
 
   // Update previousSelectedActivity when selectedActivity changes
   useEffect(() => {
@@ -99,9 +109,21 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
     }
   }, [selectedActivity]);
 
-  // Pulsing animation for the wheel
-  const startPulseAnimation = () => {
-    Animated.loop(
+  // Notify parent when previousSelectedActivity changes
+  useEffect(() => {
+    onPreviousActivityChange(previousSelectedActivity);
+  }, [previousSelectedActivity, onPreviousActivityChange]);
+
+  // Pulsing animation for the wheel - only when not spinning
+  const startPulseAnimation = useCallback(() => {
+    if (isSpinning) return; // Don't pulse when spinning
+    
+    // Stop any existing pulse animation first
+    if (pulseAnimationRef.current) {
+      pulseAnimationRef.current.stop();
+    }
+    
+    pulseAnimationRef.current = Animated.loop(
       Animated.sequence([
         Animated.timing(pulseAnim, {
           toValue: 1.05,
@@ -116,12 +138,37 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
           useNativeDriver: true,
         })
       ])
-    ).start();
-  };
+    );
+    
+    pulseAnimationRef.current.start();
+  }, [isSpinning, pulseAnim]);
 
-  const spinWheel = () => {
+  // Initialize animations when component mounts (moved here after startPulseAnimation declaration)
+  useEffect(() => {
+    // Start scale animation for wheel appearance
+    Animated.spring(scaleAnim, {
+      toValue: 1,
+      friction: 7,
+      tension: 40,
+      useNativeDriver: true,
+    }).start();
+    
+    // Start the pulsing animation
+    startPulseAnimation();
+    
+    // Cleanup function to prevent memory leaks
+    return () => {
+      pulseAnim.stopAnimation();
+    };
+  }, [startPulseAnimation, pulseAnim, scaleAnim]);
+
+  const spinWheel = useCallback(() => {
     if (isSpinning || activities.length < 2) return;
     setIsSpinning(true);
+    
+    // Stop pulse animation during spinning
+    pulseAnim.stopAnimation();
+    pulseAnim.setValue(1); // Reset to normal size
     
     // Play click and spinning sounds
     playClickSound();
@@ -148,16 +195,17 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
     // Faster initial speed (smaller speedFactor) = longer spin duration
     const spinDuration = Math.round(4000 * (2 - speedFactor));
     
-    // Create easing with randomized tension for varied spin feel
-    const randomTension = 0.8 + (Math.random() * 0.4); // 0.8 - 1.2
-    
+    // Improved easing curve for smoother deceleration
     Animated.timing(rotation, {
       toValue: spinValue.current,
       duration: spinDuration,
-      easing: Easing.out(Easing.cubic),
+      easing: Easing.bezier(0.25, 0.46, 0.45, 0.94), // More realistic deceleration
       useNativeDriver: true,
     }).start(() => {
       setIsSpinning(false);
+      
+      // Restart pulse animation after spinning
+      startPulseAnimation();
       
       // Stop spinning sound and play success sound
       stopSpinningSound();
@@ -174,9 +222,19 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
         onActivitySelect(activities[selectedIndex]);
       }
     });
-  };
+  }, [isSpinning, activities.length, pulseAnim, bounceAnim, rotation, activities, onActivitySelect, startPulseAnimation]);
 
-  const renderWheel = () => {
+  // Memoize rotation interpolation to prevent flickering
+  const rotationInterpolation = useMemo(() => {
+    return rotation.interpolate({
+      inputRange: [0, 360],
+      outputRange: ['0deg', '360deg'],
+      extrapolate: 'extend', // Allow values beyond 360 degrees
+    });
+  }, [rotation]);
+
+  // Memoize wheel rendering to reduce computational overhead
+  const wheelContent = useMemo(() => {
     if (activities.length < 2 && WHEEL_SIZE > 0) {
       const placeholderText = activities.length === 0 ? "Add at least 2 activities!" : "Add 1 more activity!";
       return (
@@ -186,7 +244,7 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
           textAnchor="middle" 
           fontSize="16" 
           fill="#333"
-          fontFamily="Nunito-Bold"
+          fontFamily={FONTS.jua}
         >
           {placeholderText}
         </SvgText>
@@ -211,9 +269,8 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
       
       // Render the slices
       ...activities.map((activity, index) => {
-        // Use the new pastel colors
-        const colorIndex = index % PASTEL_COLORS.length;
-        const sliceColor = PASTEL_COLORS[colorIndex];
+        // Use the actual color from the activity object instead of calculating it
+        const sliceColor = activity.color;
         
         const startAngleDegrees = index * sliceAngleDegrees;
         const endAngleDegrees = (index + 1) * sliceAngleDegrees;
@@ -241,7 +298,7 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
         const textAngleRad = (midAngleDegrees - 90) * (Math.PI / 180);
         
         // Position text closer to the center, but not too close
-        const textRadius = CENTER * 0.6; // Adjusted from 0.5 to 0.58 to move text slightly away from center
+        const textRadius = CENTER * 0.56; // Adjusted from 0.5 to 0.58 to move text slightly away from center
         const textX = CENTER + textRadius * Math.cos(textAngleRad);
         const textY = CENTER + textRadius * Math.sin(textAngleRad);
         
@@ -251,8 +308,8 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
         const emojiY = CENTER + emojiRadius * Math.sin(textAngleRad);
         
         // Unified font size
-        const fontSize = 11;
-        const emojiFontSize = 22; // Increased from 16 to 22 for larger emojis
+        const fontSize = 14;
+        const emojiFontSize = 22;
         
         // Calculate text rotation angle
         const textRotationAngle = midAngleDegrees + 90;
@@ -268,9 +325,9 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
           let maxChars: number;
           
           // Adjust max characters based on slice width
-          if (sliceAngleDegrees < 35) maxChars = 7;       // Increased from 6 to 7
-          else if (sliceAngleDegrees < 45) maxChars = 8;  // Increased from 7 to 8
-          else if (sliceAngleDegrees < 60) maxChars = 9;  // Increased from 8 to 9
+          if (sliceAngleDegrees < 35) maxChars = 10;       // Increased from 6 to 7
+          else if (sliceAngleDegrees < 45) maxChars = 10;  // Increased from 7 to 8
+          else if (sliceAngleDegrees < 60) maxChars = 10;  // Increased from 8 to 9
           else maxChars = 10;                             // Increased from 9 to 10
           
           // No wrapping needed for short text
@@ -327,10 +384,9 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
               <SvgText
                 x={textX}
                 y={textY}
-                fill="#333333"
+                fill="#4e4370"
                 fontSize={fontSize}
-                fontWeight="bold" 
-                fontFamily="Nunito-Bold"
+                fontFamily={FONTS.jua}
                 textAnchor="middle"
                 alignmentBaseline="middle"
                 transform={`rotate(${textRotationAngle}, ${textX}, ${textY})`}
@@ -342,7 +398,7 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
           } 
           // Multi-line text needs specific alignment
           else {
-            const lineSpacing = fontSize * 1.3;
+            const lineSpacing = fontSize * 1.15;
             const totalHeight = textLines.length * lineSpacing;
             const verticalOffset = -(totalHeight / 2) + (lineSpacing / 2);
             
@@ -355,10 +411,9 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
                   key={`line-${index}`}
                   x={textX}
                   y={lineY}
-                  fill="#333333"
+                  fill="#4e4370"
                   fontSize={fontSize}
-                  fontWeight="bold" 
-                  fontFamily="Nunito-Bold"
+                  fontFamily={FONTS.jua}
                   textAnchor="middle"
                   alignmentBaseline="middle"
                   transform={`rotate(${textRotationAngle}, ${textX}, ${textY})`}
@@ -405,6 +460,10 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
         );
       })
     ];
+  }, [activities, CENTER, WHEEL_SIZE, highlightedSlice, isSpinning]);
+
+  const renderWheel = () => {
+    return wheelContent;
   };
 
   // Handle deleting an activity when trash icon is clicked
@@ -441,7 +500,7 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
     
     // Calculate which slice index this angle falls into
     // We need to account for the wheel's current rotation
-    const effectiveAngle = (normalizedAngle + currentRotationDegrees) % 360;
+    const effectiveAngle = (normalizedAngle + currentRotationDegrees.current) % 360;
     const sliceIndex = Math.floor(effectiveAngle / sliceAngle);
     
     // Make sure index is valid
@@ -475,6 +534,26 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
       };
     });
   }, [activities, CENTER]);
+
+  // Comprehensive cleanup effect to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      // Clean up all animations when component unmounts
+      rotation.stopAnimation();
+      pulseAnim.stopAnimation();
+      bounceAnim.stopAnimation();
+      fadeAnim.stopAnimation();
+      scaleAnim.stopAnimation();
+      
+      if (pulseAnimationRef.current) {
+        pulseAnimationRef.current.stop();
+      }
+      
+      if (animationFrameId.current) {
+        cancelAnimationFrame(animationFrameId.current);
+      }
+    };
+  }, [rotation, pulseAnim, bounceAnim, fadeAnim, scaleAnim]);
 
   if (WHEEL_SIZE <= 0) {
     return (
@@ -522,7 +601,7 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
               top: 0,
               left: 0,
               transform: [
-                { rotate: rotation.interpolate({ inputRange: [0, 360], outputRange: ['0deg', '360deg'] }) },
+                { rotate: rotationInterpolation },
                 { scale: pulseAnim }
               ],
             },
@@ -546,7 +625,7 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
             {
               width: WHEEL_SIZE,
               height: WHEEL_SIZE,
-              transform: [{ rotate: rotation.interpolate({ inputRange: [0, 360], outputRange: ['0deg', '360deg'] }) }],
+              transform: [{ rotate: rotationInterpolation }],
             },
           ]}
           pointerEvents="box-none"
@@ -605,30 +684,32 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
         )}
       </Animated.View>
 
-      {/* Instruction text - moved above the last selected activity box */}
-      <View style={styles.instructionContainer}>
+      {/* Instruction text - absolutely positioned below the wheel */}
+      <View style={[styles.instructionContainer, { top: WHEEL_SIZE + 10 }]}>
         <ThemedText style={styles.instructionText}>
-          Tap on an activity name to remove it from the wheel
+          Tap activity name to remove 🗑️
         </ThemedText>
       </View>
 
-      {/* Persistent results box at the bottom */}
-      {previousSelectedActivity && (
-        <Animated.View 
-          style={[
-            styles.persistentResultBox,
-            {
-              opacity: fadeAnim,
-              transform: [{ translateY: fadeAnim.interpolate({ inputRange: [0, 1], outputRange: [20, 0] }) }]
+      {/* Last selected activity box - absolutely positioned below instruction text */}
+      <View style={[styles.lastActivityContainer, { top: WHEEL_SIZE + 40 }]}>
+        <View style={styles.lastActivityContent}>
+          <ThemedText style={styles.lastActivityLabel}>Last selected activity:</ThemedText>
+          <ThemedText style={styles.lastActivityText}>
+            {previousSelectedActivity 
+              ? (previousSelectedActivity.emoji ? `${previousSelectedActivity.emoji} ${previousSelectedActivity.name}` : previousSelectedActivity.name)
+              : ""
             }
-          ]}
-        >
-          <ThemedText style={styles.persistentResultLabel}>Last selected activity:</ThemedText>
-          <ThemedText style={styles.persistentResultText}>
-            {previousSelectedActivity.emoji ? `${previousSelectedActivity.emoji} ${previousSelectedActivity.name}` : previousSelectedActivity.name}
           </ThemedText>
-        </Animated.View>
-      )}
+        </View>
+      </View>
+
+      {/* Copyright text - absolutely positioned at the bottom */}
+      <View style={[styles.copyrightContainer, { top: WHEEL_SIZE + 130 }]}>
+        <ThemedText style={styles.copyrightText}>
+          © {new Date().getFullYear()} VibeCreAI - All rights reserved
+        </ThemedText>
+      </View>
 
       {!canSpin && (
         <View style={styles.messageContainer}>
@@ -646,6 +727,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginVertical: 10,
+    marginBottom: 200, // Increased to accommodate absolutely positioned elements
     position: 'relative',
     width: '100%', // Ensure full width
   },
@@ -705,10 +787,9 @@ const styles = StyleSheet.create({
     position: 'absolute', 
   },
   spinButtonText: {
-    fontSize: 24, 
-    fontWeight: 'bold',
+    fontSize: 28, 
     color: '#4e4370',
-    fontFamily: FONTS.gamjaFlower,
+    fontFamily: FONTS.jua,
   },
   messageContainer: {
     marginTop: 15,
@@ -736,15 +817,62 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   instructionContainer: {
-    marginTop: 10,
+    position: 'absolute',
+    left: 0,
+    right: 0,
     alignItems: 'center',
     padding: 5,
+    paddingHorizontal: 20,
   },
   instructionText: {
+    fontSize: 16,
+    color: '#666',
+    fontFamily: FONTS.jua,
+    textAlign: 'center',
+  },
+  lastActivityContainer: {
+    position: 'absolute',
+    left: 20,
+    right: 20,
+    padding: 15,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: '#E8F4FC',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 1.41,
+  },
+  lastActivityContent: {
+    alignItems: 'center',
+  },
+  lastActivityLabel: {
     fontSize: 14,
     color: '#666',
-    fontFamily: 'Nunito',
+    fontFamily: FONTS.jua,
+  },
+  lastActivityText: {
+    fontSize: 24,
+    color: '#4e4370',
+    fontFamily: FONTS.jua,
     textAlign: 'center',
+    marginTop: 4,
+  },
+  copyrightContainer: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    paddingHorizontal: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  copyrightText: {
+    fontSize: 12,
+    color: '#888',
+    textAlign: 'center',
+    fontFamily: FONTS.jua,
   },
   resultCenter: {
     backgroundColor: 'rgba(255, 255, 255, 0.85)', // Slightly transparent white
@@ -755,16 +883,15 @@ const styles = StyleSheet.create({
   },
   resultCenterText: {
     fontSize: 36,
-    fontWeight: 'bold',
     color: '#4e4370',
-    fontFamily: FONTS.gamjaFlower,
+    fontFamily: FONTS.jua,
     textAlign: 'center',
     padding: 5,
   },
   resultSubtext: {
     fontSize: 24, // Increased accordingly (was 18)
     color: '#333',
-    fontFamily: 'Nunito',
+    fontFamily: FONTS.jua,
     textAlign: 'center',
   },
   buttonOverlay: {
@@ -787,36 +914,5 @@ const styles = StyleSheet.create({
     color: 'transparent',
     height: 0,
     opacity: 0,
-  },
-  persistentResultBox: {
-    marginTop: 15,
-    padding: 16,
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    marginHorizontal: 16,
-    marginVertical: 8,
-    alignItems: 'center',
-    width: 'auto', // Match parent width
-    alignSelf: 'stretch', // Make it stretch horizontally like the input box
-    borderWidth: 2,
-    borderColor: '#E8F4FC',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 1.41,
-  },
-  persistentResultLabel: {
-    fontSize: 14,
-    color: '#666',
-    fontFamily: 'Nunito',
-  },
-  persistentResultText: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#4e4370',
-    fontFamily: FONTS.gamjaFlower,
-    textAlign: 'center',
-    marginTop: 4,
   },
 }); 

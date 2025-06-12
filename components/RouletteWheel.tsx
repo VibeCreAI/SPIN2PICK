@@ -882,6 +882,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 0,
     right: 0,
+    marginTop: 10,
     paddingHorizontal: 10,
     alignItems: 'center',
     justifyContent: 'center',

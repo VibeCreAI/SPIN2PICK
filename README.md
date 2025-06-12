@@ -26,3 +26,17 @@ ________________________________________
 ## 📱 Demo Video
 
 https://www.youtube.com/watch?v=t6DQrgBDQFU
+
+## 💾 Save & Load Activities (New!)
+
+• Save up to 5 different activity sets with custom names.
+• Load any saved set instantly—great for switching between different groups or occasions.
+• Delete or overwrite saves as needed.
+• All saves are persistent and work across app restarts.
+
+### How to Use
+1. Tap the 💾 button (now inside the 'Enter new activity' box).
+2. Choose an empty slot to save your current activities, or tap a filled slot to load or delete.
+3. Name your save for easy reference!
+
+This feature is available on both web and mobile, with a modern, user-friendly popup interface.

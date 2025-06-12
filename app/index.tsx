@@ -3,6 +3,7 @@ import { ActivityInput } from '@/components/ActivityInput';
 import { AdBanner } from '@/components/AdBanner';
 import { Celebration } from '@/components/Celebration';
 import { RouletteWheel } from '@/components/RouletteWheel';
+import { SaveLoadModal } from '@/components/SaveLoadModal';
 import { ThemedText } from '@/components/ThemedText';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useEffect, useState } from 'react';
@@ -71,6 +72,9 @@ export default function HomeScreen() {
   // New state for deletion confirmation
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [activityToDelete, setActivityToDelete] = useState<Activity | null>(null);
+
+  // New state for save/load functionality
+  const [showSaveLoadModal, setShowSaveLoadModal] = useState(false);
 
   // Get screen dimensions for responsive design
   const screenData = Dimensions.get('window');
@@ -296,10 +300,28 @@ export default function HomeScreen() {
     setPreviousSelectedActivity(activity);
   };
 
+  const handleLoadActivities = (loadedActivities: Activity[]) => {
+    // Reassign colors to ensure optimal distribution
+    const recoloredActivities = reassignAllColors(loadedActivities);
+    setActivities(recoloredActivities);
+  };
+
+  const handleOpenSaveLoad = () => {
+    setShowSaveLoadModal(true);
+  };
+
+  const handleCloseSaveLoad = () => {
+    setShowSaveLoadModal(false);
+  };
+
   const renderContent = () => (
           <View style={styles.container} onLayout={onLayout}>
-            <ThemedText type="title" style={styles.title}>SPIN 2 PICK</ThemedText>
-            <ThemedText style={styles.subtitle}>Tap ✨ to get new activity picked by AI</ThemedText>
+            <View style={styles.headerContainer}>
+              <View style={styles.titleContainer}>
+                <ThemedText type="title" style={styles.title}>SPIN 2 PICK</ThemedText>
+                <ThemedText style={styles.subtitle}>✨ for AI suggestion | 💾 to save or load</ThemedText>
+              </View>
+            </View>
             
             <ActivityInput
               onAddActivity={handleAddActivity}
@@ -311,6 +333,7 @@ export default function HomeScreen() {
               showSuggestionPopup={showSuggestionPopup}
               onAcceptSuggestion={handleAcceptSuggestion}
               onDeclineSuggestion={handleDeclineSuggestion}
+              onSaveLoad={handleOpenSaveLoad}
             />
 
             {containerWidth > 0 ? (
@@ -405,6 +428,14 @@ export default function HomeScreen() {
           </TouchableOpacity>
         </TouchableOpacity>
       </Modal>
+      
+      {/* Save/Load Modal */}
+      <SaveLoadModal
+        visible={showSaveLoadModal}
+        onClose={handleCloseSaveLoad}
+        currentActivities={activities}
+        onLoadActivities={handleLoadActivities}
+      />
     </SafeAreaView>
   );
 }
@@ -446,8 +477,8 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 52,
     textAlign: 'center',
-    marginTop: 30,
-    marginBottom: 5,
+    marginTop: 36,
+    marginBottom: 10,
     color: '#4e4370',
     fontFamily: FONTS.jua,
   },
@@ -533,5 +564,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: FONTS.jua,
     color: '#fff',
+  },
+  headerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  titleContainer: {
+    flex: 1,
   },
 }); 

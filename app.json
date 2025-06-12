@@ -2,7 +2,7 @@
   "expo": {
     "name": "Spin2Pick",
     "slug": "spin2pick",
-    "version": "1.0.4",
+    "version": "1.0.5",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "spin2pick",
@@ -13,14 +13,14 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.vibecreai.spin2pick",
-      "buildNumber": "5",
+      "buildNumber": "6",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "GADApplicationIdentifier": "ca-app-pub-7239598551330509~5791479155"
       }
     },
     "android": {
-      "versionCode": 5,
+      "versionCode": 6,
       "softwareKeyboardLayoutMode": "pan",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",

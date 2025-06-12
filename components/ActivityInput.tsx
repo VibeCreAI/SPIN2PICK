@@ -13,6 +13,7 @@ interface ActivityInputProps {
   showSuggestionPopup?: boolean;
   onAcceptSuggestion?: () => void;
   onDeclineSuggestion?: () => void;
+  onSaveLoad?: () => void;
 }
 
 // Maximum character limit for activities
@@ -28,6 +29,7 @@ export const ActivityInput: React.FC<ActivityInputProps> = ({
   showSuggestionPopup,
   onAcceptSuggestion,
   onDeclineSuggestion,
+  onSaveLoad,
 }) => {
   const [activityName, setActivityName] = useState('');
 
@@ -103,6 +105,16 @@ export const ActivityInput: React.FC<ActivityInputProps> = ({
             <Text style={styles.suggestButtonText}>✨</Text>
           )}
         </TouchableOpacity>
+        
+        {onSaveLoad && (
+          <TouchableOpacity
+            style={styles.saveLoadButton}
+            onPress={onSaveLoad}
+            disabled={isLoading || isSuggesting}
+          >
+            <Text style={styles.saveLoadButtonText}>💾</Text>
+          </TouchableOpacity>
+        )}
       </View>
       
       {/* AI Suggestion Popup */}
@@ -161,6 +173,7 @@ const styles = StyleSheet.create({
     maxWidth: '90%',
     marginHorizontal: 16,
     marginVertical: 8,
+    marginBottom: 20,
     elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
@@ -286,5 +299,18 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: FONTS.jua,
     color: '#fff',
+  },
+  saveLoadButton: {
+    marginLeft: 6,
+    padding: 4,
+    borderRadius: 6,
+    backgroundColor: 'transparent',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  saveLoadButtonText: {
+    fontSize: 24,
+    fontFamily: FONTS.jua,
+    color: '#94c4f5',
   },
 }); 

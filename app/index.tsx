@@ -413,13 +413,22 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: '#f3efff',
+    ...(Platform.OS === 'web' && {
+      minHeight: '100vh',
+    }),
   },
   keyboardAvoidingView: {
     flex: 1,
+    ...(Platform.OS === 'web' && {
+      minHeight: '100vh',
+    }),
   },
   mainContainer: {
     flex: 1,
     backgroundColor: '#f3efff',
+    ...(Platform.OS === 'web' && {
+      minHeight: '100vh',
+    }),
   },
   container: {
     width: '100%',

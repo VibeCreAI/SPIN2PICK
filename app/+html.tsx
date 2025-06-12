@@ -69,6 +69,115 @@ export default function Root({ children }: PropsWithChildren) {
           crossOrigin="anonymous"
         />
 
+        {/* Fix white space on large screens - Enhanced for React Native Web */}
+        <style dangerouslySetInnerHTML={{
+          __html: `
+            /* Reset all margins and paddings */
+            html, body {
+              margin: 0 !important;
+              padding: 0 !important;
+              min-height: 100vh;
+              height: 100%;
+              overflow-x: hidden;
+            }
+            
+            /* Target React Native Web root containers */
+            #__next,
+            #root,
+            .expo-web-app,
+            [data-reactroot] {
+              min-height: 100vh !important;
+              height: 100% !important;
+              display: flex !important;
+              flex-direction: column !important;
+            }
+            
+            /* For screens taller than 772.4px, ensure content fills available space */
+            @media (min-height: 772.4px) {
+              body {
+                min-height: 100vh !important;
+                height: 100vh !important;
+                display: flex !important;
+                flex-direction: column !important;
+                background: #f3efff !important;
+              }
+              
+              #__next,
+              #root,
+              .expo-web-app,
+              [data-reactroot] {
+                flex: 1 !important;
+                min-height: 100vh !important;
+                height: 100vh !important;
+              }
+              
+              /* Target React Native Web View components */
+              div[style*="flex"] {
+                min-height: inherit;
+              }
+              
+              /* Remove bottom white space by targeting specific containers */
+              div[data-testid="app-container"],
+              .main-container,
+              [class*="safeArea"],
+              [class*="container"] {
+                flex: 1 !important;
+                min-height: 100vh !important;
+              }
+              
+              /* Ensure ScrollView content fills space */
+              div[style*="overflow"] {
+                min-height: 100vh !important;
+              }
+              
+              /* Remove any bottom margins or padding that could create white space */
+              body > * {
+                margin-bottom: 0 !important;
+                padding-bottom: 0 !important;
+              }
+              
+              /* Specifically target the main content area to expand */
+              .scroll-content,
+              [role="main"],
+              main {
+                flex: 1 !important;
+                min-height: calc(100vh - 60px) !important; /* Account for any headers */
+              }
+            }
+            
+            /* For very large screens (desktop), ensure proper centering and no excessive white space */
+            @media (min-height: 1000px) {
+              body {
+                justify-content: center;
+                align-items: center;
+              }
+              
+              #__next {
+                max-height: 100vh;
+                justify-content: center;
+              }
+            }
+            
+            /* Ensure no unwanted margins or padding create white space */
+            * {
+              box-sizing: border-box !important;
+            }
+            
+            /* Hide any default margins from user agent stylesheets */
+            body, html {
+              margin: 0 !important;
+              padding: 0 !important;
+            }
+            
+            /* Debug mode - uncomment to see container boundaries */
+            /*
+            * {
+              border: 1px solid red !important;
+            }
+            */
+          `
+        }} />
+
         {/*
           Enable body scrolling on web for better user experience.
           ScrollViewStyleReset was disabling scrolling - commented out to allow normal page scrolling.

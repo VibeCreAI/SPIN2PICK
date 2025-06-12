@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { Animated, StyleSheet, View } from 'react-native';
+import { Animated, StyleSheet } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 
 interface CelebrationProps {
@@ -8,7 +8,7 @@ interface CelebrationProps {
 
 export const Celebration: React.FC<CelebrationProps> = ({ onComplete }) => {
   const confettiRef = useRef<ConfettiCannon>(null);
-  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const fadeAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     if (confettiRef.current) {
@@ -16,32 +16,29 @@ export const Celebration: React.FC<CelebrationProps> = ({ onComplete }) => {
     }
 
     Animated.sequence([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 500,
-        useNativeDriver: true,
-      }),
-      Animated.delay(2000),
+      Animated.delay(1500),
       Animated.timing(fadeAnim, {
         toValue: 0,
-        duration: 500,
+        duration: 300,
         useNativeDriver: true,
       }),
     ]).start(() => {
       onComplete();
     });
-  }, []);
+  }, [fadeAnim, onComplete]);
 
   return (
-    <View style={styles.container}>
+    <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
       <ConfettiCannon
         ref={confettiRef}
-        count={200}
+        count={150}
         origin={{ x: -10, y: 0 }}
         autoStart={false}
         fadeOut={true}
+        explosionSpeed={350}
+        fallSpeed={2500}
       />
-    </View>
+    </Animated.View>
   );
 };
 

@@ -1,5 +1,5 @@
 {
-  "name": "pick2play",
+  "name": "spin2pick",
   "main": "expo-router/entry",
   "version": "1.0.0",
   "scripts": {
@@ -7,12 +7,14 @@
     "reset-project": "node ./scripts/reset-project.js",
     "android": "expo run:android",
     "ios": "expo run:ios",
-    "web": "expo start --web",
-    "lint": "expo lint"
+    "web": "EXPO_PLATFORM=web expo start --web",
+    "web-safe": "expo start --web --offline",
+    "lint": "expo lint",
+    "deploy": "gh-pages --nojekyll -d dist",
+    "predeploy": "expo export -p web",
+    "deploy-gh-pages": "npm run predeploy && npm run deploy"
   },
   "dependencies": {
-    "@expo-google-fonts/jua": "^0.3.0",
-    "@expo-google-fonts/nunito": "^0.2.3",
     "@expo-google-fonts/slackey": "^0.3.0",
     "@expo/cli": "^0.24.13",
     "@expo/vector-icons": "^14.1.0",
@@ -40,6 +42,7 @@
     "react-native": "0.79.2",
     "react-native-confetti-cannon": "^1.5.2",
     "react-native-gesture-handler": "~2.24.0",
+    "react-native-google-mobile-ads": "^15.3.1",
     "react-native-reanimated": "~3.17.4",
     "react-native-safe-area-context": "5.4.0",
     "react-native-screens": "~4.10.0",
@@ -52,6 +55,7 @@
     "@types/react": "~19.0.10",
     "eslint": "^9.25.0",
     "eslint-config-expo": "~9.2.0",
+    "gh-pages": "^6.3.0",
     "typescript": "~5.8.3"
   },
   "private": true

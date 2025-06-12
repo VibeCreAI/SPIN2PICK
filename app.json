@@ -1,28 +1,36 @@
 {
   "expo": {
-    "name": "PICK2PLAY",
-    "slug": "pick2play-app",
-    "version": "1.0.5",
+    "name": "Spin2Pick",
+    "slug": "spin2pick",
+    "version": "1.0.4",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "pick2play",
+    "scheme": "spin2pick",
     "userInterfaceStyle": "automatic",
     "assetBundlePatterns": [
       "**/*"
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.vibecreai.pick2play"
+      "bundleIdentifier": "com.vibecreai.spin2pick",
+      "buildNumber": "5",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
+        "GADApplicationIdentifier": "ca-app-pub-7239598551330509~5791479155"
+      }
     },
     "android": {
+      "versionCode": 5,
+      "softwareKeyboardLayoutMode": "pan",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.vibecreai.pick2play",
+      "package": "com.vibecreai.spin2pick",
       "permissions": [
         "android.permission.RECORD_AUDIO",
-        "android.permission.MODIFY_AUDIO_SETTINGS"
+        "android.permission.MODIFY_AUDIO_SETTINGS",
+        "com.google.android.gms.permission.AD_ID"
       ],
       "splash": {
         "image": "./assets/images/splash.png",
@@ -45,6 +53,13 @@
           "resizeMode": "contain",
           "backgroundColor": "#000000"
         }
+      ],
+      [
+        "react-native-google-mobile-ads",
+        {
+          "android_app_id": "ca-app-pub-7239598551330509~5791479155",
+          "ios_app_id": "ca-app-pub-7239598551330509~5791479155"
+        }
       ]
     ],
     "experiments": {
@@ -58,9 +73,13 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "f168140c-7490-44c4-9993-e9711ba09919"
+        "projectId": "f8f80de9-8015-4e53-9b50-69306f5d74f2"
       }
     },
     "owner": "vibecreai"
+  },
+  "react-native-google-mobile-ads": {
+    "android_app_id": "ca-app-pub-7239598551330509~5791479155",
+    "ios_app_id": "ca-app-pub-7239598551330509~5791479155"
   }
 }

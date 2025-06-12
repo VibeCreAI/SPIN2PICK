@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Platform, StyleSheet, Text, View } from 'react-native';
 import { AD_UNIT_IDS, isAdMobAvailable } from '../utils/adMobUtils';
 
 // Conditional import for AdMob components
@@ -21,6 +21,11 @@ interface AdBannerProps {
 export const AdBanner: React.FC<AdBannerProps> = ({ 
   size 
 }) => {
+  // Hide ads on web until AdSense approval
+  if (Platform.OS === 'web') {
+    return null;
+  }
+
   // If AdMob is not available (Expo Go), show a placeholder
   if (!isAdMobAvailable() || !BannerAd) {
     return (

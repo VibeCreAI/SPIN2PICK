@@ -1,4 +1,4 @@
-# Sound Files for PICK2PLAY
+# Sound Files for Spin 2 Pick
 
 This directory needs the following sound files:
 

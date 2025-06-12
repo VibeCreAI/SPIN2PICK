@@ -1,18 +1,28 @@
 {
   "cli": {
     "version": ">= 16.6.2",
-    "appVersionSource": "remote"
+    "appVersionSource": "local"
   },
   "build": {
     "development": {
-      "developmentClient": true,
-      "distribution": "internal"
+      "developmentClient": false,
+      "distribution": "internal",
+      "android": {
+        "image": "latest"
+      }
     },
     "preview": {
-      "distribution": "internal"
+      "distribution": "internal",
+      "autoIncrement": false,
+      "android": {
+        "image": "latest"
+      }
     },
     "production": {
-      "autoIncrement": true
+      "autoIncrement": false,
+      "android": {
+        "image": "latest"
+      }
     }
   },
   "submit": {

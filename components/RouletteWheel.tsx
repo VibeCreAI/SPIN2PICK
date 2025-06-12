@@ -1,6 +1,6 @@
 import * as Haptics from 'expo-haptics';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Animated, Easing, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Animated, Dimensions, Easing, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Svg, { Circle, G, Path, Text as SvgText } from 'react-native-svg';
 import { FONTS } from '../app/_layout';
 import { playClickSound, playSpinningSound, playSuccessSound, stopSpinningSound } from '../utils/soundUtils';
@@ -42,7 +42,22 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
   parentWidth,
   selectedActivity,
 }) => {
-  const WHEEL_SIZE = useMemo(() => parentWidth * 0.9, [parentWidth]);
+  // Get screen dimensions for web platform
+  const screenData = Dimensions.get('window');
+  
+  // Calculate wheel size with platform-specific limits
+  const WHEEL_SIZE = useMemo(() => {
+    let calculatedSize = parentWidth * 0.9;
+    
+    // Apply size limits for web platform
+    if (Platform.OS === 'web') {
+      const minSize = 350; // Minimum wheel size for web
+      const maxSize = Math.min(screenData.width * 0.7, screenData.height * 0.7, 350); // Max 500px or 60% of screen
+      calculatedSize = Math.max(Math.min(calculatedSize, maxSize), minSize); // Apply both min and max constraints
+    }
+    
+    return calculatedSize;
+  }, [parentWidth, screenData]);
   const CENTER = useMemo(() => WHEEL_SIZE / 2, [WHEEL_SIZE]);
 
   const [rotation] = useState(new Animated.Value(0));
@@ -726,10 +741,10 @@ const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
     justifyContent: 'center',
-    marginVertical: 10,
-    marginBottom: 200, // Increased to accommodate absolutely positioned elements
+    marginVertical: Platform.OS === 'web' ? 5 : 10,
+    marginBottom: Platform.OS === 'web' ? 180 : 200,
     position: 'relative',
-    width: '100%', // Ensure full width
+    width: '100%',
   },
   pointerContainer: {
     position: 'absolute',
@@ -832,8 +847,11 @@ const styles = StyleSheet.create({
   },
   lastActivityContainer: {
     position: 'absolute',
-    left: 20,
-    right: 20,
+    alignSelf: 'center', // Center the container
+    width: 'auto', // Let content determine width
+    minWidth: 340, // Minimum width
+    maxWidth: '90%', // Maximum width relative to parent
+    marginHorizontal: 16, // Fixed horizontal margins like ActivityInput
     padding: 15,
     backgroundColor: '#fff',
     borderRadius: 12,

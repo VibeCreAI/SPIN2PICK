@@ -1,4 +1,3 @@
-import { Platform } from 'react-native';
 
 // Check if AdMob package is available
 let isPackageAvailable = false;
@@ -20,19 +19,15 @@ try {
   isPackageAvailable = false;
 }
 
-// Test IDs for development - replace with your real Ad Unit IDs in production
+// Your actual Ad Unit IDs
 export const AD_UNIT_IDS = {
   banner: isPackageAvailable && __DEV__ 
     ? TestIds?.ADAPTIVE_BANNER || 'test-banner'
-    : Platform.OS === 'ios' 
-      ? 'ca-app-pub-XXXXXXXX/XXXXXXXXXX' // Your iOS banner ad unit ID
-      : 'ca-app-pub-XXXXXXXX/XXXXXXXXXX', // Your Android banner ad unit ID
+    : 'ca-app-pub-7239598551330509/4053464457', // Your banner ad unit ID
   
   interstitial: isPackageAvailable && __DEV__ 
     ? TestIds?.INTERSTITIAL || 'test-interstitial'
-    : Platform.OS === 'ios' 
-      ? 'ca-app-pub-XXXXXXXX/XXXXXXXXXX' // Your iOS interstitial ad unit ID
-      : 'ca-app-pub-XXXXXXXX/XXXXXXXXXX', // Your Android interstitial ad unit ID
+    : 'ca-app-pub-7239598551330509/4053464457', // Using same ID for now - you may want to create a separate interstitial ad unit
 };
 
 // Initialize interstitial ad

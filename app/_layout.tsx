@@ -1,5 +1,3 @@
-import { Jua_400Regular } from '@expo-google-fonts/jua';
-import { Nunito_400Regular, Nunito_700Bold } from '@expo-google-fonts/nunito';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import { Slot } from 'expo-router';
@@ -22,12 +20,13 @@ export const FONTS = {
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   
-  // Load fonts with explicit naming
+  // Load fonts with explicit naming - all from local assets
   const [fontsLoaded, fontError] = useFonts({
-    [FONTS.nunito]: Nunito_400Regular,
-    [FONTS.nunitoBold]: Nunito_700Bold,
+    [FONTS.nunito]: require('../assets/fonts/Nunito_400Regular.ttf'),
+    [FONTS.nunitoBold]: require('../assets/fonts/Nunito_700Bold.ttf'),
     [FONTS.gamjaFlower]: require('../assets/fonts/GamjaFlower-Regular.ttf'),
-    [FONTS.jua]: Jua_400Regular,
+    [FONTS.jua]: require('../assets/fonts/Jua_400Regular.ttf'),
+    'Ionicons': require('../assets/fonts/Ionicons.ttf'),
   });
 
   useEffect(() => {

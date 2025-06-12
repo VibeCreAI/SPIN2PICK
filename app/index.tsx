@@ -6,11 +6,11 @@ import { RouletteWheel } from '@/components/RouletteWheel';
 import { ThemedText } from '@/components/ThemedText';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useEffect, useState } from 'react';
-import { KeyboardAvoidingView, LayoutChangeEvent, Platform, StyleSheet, View } from 'react-native';
+import { Dimensions, KeyboardAvoidingView, LayoutChangeEvent, Modal, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { initializeInterstitialAd, showInterstitialAd } from '../utils/adMobUtils';
 import { PASTEL_COLORS, reassignAllColors, type Activity } from '../utils/colorUtils';
-import { getEmoji } from '../utils/emojiUtils';
+import { getAISuggestedActivity, getEmoji } from '../utils/emojiUtils';
 import { initSounds, unloadSounds } from '../utils/soundUtils';
 
 const DEFAULT_ACTIVITIES: Activity[] = [
@@ -24,8 +24,8 @@ const DEFAULT_ACTIVITIES: Activity[] = [
   { id: '8', name: 'Read a Book', color: PASTEL_COLORS[7], emoji: '📚' },    // Coral
 ];
 
-const STORAGE_KEY = 'PICK2PLAY_ACTIVITIES';
-const SPIN_COUNT_KEY = 'PICK2PLAY_SPIN_COUNT';
+const STORAGE_KEY = 'SPIN2PICK_ACTIVITIES';
+const SPIN_COUNT_KEY = 'SPIN2PICK_SPIN_COUNT';
 
 // Error Boundary Component to prevent black screens
 class ErrorBoundary extends React.Component {
@@ -63,7 +63,18 @@ export default function HomeScreen() {
   const [containerWidth, setContainerWidth] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(true);
   const [isAddingActivity, setIsAddingActivity] = useState(false);
+  const [isSuggestingActivity, setIsSuggestingActivity] = useState(false);
   const [spinCount, setSpinCount] = useState(0);
+  const [pendingSuggestion, setPendingSuggestion] = useState<string | null>(null);
+  const [showSuggestionPopup, setShowSuggestionPopup] = useState(false);
+  
+  // New state for deletion confirmation
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+  const [activityToDelete, setActivityToDelete] = useState<Activity | null>(null);
+
+  // Get screen dimensions for responsive design
+  const screenData = Dimensions.get('window');
+  const isWeb = Platform.OS === 'web';
 
   // Load saved activities and initialize sounds when app starts
   useEffect(() => {
@@ -179,10 +190,86 @@ export default function HomeScreen() {
     }
   };
 
+  const handleSuggestActivity = async () => {
+    setIsSuggestingActivity(true);
+    try {
+      // Get AI suggested activity
+      const existingActivityNames = activities.map(a => a.name);
+      const suggestedActivityName = await getAISuggestedActivity(existingActivityNames);
+      
+      // Show popup with suggestion instead of directly adding
+      setPendingSuggestion(suggestedActivityName);
+      setShowSuggestionPopup(true);
+      
+      console.log('✨ AI suggested activity:', suggestedActivityName);
+    } catch (error) {
+      console.error('Error suggesting activity:', error);
+      alert('Sorry, I couldn\'t suggest an activity right now. Please try again!');
+    } finally {
+      setIsSuggestingActivity(false);
+    }
+  };
+
+  const handleAcceptSuggestion = async () => {
+    if (!pendingSuggestion) return;
+    
+    setIsAddingActivity(true);
+    try {
+      // Get emoji for the suggested activity
+      const emoji = await getEmoji(pendingSuggestion);
+      
+      // Create new activity
+      const newActivity: Activity = {
+        id: Date.now().toString(),
+        name: pendingSuggestion,
+        color: PASTEL_COLORS[0], // Temporary color, will be reassigned
+        emoji,
+      };
+      
+      // Add the new activity and reassign all colors optimally
+      const updatedActivities = [...activities, newActivity];
+      const recoloredActivities = reassignAllColors(updatedActivities);
+      setActivities(recoloredActivities);
+      
+      console.log('✅ Accepted AI suggestion:', pendingSuggestion);
+    } catch (error) {
+      console.error('Error adding suggested activity:', error);
+      alert('Sorry, there was an error adding the activity. Please try again!');
+    } finally {
+      setIsAddingActivity(false);
+      setShowSuggestionPopup(false);
+      setPendingSuggestion(null);
+    }
+  };
+
+  const handleDeclineSuggestion = () => {
+    setShowSuggestionPopup(false);
+    setPendingSuggestion(null);
+    console.log('❌ Declined AI suggestion');
+  };
+
   const handleDeleteActivity = (id: string) => {
-    const activitiesAfterDeletion = activities.filter(activity => activity.id !== id);
-    const recoloredActivities = reassignAllColors(activitiesAfterDeletion);
-    setActivities(recoloredActivities);
+    // Find the activity to delete and show confirmation popup
+    const activityToDelete = activities.find(activity => activity.id === id);
+    if (activityToDelete) {
+      setActivityToDelete(activityToDelete);
+      setShowDeleteConfirmation(true);
+    }
+  };
+
+  const handleConfirmDelete = () => {
+    if (activityToDelete) {
+      const activitiesAfterDeletion = activities.filter(activity => activity.id !== activityToDelete.id);
+      const recoloredActivities = reassignAllColors(activitiesAfterDeletion);
+      setActivities(recoloredActivities);
+    }
+    setShowDeleteConfirmation(false);
+    setActivityToDelete(null);
+  };
+
+  const handleCancelDelete = () => {
+    setShowDeleteConfirmation(false);
+    setActivityToDelete(null);
   };
 
   const handleActivitySelect = async (activity: Activity) => {
@@ -209,22 +296,21 @@ export default function HomeScreen() {
     setPreviousSelectedActivity(activity);
   };
 
-  return (
-    <SafeAreaView style={styles.safeArea}>
-      <KeyboardAvoidingView 
-        style={styles.keyboardAvoidingView}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={0}
-      >
-        <View style={styles.mainContainer}>
+  const renderContent = () => (
           <View style={styles.container} onLayout={onLayout}>
-            <ThemedText type="title" style={styles.title}>PICK2PLAY</ThemedText>
-            <ThemedText style={styles.subtitle}>Spin the wheel for your next adventure!</ThemedText>
+            <ThemedText type="title" style={styles.title}>SPIN 2 PICK</ThemedText>
+            <ThemedText style={styles.subtitle}>Tap ✨ to get new activity picked by AI</ThemedText>
             
             <ActivityInput
               onAddActivity={handleAddActivity}
+              onSuggestActivity={handleSuggestActivity}
               existingActivities={activities.map(a => a.name)}
               isLoading={isAddingActivity}
+              isSuggesting={isSuggestingActivity}
+              pendingSuggestion={pendingSuggestion}
+              showSuggestionPopup={showSuggestionPopup}
+              onAcceptSuggestion={handleAcceptSuggestion}
+              onDeclineSuggestion={handleDeclineSuggestion}
             />
 
             {containerWidth > 0 ? (
@@ -249,6 +335,26 @@ export default function HomeScreen() {
 
             {showCelebration && <Celebration onComplete={handleCelebrationComplete} />}
           </View>
+  );
+
+  return (
+    <SafeAreaView style={styles.safeArea}>
+      <KeyboardAvoidingView 
+        style={styles.keyboardAvoidingView}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={0}
+        enabled={Platform.OS === 'ios'}
+      >
+        <View style={styles.mainContainer}>
+          {/* ScrollView for all platforms */}
+          <ScrollView 
+            style={styles.scrollContainer}
+            contentContainerStyle={styles.scrollContentContainer}
+            showsVerticalScrollIndicator={true}
+            bounces={Platform.OS === 'ios'}
+          >
+            {renderContent()}
+          </ScrollView>
         </View>
       </KeyboardAvoidingView>
       
@@ -257,6 +363,48 @@ export default function HomeScreen() {
         {/* Banner Ad at the bottom */}
         <AdBanner />
       </View>
+      
+      {/* Deletion Confirmation Popup */}
+      <Modal
+        visible={showDeleteConfirmation}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={handleCancelDelete}
+      >
+        <TouchableOpacity 
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={handleCancelDelete}
+        >
+          <TouchableOpacity 
+            style={styles.popupContainer}
+            activeOpacity={1}
+            onPress={() => {}} // Prevent closing when tapping inside popup
+          >
+            <Text style={styles.popupTitle}>Remove Activity 🗑️</Text>
+            <Text style={styles.popupMessage}>Are you sure you want to remove:</Text>
+            <Text style={styles.activityToDeleteText}>
+              {activityToDelete ? (activityToDelete.emoji ? `${activityToDelete.emoji} ${activityToDelete.name}` : activityToDelete.name) : ''}
+            </Text>
+            
+            <View style={styles.popupButtonsContainer}>
+              <TouchableOpacity 
+                style={[styles.popupButton, styles.cancelButton]} 
+                onPress={handleCancelDelete}
+              >
+                <Text style={styles.cancelButtonText}>Cancel ❌</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={[styles.popupButton, styles.confirmButton]} 
+                onPress={handleConfirmDelete}
+              >
+                <Text style={styles.confirmButtonText}>Remove ✅</Text>
+              </TouchableOpacity>
+            </View>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -274,17 +422,22 @@ const styles = StyleSheet.create({
     backgroundColor: '#f3efff',
   },
   container: {
-    flex: 1,
     width: '100%',
     alignItems: 'center',
     padding: 16,
     paddingTop: 0,
-    paddingBottom: 20,
+    paddingBottom: 10,
+  },
+  scrollContainer: {
+    flex: 1,
+  },
+  scrollContentContainer: {
+    paddingBottom: 10,
   },
   title: {
     fontSize: 52,
     textAlign: 'center',
-    marginTop: 10,
+    marginTop: 30,
     marginBottom: 5,
     color: '#4e4370',
     fontFamily: FONTS.jua,
@@ -298,5 +451,78 @@ const styles = StyleSheet.create({
   },
   fixedBottomContainer: {
     backgroundColor: '#f3efff',
+  },
+  // Deletion confirmation popup styles (consistent with AI suggestion popup)
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  popupContainer: {
+    backgroundColor: '#fff',
+    padding: 20,
+    borderRadius: 12,
+    width: 'auto',
+    minWidth: 280,
+    maxWidth: 400,
+    marginHorizontal: 16,
+    alignItems: 'center',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  popupTitle: {
+    fontSize: 20,
+    fontFamily: FONTS.jua,
+    marginBottom: 10,
+    color: '#4e4370',
+  },
+  popupMessage: {
+    fontSize: 16,
+    fontFamily: FONTS.jua,
+    marginBottom: 10,
+    color: '#666',
+  },
+  activityToDeleteText: {
+    fontSize: 18,
+    fontFamily: FONTS.jua,
+    marginBottom: 20,
+    color: '#333',
+    textAlign: 'center',
+    backgroundColor: '#f0f0f0',
+    padding: 10,
+    borderRadius: 8,
+    width: '100%',
+  },
+  popupButtonsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  popupButton: {
+    padding: 12,
+    borderRadius: 8,
+    flex: 1,
+    marginHorizontal: 5,
+    alignItems: 'center',
+  },
+  cancelButton: {
+    backgroundColor: '#f59f9f',
+  },
+  cancelButtonText: {
+    fontSize: 16,
+    fontFamily: FONTS.jua,
+    color: '#fff',
+  },
+  confirmButton: {
+    backgroundColor: '#94c4f5',
+  },
+  confirmButtonText: {
+    fontSize: 16,
+    fontFamily: FONTS.jua,
+    color: '#fff',
   },
 }); 

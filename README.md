@@ -1,50 +1,28 @@
-# Welcome to your Expo app 👋
+# Spin 2 Pick – Kids Activity Wheel
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Turn everyday moments into exciting adventures with roulette and AI! 🎉
 
-## Get started
+Let kids spin the colorful activity wheel and get instantly inspired with fun games and creative play ideas. Whether you're a parent, caregiver, or teacher, Spin 2 Pick helps you spark imagination and bring laughter into any moment.
 
-1. Install dependencies
+________________________________________
 
-   ```bash
-   npm install
-   ```
+## 🧠✨ Smart Features:
 
-2. Start the app
+• ✨ **AI-powered suggestions** – Tap the ✨ icon and let the AI surprise you with a fun new activity!
+• 🎨 **Add your own activities** – Customize the wheel with anything your kids enjoy.
+• 🤖 **Emoji-matching magic** – The app automatically adds the perfect emoji to each activity.
+• 🗑 **Tap to remove** – Finished with an activity? Just tap it off the wheel.
+• 🎉 **Fun animations and sounds** – Celebrate every spin!
+• 🌈 **Kid-friendly design** – Bright colors and playful fonts make it perfect for little hands.
 
-   ```bash
-   npx expo start
-   ```
+________________________________________
 
-In the output, you'll find options to open the app in a
+## 👨‍👩‍👧‍👦 Perfect for:
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+• Playdates and sleepovers
+• Family time and rainy days
+• Travel, classroom breaks, or quick boredom busters
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+## 📱 Demo Video
 
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
-```
-
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+https://www.youtube.com/watch?v=t6DQrgBDQFU

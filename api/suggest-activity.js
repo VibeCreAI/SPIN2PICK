@@ -58,7 +58,7 @@ Activity name only:`;
         "X-Title": "Spin2Pick App"
       },
       body: JSON.stringify({
-        model: "anthropic/claude-3.5-sonnet", // Upgraded to more creative model
+        model: "liquid/lfm-7b", // Cost-effective model
         messages: [
           {
             role: "system",

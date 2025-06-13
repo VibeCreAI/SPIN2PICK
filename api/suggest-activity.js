@@ -22,6 +22,33 @@ export default async function handler(req, res) {
       ? existingActivities.join(', ') 
       : 'No activities yet';
 
+    // Enhanced prompt for more creative and diverse suggestions
+    const systemPrompt = `You are a creative activity expert for kids aged 3-12. Your goal is to suggest diverse, engaging activities that spark imagination and fun.
+
+CREATIVITY GUIDELINES:
+- Think outside the box! Consider indoor/outdoor, active/quiet, solo/group, creative/educational activities
+- Explore different categories: arts & crafts, science experiments, physical activities, imaginative play, cooking, nature exploration, building, music, storytelling, games
+- Consider seasonal activities, cultural activities, and unique experiences
+- Be innovative - suggest activities that might be unexpected but age-appropriate and safe
+
+OUTPUT FORMAT:
+- Return ONLY the activity name (1-3 words maximum)
+- Keep it under 20 characters
+- Make it clear and actionable (e.g., "Build Robots", "Make Slime", "Treasure Hunt")
+- NO explanations, quotes, or extra text`;
+
+    const userPrompt = `Current activities: ${activitiesList}
+
+Suggest ONE completely NEW activity that:
+1. Is different from ALL existing activities
+2. Brings fresh variety to the collection
+3. Is age-appropriate for kids (3-12 years)
+4. Is creative and engaging
+
+Think creatively about different activity categories. If the existing activities are mostly physical, consider creative/educational ones. If they're mostly indoor, consider outdoor options. Aim for diversity and surprise!
+
+Activity name only:`;
+
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -31,19 +58,19 @@ export default async function handler(req, res) {
         "X-Title": "Spin2Pick App"
       },
       body: JSON.stringify({
-        model: "liquid/lfm-7b",
+        model: "anthropic/claude-3.5-sonnet", // Upgraded to more creative model
         messages: [
           {
             role: "system",
-            content: "You are a helpful assistant that suggests fun activities for kids. You must return ONLY the activity name, nothing else. Prefer TWO-WORD activity names when possible (like 'Play Soccer', 'Draw Pictures', 'Bake Cookies'). The activity name must be 20 characters or less and must be a complete, proper activity name. Make sure the suggested activity is different from the existing ones and fits well with the theme/trend of activities already present."
+            content: systemPrompt
           },
           {
             role: "user",
-            content: `Based on these existing activities: "${activitiesList}", suggest ONE new fun activity for kids that is different from the existing ones and fits the theme. Prefer a SHORT, TWO-WORD activity name when possible (examples: 'Play Soccer', 'Draw Pictures', 'Build Blocks'). The activity name must be 20 characters or less and must be complete (not truncated). Return only the activity name, no explanations, no quotes, no periods.`
+            content: userPrompt
           }
         ],
-        max_tokens: 100,
-        temperature: 0.7
+        max_tokens: 50, // Reduced since we only need activity name
+        temperature: 0.9 // Increased for more creativity and variety
       })
     });
 

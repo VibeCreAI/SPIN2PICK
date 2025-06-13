@@ -211,17 +211,35 @@ export const getAISuggestedActivity = async (existingActivities: string[]): Prom
 };
 
 /**
- * Fallback activity suggestions when AI fails
+ * Enhanced fallback activity suggestions when AI fails - organized by category for diversity
  */
 const FALLBACK_ACTIVITIES = [
-  'Build Blocks', 'Draw Pictures', 'Play Soccer', 'Bake Cookies', 'Water Plants',
-  'Tell Stories', 'Play Music', 'Do Yoga', 'Make Slime', 'Fly Kites',
-  'Play Chess', 'Do Magic', 'Paint Rocks', 'Build Fort', 'Play Tag',
-  'Make Origami', 'Blow Bubbles', 'Play Catch', 'Sing Karaoke',
-  'Ride Bikes', 'Skip Rope', 'Play Cards', 'Build Sandcastles', 'Go Fishing',
-  'Make Jewelry', 'Play Drums', 'Do Gymnastics', 'Feed Birds', 'Collect Leaves',
-  'Make Smoothies', 'Play Hopscotch', 'Do Science', 'Write Letters', 'Play Piano',
-  'Make Puppets', 'Go Camping', 'Play Basketball', 'Do Crafts', 'Sing Songs'
+  // Creative & Arts
+  'Draw Pictures', 'Paint Rocks', 'Make Origami', 'Build Blocks', 'Make Jewelry', 'Do Crafts', 'Make Puppets', 'Clay Sculpting', 'Finger Painting', 'Make Collages',
+  
+  // Science & Discovery  
+  'Make Slime', 'Do Science', 'Grow Crystals', 'Mix Colors', 'Make Volcanoes', 'Bug Hunting', 'Cloud Watching', 'Magnet Play', 'Shadow Puppets', 'Water Experiments',
+  
+  // Physical & Active
+  'Play Soccer', 'Do Yoga', 'Play Tag', 'Ride Bikes', 'Skip Rope', 'Do Gymnastics', 'Play Basketball', 'Hopscotch', 'Obstacle Course', 'Balloon Games',
+  
+  // Imaginative & Role Play
+  'Tell Stories', 'Do Magic', 'Build Fort', 'Treasure Hunt', 'Dress Up', 'Puppet Show', 'Space Adventure', 'Pirate Quest', 'Superhero Training', 'Tea Party',
+  
+  // Music & Performance
+  'Play Music', 'Sing Karaoke', 'Play Drums', 'Sing Songs', 'Dance Battle', 'Make Instruments', 'Rhythm Games', 'Opera Singing', 'Beat Boxing', 'Air Guitar',
+  
+  // Outdoor & Nature
+  'Fly Kites', 'Water Plants', 'Build Sandcastles', 'Go Fishing', 'Feed Birds', 'Collect Leaves', 'Go Camping', 'Nature Walk', 'Rock Collecting', 'Flower Pressing',
+  
+  // Games & Puzzles
+  'Play Chess', 'Play Cards', 'Board Games', 'Memory Games', 'Riddle Time', 'Word Games', 'Number Puzzles', 'Brain Teasers', 'Trivia Quiz', 'Charades',
+  
+  // Cooking & Food
+  'Bake Cookies', 'Make Smoothies', 'Fruit Kabobs', 'Pizza Making', 'Cookie Decorating', 'Sandwich Art', 'Ice Cream Sundae', 'Veggie Faces', 'Trail Mix', 'Pancake Art',
+  
+  // Unique & Quirky
+  'Blow Bubbles', 'Play Catch', 'Write Letters', 'Sock Puppet', 'Backwards Day', 'Silly Walks', 'Robot Dance', 'Animal Sounds', 'Tongue Twisters', 'Joke Telling'
 ];
 
 /**

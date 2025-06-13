@@ -243,36 +243,120 @@ export const getAISuggestedActivity = async (existingActivities: string[]): Prom
 };
 
 /**
- * Enhanced fallback activity suggestions when AI fails - organized by category for diversity
+ * Enhanced fallback activity suggestions with matching emojis - organized by category for diversity
  */
-const FALLBACK_ACTIVITIES = [
+const FALLBACK_ACTIVITY_PAIRS = [
   // Creative & Arts
-  'Draw Pictures', 'Paint Rocks', 'Make Origami', 'Build Blocks', 'Make Jewelry', 'Do Crafts', 'Make Puppets', 'Clay Sculpting', 'Finger Painting', 'Make Collages',
+  { name: 'Draw Pictures', emoji: '🎨' },
+  { name: 'Paint Rocks', emoji: '🖌️' },
+  { name: 'Make Origami', emoji: '📄' },
+  { name: 'Build Blocks', emoji: '🧱' },
+  { name: 'Make Jewelry', emoji: '💎' },
+  { name: 'Do Crafts', emoji: '✂️' },
+  { name: 'Make Puppets', emoji: '🧸' },
+  { name: 'Clay Sculpting', emoji: '🏺' },
+  { name: 'Finger Painting', emoji: '🖐️' },
+  { name: 'Make Collages', emoji: '📸' },
   
   // Science & Discovery  
-  'Make Slime', 'Do Science', 'Grow Crystals', 'Mix Colors', 'Make Volcanoes', 'Bug Hunting', 'Cloud Watching', 'Magnet Play', 'Shadow Puppets', 'Water Experiments',
+  { name: 'Make Slime', emoji: '🧪' },
+  { name: 'Do Science', emoji: '🔬' },
+  { name: 'Grow Crystals', emoji: '💎' },
+  { name: 'Mix Colors', emoji: '🌈' },
+  { name: 'Make Volcanoes', emoji: '🌋' },
+  { name: 'Bug Hunting', emoji: '🐛' },
+  { name: 'Cloud Watching', emoji: '☁️' },
+  { name: 'Magnet Play', emoji: '🧲' },
+  { name: 'Shadow Puppets', emoji: '👥' },
+  { name: 'Water Experiments', emoji: '💧' },
   
   // Physical & Active
-  'Play Soccer', 'Do Yoga', 'Play Tag', 'Ride Bikes', 'Skip Rope', 'Do Gymnastics', 'Play Basketball', 'Hopscotch', 'Obstacle Course', 'Balloon Games',
+  { name: 'Play Soccer', emoji: '⚽' },
+  { name: 'Do Yoga', emoji: '🧘' },
+  { name: 'Play Tag', emoji: '🏃' },
+  { name: 'Ride Bikes', emoji: '🚴' },
+  { name: 'Skip Rope', emoji: '🪢' },
+  { name: 'Do Gymnastics', emoji: '🤸' },
+  { name: 'Play Basketball', emoji: '🏀' },
+  { name: 'Hopscotch', emoji: '🦘' },
+  { name: 'Obstacle Course', emoji: '🏁' },
+  { name: 'Balloon Games', emoji: '🎈' },
   
   // Imaginative & Role Play
-  'Tell Stories', 'Do Magic', 'Build Fort', 'Treasure Hunt', 'Dress Up', 'Puppet Show', 'Space Adventure', 'Pirate Quest', 'Superhero Training', 'Tea Party',
+  { name: 'Tell Stories', emoji: '📚' },
+  { name: 'Do Magic', emoji: '🎩' },
+  { name: 'Build Fort', emoji: '🏰' },
+  { name: 'Treasure Hunt', emoji: '🗺️' },
+  { name: 'Dress Up', emoji: '👗' },
+  { name: 'Puppet Show', emoji: '🎭' },
+  { name: 'Space Adventure', emoji: '🚀' },
+  { name: 'Pirate Quest', emoji: '🏴‍☠️' },
+  { name: 'Superhero Training', emoji: '🦸' },
+  { name: 'Tea Party', emoji: '🫖' },
   
   // Music & Performance
-  'Play Music', 'Sing Karaoke', 'Play Drums', 'Sing Songs', 'Dance Battle', 'Make Instruments', 'Rhythm Games', 'Opera Singing', 'Beat Boxing', 'Air Guitar',
+  { name: 'Play Music', emoji: '🎵' },
+  { name: 'Sing Karaoke', emoji: '🎤' },
+  { name: 'Play Drums', emoji: '🥁' },
+  { name: 'Sing Songs', emoji: '🎶' },
+  { name: 'Dance Battle', emoji: '💃' },
+  { name: 'Make Instruments', emoji: '🎸' },
+  { name: 'Rhythm Games', emoji: '🎼' },
+  { name: 'Opera Singing', emoji: '🎭' },
+  { name: 'Beat Boxing', emoji: '🎵' },
+  { name: 'Air Guitar', emoji: '🎸' },
   
   // Outdoor & Nature
-  'Fly Kites', 'Water Plants', 'Build Sandcastles', 'Go Fishing', 'Feed Birds', 'Collect Leaves', 'Go Camping', 'Nature Walk', 'Rock Collecting', 'Flower Pressing',
+  { name: 'Fly Kites', emoji: '🪁' },
+  { name: 'Water Plants', emoji: '🌱' },
+  { name: 'Build Sandcastles', emoji: '🏰' },
+  { name: 'Go Fishing', emoji: '🎣' },
+  { name: 'Feed Birds', emoji: '🐦' },
+  { name: 'Collect Leaves', emoji: '🍃' },
+  { name: 'Go Camping', emoji: '🏕️' },
+  { name: 'Nature Walk', emoji: '🌳' },
+  { name: 'Rock Collecting', emoji: '🪨' },
+  { name: 'Flower Pressing', emoji: '🌸' },
   
   // Games & Puzzles
-  'Play Chess', 'Play Cards', 'Board Games', 'Memory Games', 'Riddle Time', 'Word Games', 'Number Puzzles', 'Brain Teasers', 'Trivia Quiz', 'Charades',
+  { name: 'Play Chess', emoji: '♟️' },
+  { name: 'Play Cards', emoji: '🃏' },
+  { name: 'Board Games', emoji: '🎲' },
+  { name: 'Memory Games', emoji: '🧠' },
+  { name: 'Riddle Time', emoji: '🤔' },
+  { name: 'Word Games', emoji: '📝' },
+  { name: 'Number Puzzles', emoji: '🔢' },
+  { name: 'Brain Teasers', emoji: '🧩' },
+  { name: 'Trivia Quiz', emoji: '❓' },
+  { name: 'Charades', emoji: '🎭' },
   
   // Cooking & Food
-  'Bake Cookies', 'Make Smoothies', 'Fruit Kabobs', 'Pizza Making', 'Cookie Decorating', 'Sandwich Art', 'Ice Cream Sundae', 'Veggie Faces', 'Trail Mix', 'Pancake Art',
+  { name: 'Bake Cookies', emoji: '🍪' },
+  { name: 'Make Smoothies', emoji: '🥤' },
+  { name: 'Fruit Kabobs', emoji: '🍓' },
+  { name: 'Pizza Making', emoji: '🍕' },
+  { name: 'Cookie Decorating', emoji: '🧁' },
+  { name: 'Sandwich Art', emoji: '🥪' },
+  { name: 'Ice Cream Sundae', emoji: '🍨' },
+  { name: 'Veggie Faces', emoji: '🥕' },
+  { name: 'Trail Mix', emoji: '🥜' },
+  { name: 'Pancake Art', emoji: '🥞' },
   
   // Unique & Quirky
-  'Blow Bubbles', 'Play Catch', 'Write Letters', 'Sock Puppet', 'Backwards Day', 'Silly Walks', 'Robot Dance', 'Animal Sounds', 'Tongue Twisters', 'Joke Telling'
+  { name: 'Blow Bubbles', emoji: '🫧' },
+  { name: 'Play Catch', emoji: '⚾' },
+  { name: 'Write Letters', emoji: '✉️' },
+  { name: 'Sock Puppet', emoji: '🧦' },
+  { name: 'Backwards Day', emoji: '🔄' },
+  { name: 'Silly Walks', emoji: '🚶' },
+  { name: 'Robot Dance', emoji: '🤖' },
+  { name: 'Animal Sounds', emoji: '🐄' },
+  { name: 'Tongue Twisters', emoji: '👅' },
+  { name: 'Joke Telling', emoji: '😂' }
 ];
+
+// Extract just the activity names for backward compatibility
+const FALLBACK_ACTIVITIES = FALLBACK_ACTIVITY_PAIRS.map(pair => pair.name);
 
 /**
  * Get a random fallback activity that doesn't exist in current activities
@@ -295,4 +379,38 @@ const getRandomFallbackActivity = (existingActivities: string[]): string => {
   
   const randomIndex = Math.floor(Math.random() * availableActivities.length);
   return availableActivities[randomIndex];
+};
+
+/**
+ * Get a random fallback activity with its matching emoji
+ */
+export const getRandomFallbackActivityPair = (existingActivities: string[]): { name: string; emoji: string } => {
+  const availablePairs = FALLBACK_ACTIVITY_PAIRS.filter(
+    pair => !existingActivities.includes(pair.name)
+  );
+  
+  if (availablePairs.length === 0) {
+    // If all fallbacks are used, generate a simple numbered activity
+    let counter = 1;
+    let newActivity = `Fun Activity ${counter}`;
+    while (existingActivities.includes(newActivity)) {
+      counter++;
+      newActivity = `Fun Activity ${counter}`;
+    }
+    return { name: newActivity, emoji: getRandomFallbackEmoji() };
+  }
+  
+  const randomIndex = Math.floor(Math.random() * availablePairs.length);
+  return availablePairs[randomIndex];
+};
+
+/**
+ * Generate random default activities for first-time app installation
+ */
+export const generateRandomDefaultActivities = (count: number = 8): Array<{ name: string; emoji: string }> => {
+  // Shuffle the activity pairs array
+  const shuffled = [...FALLBACK_ACTIVITY_PAIRS].sort(() => Math.random() - 0.5);
+  
+  // Take the first 'count' activities
+  return shuffled.slice(0, count);
 }; 

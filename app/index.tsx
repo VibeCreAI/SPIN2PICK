@@ -14,16 +14,21 @@ import { PASTEL_COLORS, reassignAllColors, type Activity } from '../utils/colorU
 import { getAISuggestedActivity, getEmoji } from '../utils/emojiUtils';
 import { initSounds, unloadSounds } from '../utils/soundUtils';
 
-const DEFAULT_ACTIVITIES: Activity[] = [
-  { id: '1', name: 'Sing Songs', color: PASTEL_COLORS[0], emoji: '🎤' },      // Light Blue
-  { id: '2', name: 'Craft Corner', color: PASTEL_COLORS[1], emoji: '🎨' },   // Pink
-  { id: '3', name: 'Jump Trampoline', color: PASTEL_COLORS[2], emoji: '🤸' }, // Light Green
-  { id: '4', name: 'Plant Seeds', color: PASTEL_COLORS[3], emoji: '🌱' },     // Light Orange
-  { id: '5', name: 'Hide and Seek', color: PASTEL_COLORS[4], emoji: '🙈' },  // Purple
-  { id: '6', name: 'Dance Party', color: PASTEL_COLORS[5], emoji: '💃' },    // Light Yellow
-  { id: '7', name: 'Puzzle Time', color: PASTEL_COLORS[6], emoji: '🧩' },    // Blue
-  { id: '8', name: 'Read a Book', color: PASTEL_COLORS[7], emoji: '📚' },    // Coral
-];
+// Generate random default activities for variety on first install
+const generateDefaultActivities = (): Activity[] => {
+  // Import the function dynamically to avoid circular dependencies
+  const { generateRandomDefaultActivities } = require('../utils/emojiUtils');
+  const randomPairs = generateRandomDefaultActivities(8);
+  
+  return randomPairs.map((pair: { name: string; emoji: string }, index: number) => ({
+    id: (index + 1).toString(),
+    name: pair.name,
+    color: PASTEL_COLORS[index % PASTEL_COLORS.length],
+    emoji: pair.emoji
+  }));
+};
+
+const DEFAULT_ACTIVITIES: Activity[] = generateDefaultActivities();
 
 const STORAGE_KEY = 'SPIN2PICK_ACTIVITIES';
 const SPIN_COUNT_KEY = 'SPIN2PICK_SPIN_COUNT';

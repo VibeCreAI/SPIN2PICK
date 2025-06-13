@@ -629,7 +629,7 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   resetWarningText: {
-    fontSize: 14,
+    fontSize: 16,
     fontFamily: FONTS.jua,
     marginBottom: 20,
     color: '#d9534f',
@@ -637,11 +637,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff5f5',
     padding: 12,
     borderRadius: 8,
-    width: '100%',
     borderWidth: 1,
     borderColor: '#f5c6cb',
-    lineHeight: 20,
-    flexShrink: 1,
+    lineHeight: 22,
+    flex: 1,
+    alignSelf: 'stretch',
   },
   popupButtonsContainer: {
     flexDirection: 'row',

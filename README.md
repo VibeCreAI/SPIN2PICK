@@ -132,20 +132,20 @@ Transform boredom into joy with our interactive activity wheel that combines the
 
 ## 🎉 **Recent Updates**
 
-### **v2.1 - Reset & AI Improvements**
+### **v1.1.1 - Reset & AI Improvements**
 - 🔄 **Reset Button** – One-click reset with 8 new random activities and confirmation dialog
 - 🤖 **Enhanced AI Suggestions** – More practical, recognizable activities (temperature optimized)
 - 📱 **Unified Spacing** – Consistent bottom margins across web and mobile platforms
 - 🎯 **Better Prompts** – AI now suggests common activities kids actually know and love
 
-### **v2.0 - Enhanced Experience**
+### **v1.1.0 - Enhanced Experience**
 - ✨ **New Activity Indicator** – Elegant pulsing borders for newly added activities
 - 🚀 **Mobile Web Optimization** – Eliminated flickering on mobile browsers
 - 💾 **Advanced Save/Load System** – Manage multiple activity sets with ease
 - 🎨 **UI/UX Improvements** – Smoother animations and better visual feedback
 - 🔧 **Performance Enhancements** – Optimized rendering and state management
 
-### **v1.5 - AI & Customization**
+### **v1.0.0 - AI & Customization**
 - 🤖 **AI-Powered Suggestions** – Intelligent activity recommendations
 - 🎨 **Automatic Emoji Matching** – Perfect emojis for every activity
 - 🎵 **Sound Effects** – Immersive audio feedback

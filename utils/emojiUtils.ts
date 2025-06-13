@@ -33,20 +33,20 @@ export const getEmojiForActivity = async (activityName: string): Promise<string>
 
     if (!response.ok) {
       console.error('API error:', await response.text());
-      return '🎲'; // Default fallback emoji
+      return getRandomFallbackEmoji(); // Random fallback emoji
     }
 
     const data = await response.json();
-    const emojiText = data.choices[0]?.message?.content?.trim() || '🎲';
+    const emojiText = data.choices[0]?.message?.content?.trim() || getRandomFallbackEmoji();
     
     // Extract just the emoji if there's any additional text
     const emojiRegex = /(\p{Emoji})/u;
     const match = emojiText.match(emojiRegex);
-    return match ? match[0] : '🎲';
+    return match ? match[0] : getRandomFallbackEmoji();
     
   } catch (error) {
     console.error('Error getting emoji:', error);
-    return '🎲'; // Default fallback emoji
+    return getRandomFallbackEmoji(); // Random fallback emoji
   }
 };
 
@@ -63,6 +63,38 @@ const emojiCache: Record<string, string> = {
   'Dance Party': '💃',
   'Puzzle Time': '🧩',
   'Read a Book': '📚',
+};
+
+/**
+ * Diverse fallback emojis for when AI emoji generation fails
+ */
+const FALLBACK_EMOJIS = [
+  // Fun & Games
+  '🎯', '🎲', '🎪', '🎨', '🎭', '🎮', '🎳', '🎸', '🎺', '🎻',
+  // Sports & Activities  
+  '⚽', '🏀', '🏈', '🎾', '🏐', '🏓', '🏸', '🥏', '🏹', '🎣',
+  // Creative & Arts
+  '✏️', '🖍️', '🖌️', '📝', '📚', '📖', '🎼', '🎵', '🎶', '🎤',
+  // Science & Discovery
+  '🔬', '🧪', '🔭', '🧲', '⚗️', '🌡️', '💡', '🔍', '🗝️', '⚡',
+  // Nature & Outdoor
+  '🌱', '🌸', '🌺', '🌻', '🌳', '🍃', '🦋', '🐛', '🐝', '🌈',
+  // Food & Cooking
+  '🍪', '🧁', '🍰', '🥧', '🍕', '🥪', '🍎', '🍌', '🥕', '🥒',
+  // Adventure & Exploration
+  '🗺️', '🧭', '⛰️', '🏕️', '🎒', '🔦', '🪓', '🏴‍☠️', '💎', '🏆',
+  // Magic & Fantasy
+  '✨', '🌟', '⭐', '🔮', '🎩', '🪄', '🧚', '🦄', '🐉', '👑',
+  // Tools & Building
+  '🔨', '🔧', '⚙️', '🧰', '📐', '📏', '✂️', '📎', '🔗', '🧩'
+];
+
+/**
+ * Get a random fallback emoji when AI emoji generation fails
+ */
+const getRandomFallbackEmoji = (): string => {
+  const randomIndex = Math.floor(Math.random() * FALLBACK_EMOJIS.length);
+  return FALLBACK_EMOJIS[randomIndex];
 };
 
 /**
@@ -83,7 +115,7 @@ export const getEmoji = async (activityName: string): Promise<string> => {
     return emoji;
   } catch (error) {
     console.error('Error in getEmoji:', error);
-    return '🎲'; // Default fallback emoji
+    return getRandomFallbackEmoji(); // Random fallback emoji
   }
 };
 

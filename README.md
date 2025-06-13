@@ -43,6 +43,7 @@ Transform boredom into joy with our interactive activity wheel that combines the
 ### 🌟 **New Activity Indicator**
 - **Elegant pulsing border** highlights newly added activities
 - **Automatic highlighting** for both manual and AI-suggested activities
+- **Smart disappearing** – automatically hides when spinning starts for distraction-free experience
 - **Smooth animations** that fade in and pulse 3 times
 - **5-second auto-hide** to keep the interface clean
 
@@ -131,6 +132,12 @@ Transform boredom into joy with our interactive activity wheel that combines the
 ---
 
 ## 🎉 **Recent Updates**
+
+### **v1.1.2 - Improved Spinning Experience & Font Scaling Fix**
+- 🎯 **Smart Indicator Handling** – New activity indicators automatically disappear when spinning starts for distraction-free experience
+- 🔧 **Android Font Scaling Fix** – Text sizes now remain consistent regardless of system font size settings
+- 📱 **Enhanced User Experience** – Cleaner spinning animations without visual distractions
+- 🛠️ **Developer Tools** – Added comprehensive font scaling prevention system for future development
 
 ### **v1.1.1 - Reset & AI Improvements**
 - 🔄 **Reset Button** – One-click reset with 8 new random activities and confirmation dialog

@@ -185,15 +185,15 @@ export const SaveLoadModal: React.FC<SaveLoadModalProps> = ({
         <View style={styles.slotContent}>
           {isEmpty ? (
             <>
-              <Text style={styles.slotText}>💾 SAVE</Text>
-              <Text style={styles.slotSubtext}>Slot {index + 1} - Empty</Text>
+              <Text allowFontScaling={false} style={styles.slotText}>💾 SAVE</Text>
+              <Text allowFontScaling={false} style={styles.slotSubtext}>Slot {index + 1} - Empty</Text>
             </>
           ) : (
             <>
               <View style={styles.slotHeader}>
                 <View style={styles.slotInfo}>
-                  <Text style={styles.slotName}>{slot.name}</Text>
-                  <Text style={styles.slotDetails}>
+                  <Text allowFontScaling={false} style={styles.slotName}>{slot.name}</Text>
+                  <Text allowFontScaling={false} style={styles.slotDetails}>
                     {slot.activities.length} activities • {slot.createdAt.toLocaleDateString()}
                   </Text>
                 </View>
@@ -204,10 +204,10 @@ export const SaveLoadModal: React.FC<SaveLoadModalProps> = ({
                     handleDeleteSlot(index);
                   }}
                 >
-                  <Text style={styles.deleteButtonText}>🗑️</Text>
+                  <Text allowFontScaling={false} style={styles.deleteButtonText}>🗑️</Text>
                 </TouchableOpacity>
               </View>
-              <Text style={styles.loadText}>Tap to load</Text>
+              <Text allowFontScaling={false} style={styles.loadText}>Tap to load</Text>
             </>
           )}
         </View>
@@ -234,8 +234,8 @@ export const SaveLoadModal: React.FC<SaveLoadModalProps> = ({
             activeOpacity={1}
             onPress={() => {}} // Prevent closing when tapping inside
           >
-            <Text style={styles.modalTitle}>💾 Save & Load</Text>
-            <Text style={styles.modalSubtitle}>Choose a slot to save or load activities</Text>
+            <Text allowFontScaling={false} style={styles.modalTitle}>💾 Save & Load</Text>
+            <Text allowFontScaling={false} style={styles.modalSubtitle}>Choose a slot to save or load activities</Text>
             
             <ScrollView
               style={styles.slotsScroll}
@@ -246,7 +246,7 @@ export const SaveLoadModal: React.FC<SaveLoadModalProps> = ({
             </ScrollView>
             
             <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-              <Text style={styles.closeButtonText}>Close</Text>
+              <Text allowFontScaling={false} style={styles.closeButtonText}>Close</Text>
             </TouchableOpacity>
           </TouchableOpacity>
         </TouchableOpacity>
@@ -269,8 +269,8 @@ export const SaveLoadModal: React.FC<SaveLoadModalProps> = ({
             activeOpacity={1}
             onPress={() => {}}
           >
-            <Text style={styles.saveInputTitle}>Load Activities</Text>
-            <Text style={styles.saveInputSubtitle}>
+            <Text allowFontScaling={false} style={styles.saveInputTitle}>Load Activities</Text>
+            <Text allowFontScaling={false} style={styles.saveInputSubtitle}>
               {pendingLoadSlot ? `Load "${pendingLoadSlot.name}"? This will replace your current activities.` : ''}
             </Text>
             <View style={styles.saveInputButtons}>
@@ -278,13 +278,13 @@ export const SaveLoadModal: React.FC<SaveLoadModalProps> = ({
                 style={[styles.saveInputButton, styles.cancelSaveButton]}
                 onPress={handleCancelLoadSlot}
               >
-                <Text style={styles.cancelSaveButtonText}>Cancel</Text>
+                <Text allowFontScaling={false} style={styles.cancelSaveButtonText}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.saveInputButton, styles.confirmSaveButton]}
                 onPress={handleConfirmLoadSlot}
               >
-                <Text style={styles.confirmSaveButtonText}>Load</Text>
+                <Text allowFontScaling={false} style={styles.confirmSaveButtonText}>Load</Text>
               </TouchableOpacity>
             </View>
           </TouchableOpacity>
@@ -308,14 +308,14 @@ export const SaveLoadModal: React.FC<SaveLoadModalProps> = ({
             activeOpacity={1}
             onPress={() => {}}
           >
-            <Text style={styles.saveInputTitle}>Success</Text>
-            <Text style={styles.saveInputSubtitle}>{successMessage}</Text>
+            <Text allowFontScaling={false} style={styles.saveInputTitle}>Success</Text>
+            <Text allowFontScaling={false} style={styles.saveInputSubtitle}>{successMessage}</Text>
             <View style={styles.saveInputButtons}>
               <TouchableOpacity
                 style={[styles.saveInputButton, styles.confirmSaveButton]}
                 onPress={() => setShowSuccessModal(false)}
               >
-                <Text style={styles.confirmSaveButtonText}>Close</Text>
+                <Text allowFontScaling={false} style={styles.confirmSaveButtonText}>Close</Text>
               </TouchableOpacity>
             </View>
           </TouchableOpacity>
@@ -339,8 +339,8 @@ export const SaveLoadModal: React.FC<SaveLoadModalProps> = ({
             activeOpacity={1}
             onPress={() => {}}
           >
-            <Text style={styles.saveInputTitle}>💾 Save Activities</Text>
-            <Text style={styles.saveInputSubtitle}>Enter a name for this save:</Text>
+            <Text allowFontScaling={false} style={styles.saveInputTitle}>💾 Save Activities</Text>
+            <Text allowFontScaling={false} style={styles.saveInputSubtitle}>Enter a name for this save:</Text>
             
             <TextInput
               style={styles.saveNameInput}
@@ -356,7 +356,7 @@ export const SaveLoadModal: React.FC<SaveLoadModalProps> = ({
               autoFocus={true}
             />
             
-            <Text style={styles.charCounter}>
+            <Text allowFontScaling={false} style={styles.charCounter}>
               {MAX_SAVE_NAME_LENGTH - saveName.length} characters left
             </Text>
             
@@ -365,7 +365,7 @@ export const SaveLoadModal: React.FC<SaveLoadModalProps> = ({
                 style={[styles.saveInputButton, styles.cancelSaveButton]}
                 onPress={() => setShowSaveInput(false)}
               >
-                <Text style={styles.cancelSaveButtonText}>Cancel</Text>
+                <Text allowFontScaling={false} style={styles.cancelSaveButtonText}>Cancel</Text>
               </TouchableOpacity>
               
               <TouchableOpacity
@@ -376,7 +376,7 @@ export const SaveLoadModal: React.FC<SaveLoadModalProps> = ({
                 {isLoading ? (
                   <ActivityIndicator size="small" color="#fff" />
                 ) : (
-                  <Text style={styles.confirmSaveButtonText}>Save</Text>
+                  <Text allowFontScaling={false} style={styles.confirmSaveButtonText}>Save</Text>
                 )}
               </TouchableOpacity>
             </View>
@@ -401,12 +401,12 @@ export const SaveLoadModal: React.FC<SaveLoadModalProps> = ({
             activeOpacity={1}
             onPress={() => {}}
           >
-            <Text style={styles.deleteConfirmTitle}>Delete Save 🗑️</Text>
-            <Text style={styles.deleteConfirmMessage}>
+            <Text allowFontScaling={false} style={styles.deleteConfirmTitle}>Delete Save 🗑️</Text>
+            <Text allowFontScaling={false} style={styles.deleteConfirmMessage}>
               Are you sure you want to delete this save?
             </Text>
             {slotToDelete !== null && saveSlots[slotToDelete] && (
-              <Text style={styles.deleteConfirmSaveName}>
+              <Text allowFontScaling={false} style={styles.deleteConfirmSaveName}>
                 "{saveSlots[slotToDelete].name}"
               </Text>
             )}
@@ -416,14 +416,14 @@ export const SaveLoadModal: React.FC<SaveLoadModalProps> = ({
                 style={[styles.deleteConfirmButton, styles.cancelDeleteButton]}
                 onPress={() => setShowDeleteConfirmation(false)}
               >
-                <Text style={styles.cancelDeleteButtonText}>Cancel</Text>
+                <Text allowFontScaling={false} style={styles.cancelDeleteButtonText}>Cancel</Text>
               </TouchableOpacity>
               
               <TouchableOpacity
                 style={[styles.deleteConfirmButton, styles.confirmDeleteButton]}
                 onPress={confirmDeleteSlot}
               >
-                <Text style={styles.confirmDeleteButtonText}>Delete</Text>
+                <Text allowFontScaling={false} style={styles.confirmDeleteButtonText}>Delete</Text>
               </TouchableOpacity>
             </View>
           </TouchableOpacity>

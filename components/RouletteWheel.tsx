@@ -245,6 +245,15 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
     if (isSpinning || activities.length < 2) return;
     setIsSpinning(true);
     
+    // Disable new activity indicator when spinning starts
+    if (showNewIndicator) {
+      setShowNewIndicator(null);
+      newIndicatorAnim.setValue(0);
+      newIndicatorPulse.setValue(1);
+      // Notify parent that indicator animation is complete
+      onNewActivityIndicatorComplete?.();
+    }
+    
     // Stop pulse animation during spinning
     pulseAnim.stopAnimation();
     pulseAnim.setValue(1); // Reset to normal size
@@ -301,7 +310,7 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
         onActivitySelect(activities[selectedIndex]);
       }
     });
-  }, [isSpinning, activities.length, pulseAnim, bounceAnim, rotation, activities, onActivitySelect, startPulseAnimation]);
+  }, [isSpinning, activities.length, pulseAnim, bounceAnim, rotation, activities, onActivitySelect, startPulseAnimation, showNewIndicator, newIndicatorAnim, newIndicatorPulse, onNewActivityIndicatorComplete]);
 
   // Memoize rotation interpolation to prevent flickering
   const rotationInterpolation = useMemo(() => {
@@ -561,7 +570,7 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
         );
       })
     ];
-  }, [activities, CENTER, WHEEL_SIZE, highlightedSlice, isSpinning, showNewIndicator, newIndicatorAnim]);
+  }, [activities, CENTER, WHEEL_SIZE, highlightedSlice, isSpinning, showNewIndicator, newIndicatorAnim, newIndicatorPulse]);
 
   const renderWheel = () => {
     return wheelContent;
@@ -747,7 +756,7 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
               disabled={isSpinning || activities.length <= 2}
             >
               {/* Empty Text component keeps the button working but invisible */}
-              <Text style={styles.invisibleText}></Text>
+              <Text allowFontScaling={false} style={styles.invisibleText}></Text>
             </TouchableOpacity>
           ))}
         </Animated.View>

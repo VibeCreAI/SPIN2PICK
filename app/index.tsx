@@ -453,9 +453,9 @@ export default function HomeScreen() {
             activeOpacity={1}
             onPress={() => {}} // Prevent closing when tapping inside popup
           >
-            <Text style={styles.popupTitle}>Remove Activity 🗑️</Text>
-            <Text style={styles.popupMessage}>Are you sure you want to remove:</Text>
-            <Text style={styles.activityToDeleteText}>
+            <Text allowFontScaling={false} style={styles.popupTitle}>Remove Activity 🗑️</Text>
+            <Text allowFontScaling={false} style={styles.popupMessage}>Are you sure you want to remove:</Text>
+            <Text allowFontScaling={false} style={styles.activityToDeleteText}>
               {activityToDelete ? (activityToDelete.emoji ? `${activityToDelete.emoji} ${activityToDelete.name}` : activityToDelete.name) : ''}
             </Text>
             
@@ -464,14 +464,14 @@ export default function HomeScreen() {
                 style={[styles.popupButton, styles.cancelButton]} 
                 onPress={handleCancelDelete}
               >
-                <Text style={styles.cancelButtonText}>Cancel ❌</Text>
+                <Text allowFontScaling={false} style={styles.cancelButtonText}>Cancel ❌</Text>
               </TouchableOpacity>
               
               <TouchableOpacity 
                 style={[styles.popupButton, styles.confirmButton]} 
                 onPress={handleConfirmDelete}
               >
-                <Text style={styles.confirmButtonText}>Remove ✅</Text>
+                <Text allowFontScaling={false} style={styles.confirmButtonText}>Remove ✅</Text>
               </TouchableOpacity>
             </View>
           </TouchableOpacity>
@@ -495,9 +495,9 @@ export default function HomeScreen() {
             activeOpacity={1}
             onPress={() => {}} // Prevent closing when tapping inside popup
           >
-            <Text style={styles.popupTitle}>Reset Activities 🔄</Text>
-            <Text style={styles.popupMessage}>Are you sure you want to reset?</Text>
-            <Text style={styles.resetWarningText}>
+            <Text allowFontScaling={false} style={styles.popupTitle}>Reset Activities 🔄</Text>
+            <Text allowFontScaling={false} style={styles.popupMessage}>Are you sure you want to reset?</Text>
+            <Text allowFontScaling={false} style={styles.resetWarningText}>
               Current activities will be deleted and replaced with 8 random activities.
             </Text>
             
@@ -506,14 +506,14 @@ export default function HomeScreen() {
                 style={[styles.popupButton, styles.cancelButton]} 
                 onPress={handleCancelReset}
               >
-                <Text style={styles.cancelButtonText}>Cancel ❌</Text>
+                <Text allowFontScaling={false} style={styles.cancelButtonText}>Cancel ❌</Text>
               </TouchableOpacity>
               
               <TouchableOpacity 
                 style={[styles.popupButton, styles.confirmButton]} 
                 onPress={handleConfirmReset}
               >
-                <Text style={styles.confirmButtonText}>Reset ✅</Text>
+                <Text allowFontScaling={false} style={styles.confirmButtonText}>Reset ✅</Text>
               </TouchableOpacity>
             </View>
           </TouchableOpacity>
@@ -640,8 +640,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#f5c6cb',
     lineHeight: 22,
-    flex: 1,
-    alignSelf: 'stretch',
+    flexShrink: 1,
   },
   popupButtonsContainer: {
     flexDirection: 'row',

@@ -72,7 +72,7 @@ export const ActivityInput: React.FC<ActivityInputProps> = ({
           editable={!isLoading && !isSuggesting}
         />
         {activityName.length > 0 && (
-          <Text style={[
+          <Text allowFontScaling={false} style={[
             styles.charCounter, 
             isNearLimit ? styles.charCounterNearLimit : null
           ]}>
@@ -102,7 +102,7 @@ export const ActivityInput: React.FC<ActivityInputProps> = ({
           {isSuggesting ? (
             <ActivityIndicator size="small" color="#f5c09f" />
           ) : (
-            <Text style={styles.suggestButtonText}>✨</Text>
+            <Text allowFontScaling={false} style={styles.suggestButtonText}>✨</Text>
           )}
         </TouchableOpacity>
         
@@ -112,7 +112,7 @@ export const ActivityInput: React.FC<ActivityInputProps> = ({
             onPress={onSaveLoad}
             disabled={isLoading || isSuggesting}
           >
-            <Text style={styles.saveLoadButtonText}>💾</Text>
+            <Text allowFontScaling={false} style={styles.saveLoadButtonText}>💾</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -134,23 +134,23 @@ export const ActivityInput: React.FC<ActivityInputProps> = ({
             activeOpacity={1}
             onPress={() => {}} // Prevent closing when tapping inside popup
           >
-            <Text style={styles.popupTitle}>AI Suggestion ✨</Text>
-            <Text style={styles.popupMessage}>How about:</Text>
-            <Text style={styles.suggestedActivityText}>{pendingSuggestion}</Text>
+            <Text allowFontScaling={false} style={styles.popupTitle}>AI Suggestion ✨</Text>
+            <Text allowFontScaling={false} style={styles.popupMessage}>How about:</Text>
+            <Text allowFontScaling={false} style={styles.suggestedActivityText}>{pendingSuggestion}</Text>
             
             <View style={styles.popupButtonsContainer}>
               <TouchableOpacity 
                 style={[styles.popupButton, styles.declineButton]} 
                 onPress={onDeclineSuggestion}
               >
-                <Text style={styles.declineButtonText}>Decline ❌</Text>
+                <Text allowFontScaling={false} style={styles.declineButtonText}>Decline ❌</Text>
               </TouchableOpacity>
               
               <TouchableOpacity 
                 style={[styles.popupButton, styles.acceptButton]} 
                 onPress={onAcceptSuggestion}
               >
-                <Text style={styles.acceptButtonText}>Accept ✅</Text>
+                <Text allowFontScaling={false} style={styles.acceptButtonText}>Accept ✅</Text>
               </TouchableOpacity>
             </View>
           </TouchableOpacity>

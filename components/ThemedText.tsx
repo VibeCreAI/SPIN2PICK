@@ -11,6 +11,7 @@ export function ThemedText({ style, type = 'default', ...props }: ThemedTextProp
 
   return (
     <Text
+      allowFontScaling={false}
       style={[
         styles.default,
         type === 'defaultSemiBold' && styles.defaultSemiBold,

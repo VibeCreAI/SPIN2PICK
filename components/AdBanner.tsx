@@ -31,7 +31,7 @@ export const AdBanner: React.FC<AdBannerProps> = ({
     return (
       <View style={styles.container}>
         <View style={styles.placeholder}>
-          <Text style={styles.placeholderText}>
+          <Text allowFontScaling={false} style={styles.placeholderText}>
             📱 AdMob Banner (Development Mode)
           </Text>
         </View>

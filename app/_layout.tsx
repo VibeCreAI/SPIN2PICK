@@ -53,7 +53,7 @@ export default function RootLayout() {
   if (!fontsLoaded && !fontError) {
     return (
       <View style={{ flex: 1, backgroundColor: '#f3efff', justifyContent: 'center', alignItems: 'center' }}>
-        <Text style={{ fontSize: 24, color: '#4e4370' }}>Loading...</Text>
+        <Text allowFontScaling={false} style={{ fontSize: 24, color: '#4e4370' }}>Loading...</Text>
       </View>
     );
   }

@@ -498,7 +498,7 @@ export default function HomeScreen() {
             <Text style={styles.popupTitle}>Reset Activities 🔄</Text>
             <Text style={styles.popupMessage}>Are you sure you want to reset?</Text>
             <Text style={styles.resetWarningText}>
-              All current activities on the wheel will be deleted and replaced with 8 random activities.
+              All current activities will be deleted and replaced with 8 random activities.
             </Text>
             
             <View style={styles.popupButtonsContainer}>
@@ -595,8 +595,8 @@ const styles = StyleSheet.create({
     padding: 20,
     borderRadius: 12,
     width: 'auto',
-    minWidth: 280,
-    maxWidth: 400,
+    minWidth: 300,
+    maxWidth: 420,
     marginHorizontal: 16,
     alignItems: 'center',
     elevation: 5,
@@ -629,7 +629,7 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   resetWarningText: {
-    fontSize: 16,
+    fontSize: 15,
     fontFamily: FONTS.jua,
     marginBottom: 20,
     color: '#d9534f',
@@ -640,6 +640,8 @@ const styles = StyleSheet.create({
     width: '100%',
     borderWidth: 1,
     borderColor: '#f5c6cb',
+    lineHeight: 22,
+    flexWrap: 'wrap',
   },
   popupButtonsContainer: {
     flexDirection: 'row',

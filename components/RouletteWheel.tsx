@@ -37,6 +37,7 @@ interface RouletteWheelProps {
   selectedActivity: Activity | null;
   newlyAddedActivityId?: string | null; // ID of the newly added activity to highlight
   onNewActivityIndicatorComplete?: () => void; // Callback when indicator animation completes
+  onReset?: () => void; // Callback for reset button
 }
 
 export const RouletteWheel: React.FC<RouletteWheelProps> = ({
@@ -48,6 +49,7 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
   selectedActivity,
   newlyAddedActivityId,
   onNewActivityIndicatorComplete,
+  onReset,
 }) => {
   // Get screen dimensions for web platform
   const screenData = Dimensions.get('window');
@@ -783,11 +785,22 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
         )}
       </Animated.View>
 
-      {/* Instruction text - positioned relative to avoid flickering */}
+      {/* Instruction text with reset button - positioned relative to avoid flickering */}
       <View style={styles.instructionContainer}>
-        <ThemedText style={styles.instructionText}>
-          Tap activity name to remove 🗑️
-        </ThemedText>
+        <View style={styles.instructionRow}>
+          <ThemedText style={styles.instructionText}>
+            Tap activity name to remove 🗑️
+          </ThemedText>
+          {onReset && (
+            <TouchableOpacity 
+              style={styles.resetButton}
+              onPress={onReset}
+              activeOpacity={0.7}
+            >
+              <ThemedText style={styles.resetButtonText}>🔄 Reset</ThemedText>
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
 
       {/* Last selected activity box - positioned relative to avoid flickering */}
@@ -826,7 +839,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginVertical: Platform.OS === 'web' ? 5 : 10,
-    marginBottom: Platform.OS === 'web' ? 60 : 80,
+    marginBottom: 60,
     position: 'relative',
     width: '100%',
   },
@@ -921,9 +934,32 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     marginTop: 10, // Fixed margin instead of absolute positioning
   },
+  instructionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 15,
+  },
   instructionText: {
     fontSize: 16,
     color: '#666',
+    fontFamily: FONTS.jua,
+    textAlign: 'center',
+  },
+  resetButton: {
+    backgroundColor: '#4e4370',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 1.41,
+  },
+  resetButtonText: {
+    fontSize: 14,
+    color: '#fff',
     fontFamily: FONTS.jua,
     textAlign: 'center',
   },

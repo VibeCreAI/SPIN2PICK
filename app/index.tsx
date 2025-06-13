@@ -78,6 +78,9 @@ export default function HomeScreen() {
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [activityToDelete, setActivityToDelete] = useState<Activity | null>(null);
 
+  // New state for reset confirmation
+  const [showResetConfirmation, setShowResetConfirmation] = useState(false);
+
   // New state for save/load functionality
   const [showSaveLoadModal, setShowSaveLoadModal] = useState(false);
   
@@ -294,6 +297,25 @@ export default function HomeScreen() {
     setActivityToDelete(null);
   };
 
+  const handleReset = () => {
+    setShowResetConfirmation(true);
+  };
+
+  const handleConfirmReset = () => {
+    // Generate new random default activities
+    const newDefaultActivities = generateDefaultActivities();
+    setActivities(newDefaultActivities);
+    setShowResetConfirmation(false);
+    // Clear any selected activity
+    setSelectedActivity(null);
+    setPreviousSelectedActivity(null);
+    setNewlyAddedActivityId(null);
+  };
+
+  const handleCancelReset = () => {
+    setShowResetConfirmation(false);
+  };
+
   const handleActivitySelect = async (activity: Activity) => {
     setSelectedActivity(activity);
     setShowCelebration(true);
@@ -374,6 +396,7 @@ export default function HomeScreen() {
                       onPreviousActivityChange={handlePreviousActivityChange}
                       newlyAddedActivityId={newlyAddedActivityId}
                       onNewActivityIndicatorComplete={handleNewActivityIndicatorComplete}
+                      onReset={handleReset}
                     />
                   </ErrorBoundary>
                 );
@@ -449,6 +472,48 @@ export default function HomeScreen() {
                 onPress={handleConfirmDelete}
               >
                 <Text style={styles.confirmButtonText}>Remove ✅</Text>
+              </TouchableOpacity>
+            </View>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
+      
+      {/* Reset Confirmation Popup */}
+      <Modal
+        visible={showResetConfirmation}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={handleCancelReset}
+      >
+        <TouchableOpacity 
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={handleCancelReset}
+        >
+          <TouchableOpacity 
+            style={styles.popupContainer}
+            activeOpacity={1}
+            onPress={() => {}} // Prevent closing when tapping inside popup
+          >
+            <Text style={styles.popupTitle}>Reset Activities 🔄</Text>
+            <Text style={styles.popupMessage}>Are you sure you want to reset?</Text>
+            <Text style={styles.resetWarningText}>
+              All current activities on the wheel will be deleted and replaced with 8 random activities.
+            </Text>
+            
+            <View style={styles.popupButtonsContainer}>
+              <TouchableOpacity 
+                style={[styles.popupButton, styles.cancelButton]} 
+                onPress={handleCancelReset}
+              >
+                <Text style={styles.cancelButtonText}>Cancel ❌</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={[styles.popupButton, styles.confirmButton]} 
+                onPress={handleConfirmReset}
+              >
+                <Text style={styles.confirmButtonText}>Reset ✅</Text>
               </TouchableOpacity>
             </View>
           </TouchableOpacity>
@@ -562,6 +627,19 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 8,
     width: '100%',
+  },
+  resetWarningText: {
+    fontSize: 16,
+    fontFamily: FONTS.jua,
+    marginBottom: 20,
+    color: '#d9534f',
+    textAlign: 'center',
+    backgroundColor: '#fff5f5',
+    padding: 12,
+    borderRadius: 8,
+    width: '100%',
+    borderWidth: 1,
+    borderColor: '#f5c6cb',
   },
   popupButtonsContainer: {
     flexDirection: 'row',

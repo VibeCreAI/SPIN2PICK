@@ -22,30 +22,34 @@ export default async function handler(req, res) {
       ? existingActivities.join(', ') 
       : 'No activities yet';
 
-    // Enhanced prompt for more creative and diverse suggestions
-    const systemPrompt = `You are a creative activity expert for kids aged 3-12. Your goal is to suggest diverse, engaging activities that spark imagination and fun.
+    // Practical prompt for recognizable, common activities
+    const systemPrompt = `You are a practical activity expert for kids aged 3-12. Your goal is to suggest simple, recognizable activities that kids and parents easily understand.
 
-CREATIVITY GUIDELINES:
-- Think outside the box! Consider indoor/outdoor, active/quiet, solo/group, creative/educational activities
-- Explore different categories: arts & crafts, science experiments, physical activities, imaginative play, cooking, nature exploration, building, music, storytelling, games
-- Consider seasonal activities, cultural activities, and unique experiences
-- Be innovative - suggest activities that might be unexpected but age-appropriate and safe
+PRACTICAL GUIDELINES:
+- Suggest COMMON, well-known activities that most families can do
+- Focus on simple, clear activities like: "Play Soccer", "Draw Pictures", "Bake Cookies", "Read Books", "Build Blocks"
+- Consider different categories: arts & crafts, sports, cooking, reading, building, music, outdoor play, board games
+- Avoid abstract, complex, or unusual activities
+- Keep suggestions practical and immediately recognizable
+
+GOOD EXAMPLES: "Play Tag", "Make Slime", "Ride Bikes", "Do Puzzles", "Plant Seeds", "Play Chess", "Sing Songs"
+BAD EXAMPLES: Abstract concepts, overly creative names, complex multi-step activities
 
 OUTPUT FORMAT:
 - Return ONLY the activity name (1-3 words maximum)
 - Keep it under 20 characters
-- Make it clear and actionable (e.g., "Build Robots", "Make Slime", "Treasure Hunt")
+- Make it clear and actionable
 - NO explanations, quotes, or extra text`;
 
     const userPrompt = `Current activities: ${activitiesList}
 
-Suggest ONE completely NEW activity that:
+Suggest ONE simple, recognizable activity that:
 1. Is different from ALL existing activities
-2. Brings fresh variety to the collection
+2. Is a common activity most kids know
 3. Is age-appropriate for kids (3-12 years)
-4. Is creative and engaging
+4. Is practical and easy to understand
 
-Think creatively about different activity categories. If the existing activities are mostly physical, consider creative/educational ones. If they're mostly indoor, consider outdoor options. Aim for diversity and surprise!
+Focus on well-known activities. If existing activities are mostly physical, consider arts/crafts or quiet activities. If mostly indoor, consider simple outdoor activities.
 
 Activity name only:`;
 
@@ -70,7 +74,7 @@ Activity name only:`;
           }
         ],
         max_tokens: 50, // Reduced since we only need activity name
-        temperature: 0.9 // Increased for more creativity and variety
+        temperature: 0.5 // Balanced for practical, recognizable suggestions
       })
     });
 

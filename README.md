@@ -121,7 +121,7 @@ Transform boredom into joy with our interactive activity wheel that combines the
 
 ## 📺 **Demo Video**
 
-🎬 **See SPIN 2 PICK in action:** https://www.youtube.com/watch?v=t6DQrgBDQFU
+🎬 **See SPIN 2 PICK in action:** https://www.youtube.com/watch?v=RfXE5Tspjyo
 
 ---
 

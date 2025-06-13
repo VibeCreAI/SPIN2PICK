@@ -826,7 +826,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginVertical: Platform.OS === 'web' ? 5 : 10,
-    marginBottom: Platform.OS === 'web' ? 180 : 200,
+    marginBottom: Platform.OS === 'web' ? 60 : 80,
     position: 'relative',
     width: '100%',
   },

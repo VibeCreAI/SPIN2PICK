@@ -195,6 +195,9 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.jua,
     color: '#333',
     paddingRight: 30, // Make room for the character counter
+    borderWidth: 0,
+    borderColor: 'transparent',
+    outline: 'none', // For web compatibility
   },
   charCounter: {
     position: 'absolute',

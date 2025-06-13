@@ -237,11 +237,13 @@ export const SaveLoadModal: React.FC<SaveLoadModalProps> = ({
             <Text style={styles.modalTitle}>💾 Save & Load</Text>
             <Text style={styles.modalSubtitle}>Choose a slot to save or load activities</Text>
             
-            <View style={{flex: 1, width: '100%'}}>
-              <ScrollView contentContainerStyle={styles.slotsContainer} showsVerticalScrollIndicator={false}>
-                {Array.from({ length: MAX_SLOTS }, (_, index) => renderSlot(index))}
-              </ScrollView>
-            </View>
+            <ScrollView
+              style={styles.slotsScroll}
+              contentContainerStyle={styles.slotsContainer}
+              showsVerticalScrollIndicator={true}
+            >
+              {Array.from({ length: MAX_SLOTS }, (_, index) => renderSlot(index))}
+            </ScrollView>
             
             <TouchableOpacity style={styles.closeButton} onPress={onClose}>
               <Text style={styles.closeButtonText}>Close</Text>
@@ -444,7 +446,9 @@ const styles = StyleSheet.create({
     padding: 20,
     width: '90%',
     maxWidth: 400,
-    minHeight: 200,
+    minHeight: 600,
+    maxHeight: '80%',
+    flexShrink: 0,
     alignItems: 'center',
   },
   modalTitle: {
@@ -661,5 +665,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: FONTS.jua,
     color: '#fff',
+  },
+  slotsScroll: {
+    flex: 1,
+    width: '100%',
+    minHeight: 200,
+    alignSelf: 'stretch',
   },
 });

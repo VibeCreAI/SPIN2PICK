@@ -6,7 +6,7 @@ import { RouletteWheel } from '@/components/RouletteWheel';
 import { SaveLoadModal } from '@/components/SaveLoadModal';
 import { ThemedText } from '@/components/ThemedText';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Dimensions, KeyboardAvoidingView, LayoutChangeEvent, Modal, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { initializeInterstitialAd, showInterstitialAd } from '../utils/adMobUtils';
@@ -75,6 +75,9 @@ export default function HomeScreen() {
 
   // New state for save/load functionality
   const [showSaveLoadModal, setShowSaveLoadModal] = useState(false);
+  
+  // New state for tracking newly added activity
+  const [newlyAddedActivityId, setNewlyAddedActivityId] = useState<string | null>(null);
 
   // Get screen dimensions for responsive design
   const screenData = Dimensions.get('window');
@@ -174,6 +177,10 @@ export default function HomeScreen() {
       const updatedActivities = [...activities, newActivity];
       const recoloredActivities = reassignAllColors(updatedActivities);
       setActivities(recoloredActivities);
+      
+      // Set the newly added activity for highlighting
+      console.log('🎯 Setting newly added activity ID:', newActivity.id, 'for activity:', newActivity.name);
+      setNewlyAddedActivityId(newActivity.id);
     } catch (error) {
       console.error('Error adding activity with emoji:', error);
       
@@ -189,6 +196,9 @@ export default function HomeScreen() {
       const updatedActivities = [...activities, newActivity];
       const recoloredActivities = reassignAllColors(updatedActivities);
       setActivities(recoloredActivities);
+      
+      // Set the newly added activity for highlighting
+      setNewlyAddedActivityId(newActivity.id);
     } finally {
       setIsAddingActivity(false);
     }
@@ -234,6 +244,9 @@ export default function HomeScreen() {
       const updatedActivities = [...activities, newActivity];
       const recoloredActivities = reassignAllColors(updatedActivities);
       setActivities(recoloredActivities);
+      
+      // Set the newly added activity for highlighting
+      setNewlyAddedActivityId(newActivity.id);
       
       console.log('✅ Accepted AI suggestion:', pendingSuggestion);
     } catch (error) {
@@ -296,9 +309,15 @@ export default function HomeScreen() {
     setSelectedActivity(null);
   };
 
-  const handlePreviousActivityChange = (activity: Activity | null) => {
-    setPreviousSelectedActivity(activity);
-  };
+  const handlePreviousActivityChange = useCallback((activity: Activity | null) => {
+    if (activity) {
+      setPreviousSelectedActivity(activity);
+    }
+  }, []);
+
+  const handleNewActivityIndicatorComplete = useCallback(() => {
+    setNewlyAddedActivityId(null);
+  }, []);
 
   const handleLoadActivities = (loadedActivities: Activity[]) => {
     // Reassign colors to ensure optimal distribution
@@ -348,6 +367,8 @@ export default function HomeScreen() {
                       parentWidth={containerWidth}
                       selectedActivity={selectedActivity}
                       onPreviousActivityChange={handlePreviousActivityChange}
+                      newlyAddedActivityId={newlyAddedActivityId}
+                      onNewActivityIndicatorComplete={handleNewActivityIndicatorComplete}
                     />
                   </ErrorBoundary>
                 );

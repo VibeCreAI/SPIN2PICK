@@ -5,6 +5,9 @@ import Svg, { Circle, G, Path, Text as SvgText } from 'react-native-svg';
 import { FONTS } from '../app/_layout';
 import { playClickSound, playSpinningSound, playSuccessSound, stopSpinningSound } from '../utils/soundUtils';
 import { ThemedText } from './ThemedText';
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+const AnimatedSvgText = Animated.createAnimatedComponent(SvgText);
+const AnimatedPath = Animated.createAnimatedComponent(Path);
 
 // Updated pastel colors to match reference image
 const PASTEL_COLORS = [
@@ -32,6 +35,8 @@ interface RouletteWheelProps {
   onPreviousActivityChange: (activity: Activity | null) => void;
   parentWidth: number;
   selectedActivity: Activity | null;
+  newlyAddedActivityId?: string | null; // ID of the newly added activity to highlight
+  onNewActivityIndicatorComplete?: () => void; // Callback when indicator animation completes
 }
 
 export const RouletteWheel: React.FC<RouletteWheelProps> = ({
@@ -41,6 +46,8 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
   onPreviousActivityChange,
   parentWidth,
   selectedActivity,
+  newlyAddedActivityId,
+  onNewActivityIndicatorComplete,
 }) => {
   // Get screen dimensions for web platform
   const screenData = Dimensions.get('window');
@@ -71,6 +78,11 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
   const bounceAnim = useRef(new Animated.Value(0)).current;
   const fadeAnim = useRef(new Animated.Value(0.7)).current;
   const scaleAnim = useRef(new Animated.Value(0.9)).current;
+  
+  // New activity indicator state and animation
+  const [showNewIndicator, setShowNewIndicator] = useState<string | null>(null);
+  const newIndicatorAnim = useRef(new Animated.Value(0)).current;
+  const newIndicatorPulse = useRef(new Animated.Value(1)).current;
 
   // Optimized rotation tracking - use ref instead of state to avoid re-renders
   const currentRotationDegrees = useRef(0);
@@ -128,6 +140,56 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
   useEffect(() => {
     onPreviousActivityChange(previousSelectedActivity);
   }, [previousSelectedActivity, onPreviousActivityChange]);
+
+  // Handle new activity indicator
+  useEffect(() => {
+    console.log('🆕 New activity indicator effect triggered:', newlyAddedActivityId);
+    if (newlyAddedActivityId) {
+      console.log('🎯 Setting new indicator for activity:', newlyAddedActivityId);
+      setShowNewIndicator(newlyAddedActivityId);
+      
+      // Start the indicator animation
+      Animated.sequence([
+        Animated.timing(newIndicatorAnim, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        Animated.loop(
+          Animated.sequence([
+            Animated.timing(newIndicatorPulse, {
+              toValue: 1.2,
+              duration: 800,
+              useNativeDriver: true,
+            }),
+            Animated.timing(newIndicatorPulse, {
+              toValue: 1,
+              duration: 800,
+              useNativeDriver: true,
+            })
+          ]),
+          { iterations: 3 } // Pulse 3 times
+        )
+      ]).start();
+      
+      // Hide the indicator after 5 seconds
+      const timeout = setTimeout(() => {
+        Animated.timing(newIndicatorAnim, {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true,
+        }).start(() => {
+          setShowNewIndicator(null);
+          newIndicatorAnim.setValue(0);
+          newIndicatorPulse.setValue(1);
+          // Notify parent that indicator animation is complete
+          onNewActivityIndicatorComplete?.();
+        });
+      }, 5000);
+      
+      return () => clearTimeout(timeout);
+    }
+  }, [newlyAddedActivityId]);
 
   // Pulsing animation for the wheel - only when not spinning
   const startPulseAnimation = useCallback(() => {
@@ -460,22 +522,44 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
           );
         };
 
+        // Check if this is the newly added activity
+        const isNewActivity = showNewIndicator === activity.id;
+        if (isNewActivity) {
+          console.log('✨ Rendering NEW indicator for activity:', activity.name, activity.id);
+        }
+
         return (
           <G key={`segment-${activity.id}`}>
-            <Path 
-              d={pathData} 
-              fill={fillColor}
-              stroke="#FFFFFF" 
-              strokeWidth={2}
-              opacity={isSpinning ? 1 : (isHighlighted ? 0.7 : 0.9)}
-            />
+            {isNewActivity ? (
+              <AnimatedPath 
+                d={pathData} 
+                fill={fillColor}
+                stroke="#4e4370"
+                strokeWidth={newIndicatorPulse.interpolate({
+                  inputRange: [1, 1.2],
+                  outputRange: [4, 6]
+                })}
+                opacity={newIndicatorAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0.9, 1]
+                })}
+              />
+            ) : (
+              <Path 
+                d={pathData} 
+                fill={fillColor}
+                stroke="#FFFFFF" 
+                strokeWidth={2}
+                opacity={isSpinning ? 1 : (isHighlighted ? 0.7 : 0.9)}
+              />
+            )}
             {renderActivityText()}
             {renderEmoji()}
           </G>
         );
       })
     ];
-  }, [activities, CENTER, WHEEL_SIZE, highlightedSlice, isSpinning]);
+  }, [activities, CENTER, WHEEL_SIZE, highlightedSlice, isSpinning, showNewIndicator, newIndicatorAnim]);
 
   const renderWheel = () => {
     return wheelContent;
@@ -699,15 +783,15 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
         )}
       </Animated.View>
 
-      {/* Instruction text - absolutely positioned below the wheel */}
-      <View style={[styles.instructionContainer, { top: WHEEL_SIZE + 10 }]}>
+      {/* Instruction text - positioned relative to avoid flickering */}
+      <View style={styles.instructionContainer}>
         <ThemedText style={styles.instructionText}>
           Tap activity name to remove 🗑️
         </ThemedText>
       </View>
 
-      {/* Last selected activity box - absolutely positioned below instruction text */}
-      <View style={[styles.lastActivityContainer, { top: WHEEL_SIZE + 40 }]}>
+      {/* Last selected activity box - positioned relative to avoid flickering */}
+      <View style={styles.lastActivityContainer}>
         <View style={styles.lastActivityContent}>
           <ThemedText style={styles.lastActivityLabel}>Last selected activity:</ThemedText>
           <ThemedText style={styles.lastActivityText}>
@@ -719,8 +803,8 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
         </View>
       </View>
 
-      {/* Copyright text - absolutely positioned at the bottom */}
-      <View style={[styles.copyrightContainer, { top: WHEEL_SIZE + 130 }]}>
+      {/* Copyright text - positioned relative to avoid flickering */}
+      <View style={styles.copyrightContainer}>
         <ThemedText style={styles.copyrightText}>
           © {new Date().getFullYear()} VibeCreAI - All rights reserved
         </ThemedText>
@@ -832,12 +916,10 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   instructionContainer: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
     alignItems: 'center',
     padding: 5,
     paddingHorizontal: 20,
+    marginTop: 10, // Fixed margin instead of absolute positioning
   },
   instructionText: {
     fontSize: 16,
@@ -846,12 +928,12 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   lastActivityContainer: {
-    position: 'absolute',
     alignSelf: 'center', // Center the container
     width: 'auto', // Let content determine width
     minWidth: 340, // Minimum width
     maxWidth: '90%', // Maximum width relative to parent
     marginHorizontal: 16, // Fixed horizontal margins like ActivityInput
+    marginTop: 20, // Fixed margin instead of absolute positioning
     padding: 15,
     backgroundColor: '#fff',
     borderRadius: 12,
@@ -879,10 +961,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   copyrightContainer: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    marginTop: 10,
+    marginTop: 20, // Fixed margin instead of absolute positioning
     paddingHorizontal: 10,
     alignItems: 'center',
     justifyContent: 'center',

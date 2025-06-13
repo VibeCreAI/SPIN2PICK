@@ -8,9 +8,10 @@ Transform boredom into joy with our interactive activity wheel that combines the
 
 ## ✨ **What Makes SPIN 2 PICK Special?**
 
-🎯 **Smart Activity Discovery** – Our AI suggests personalized activities based on what you already enjoy  
+🎯 **Smart Activity Discovery** – Our AI suggests practical, recognizable activities tailored to your collection  
 🎨 **Fully Customizable** – Add unlimited activities with automatic emoji matching  
 💾 **Save & Load Sets** – Create and manage up to 5 different activity collections  
+🔄 **One-Click Reset** – Instantly generate 8 new random activities with confirmation dialog  
 🌟 **New Activity Highlighting** – Newly added activities pulse with an elegant border  
 📱 **Cross-Platform** – Works seamlessly on web, iOS, and Android  
 🎵 **Immersive Experience** – Delightful sounds, animations, and haptic feedback  
@@ -28,7 +29,8 @@ Transform boredom into joy with our interactive activity wheel that combines the
 
 ### 🤖 **AI-Powered Activity Suggestions**
 - Tap the **✨ button** for intelligent activity recommendations
-- AI analyzes your existing activities to suggest complementary ones
+- **Practical suggestions** – AI focuses on recognizable, common activities kids love
+- **Balanced creativity** – Optimized temperature for useful, not abstract suggestions
 - **Accept or decline** suggestions with a beautiful popup interface
 - **Automatic emoji matching** for every activity
 
@@ -47,6 +49,8 @@ Transform boredom into joy with our interactive activity wheel that combines the
 ### 🎨 **Smart Activity Management**
 - **Unlimited activities** with intelligent color distribution
 - **Tap to delete** any activity with confirmation dialogs
+- **🔄 Reset button** – Generate 8 new random activities instantly
+- **Confirmation dialogs** – Prevent accidental deletions and resets
 - **Minimum 2 activities** requirement for spinning
 - **Automatic color reassignment** for optimal visual balance
 
@@ -94,6 +98,7 @@ Transform boredom into joy with our interactive activity wheel that combines the
 
 ### **Activity Management**
 - **Remove Activities** – Tap any activity name on the wheel
+- **Reset All Activities** – Click the 🔄 Reset button next to the instruction text
 - **View Last Selected** – Check the "Last selected activity" box below the wheel
 - **Track New Additions** – Watch for the pulsing purple border on new activities
 
@@ -126,6 +131,12 @@ Transform boredom into joy with our interactive activity wheel that combines the
 ---
 
 ## 🎉 **Recent Updates**
+
+### **v2.1 - Reset & AI Improvements**
+- 🔄 **Reset Button** – One-click reset with 8 new random activities and confirmation dialog
+- 🤖 **Enhanced AI Suggestions** – More practical, recognizable activities (temperature optimized)
+- 📱 **Unified Spacing** – Consistent bottom margins across web and mobile platforms
+- 🎯 **Better Prompts** – AI now suggests common activities kids actually know and love
 
 ### **v2.0 - Enhanced Experience**
 - ✨ **New Activity Indicator** – Elegant pulsing borders for newly added activities

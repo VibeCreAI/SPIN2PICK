@@ -104,6 +104,7 @@ export const ActivityInput: React.FC<ActivityInputProps> = ({
           onSubmitEditing={handleAddActivity}
           maxLength={MAX_ACTIVITY_LENGTH}
           editable={!isLoading && !isSuggesting}
+          allowFontScaling={false}
         />
         {activityName.length > 0 && (
           <Text allowFontScaling={false} style={[

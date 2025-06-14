@@ -386,6 +386,7 @@ export const SaveLoadModal: React.FC<SaveLoadModalProps> = ({
               placeholderTextColor="#666"
               maxLength={MAX_SAVE_NAME_LENGTH}
               autoFocus={true}
+              allowFontScaling={false}
             />
             
             <Text allowFontScaling={false} style={styles.charCounter}>

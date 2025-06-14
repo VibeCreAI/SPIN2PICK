@@ -91,6 +91,26 @@ export default function HomeScreen() {
   const screenData = Dimensions.get('window');
   const isWeb = Platform.OS === 'web';
 
+  // Responsive width settings (matching ActivityInput and RouletteWheel)
+  const screenWidth = screenData.width;
+  const isNarrowScreen = screenWidth < 360; // Very narrow screens
+  const isSmallScreen = screenWidth < 400; // Small screens
+  const isMediumScreen = screenWidth < 500; // Medium screens
+  
+  // Dynamic minWidth based on screen size for better text centering (matching other components)
+  const getResponsiveMinWidth = () => {
+    // Smaller minWidth on narrow screens allows text to center better
+    // when content is shorter than the container width
+    if (screenWidth < 320) return 260; // Very narrow - smaller minWidth for better centering
+    if (screenWidth < 360) return 280; // Narrow
+    if (screenWidth < 400) return 300; // Small  
+    if (screenWidth < 500) return 340; // Medium
+    return 340; // Wide screens - original value
+  };
+  
+  const containerMinWidth = getResponsiveMinWidth();
+  const containerMaxWidth = isSmallScreen ? '95%' : '90%';
+
   // Load saved activities and initialize sounds when app starts
   useEffect(() => {
     const initialize = async () => {
@@ -449,7 +469,10 @@ export default function HomeScreen() {
           onPress={handleCancelDelete}
         >
           <TouchableOpacity 
-            style={styles.popupContainer}
+            style={[styles.popupContainer, {
+              minWidth: containerMinWidth,
+              maxWidth: containerMaxWidth,
+            }]}
             activeOpacity={1}
             onPress={() => {}} // Prevent closing when tapping inside popup
           >
@@ -491,7 +514,10 @@ export default function HomeScreen() {
           onPress={handleCancelReset}
         >
           <TouchableOpacity 
-            style={styles.popupContainer}
+            style={[styles.popupContainer, {
+              minWidth: containerMinWidth,
+              maxWidth: containerMaxWidth,
+            }]}
             activeOpacity={1}
             onPress={() => {}} // Prevent closing when tapping inside popup
           >

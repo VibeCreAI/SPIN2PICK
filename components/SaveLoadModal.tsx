@@ -1,7 +1,7 @@
 import { FONTS } from '@/app/_layout';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Dimensions, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { Activity } from '../utils/colorUtils';
 
 export interface SaveSlot {
@@ -38,6 +38,26 @@ export const SaveLoadModal: React.FC<SaveLoadModalProps> = ({
   const [pendingLoadSlot, setPendingLoadSlot] = useState<SaveSlot | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+
+  // Get screen width for responsive design (matching ActivityInput and RouletteWheel)
+  const screenWidth = Dimensions.get('window').width;
+  const isNarrowScreen = screenWidth < 360; // Very narrow screens
+  const isSmallScreen = screenWidth < 400; // Small screens
+  const isMediumScreen = screenWidth < 500; // Medium screens
+  
+  // Dynamic minWidth based on screen size for better text centering (matching other components)
+  const getResponsiveMinWidth = () => {
+    // Smaller minWidth on narrow screens allows text to center better
+    // when content is shorter than the container width
+    if (screenWidth < 320) return 260; // Very narrow - smaller minWidth for better centering
+    if (screenWidth < 360) return 280; // Narrow
+    if (screenWidth < 400) return 300; // Small  
+    if (screenWidth < 500) return 340; // Medium
+    return 340; // Wide screens - original value
+  };
+  
+  const containerMinWidth = getResponsiveMinWidth();
+  const containerMaxWidth = isSmallScreen ? '95%' : '90%';
 
   // Load save slots when modal opens
   useEffect(() => {
@@ -230,7 +250,10 @@ export const SaveLoadModal: React.FC<SaveLoadModalProps> = ({
           onPress={onClose}
         >
           <TouchableOpacity
-            style={styles.modalContainer}
+            style={[styles.modalContainer, {
+              minWidth: containerMinWidth,
+              maxWidth: containerMaxWidth,
+            }]}
             activeOpacity={1}
             onPress={() => {}} // Prevent closing when tapping inside
           >
@@ -265,7 +288,10 @@ export const SaveLoadModal: React.FC<SaveLoadModalProps> = ({
           onPress={handleCancelLoadSlot}
         >
           <TouchableOpacity
-            style={styles.saveInputContainer}
+            style={[styles.saveInputContainer, {
+              minWidth: containerMinWidth,
+              maxWidth: containerMaxWidth,
+            }]}
             activeOpacity={1}
             onPress={() => {}}
           >
@@ -304,7 +330,10 @@ export const SaveLoadModal: React.FC<SaveLoadModalProps> = ({
           onPress={() => setShowSuccessModal(false)}
         >
           <TouchableOpacity
-            style={styles.saveInputContainer}
+            style={[styles.saveInputContainer, {
+              minWidth: containerMinWidth,
+              maxWidth: containerMaxWidth,
+            }]}
             activeOpacity={1}
             onPress={() => {}}
           >
@@ -335,7 +364,10 @@ export const SaveLoadModal: React.FC<SaveLoadModalProps> = ({
           onPress={() => setShowSaveInput(false)}
         >
           <TouchableOpacity
-            style={styles.saveInputContainer}
+            style={[styles.saveInputContainer, {
+              minWidth: containerMinWidth,
+              maxWidth: containerMaxWidth,
+            }]}
             activeOpacity={1}
             onPress={() => {}}
           >
@@ -397,7 +429,10 @@ export const SaveLoadModal: React.FC<SaveLoadModalProps> = ({
           onPress={() => setShowDeleteConfirmation(false)}
         >
           <TouchableOpacity
-            style={styles.deleteConfirmContainer}
+            style={[styles.deleteConfirmContainer, {
+              minWidth: containerMinWidth,
+              maxWidth: containerMaxWidth,
+            }]}
             activeOpacity={1}
             onPress={() => {}}
           >

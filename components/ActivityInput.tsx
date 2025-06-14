@@ -1,7 +1,7 @@
 import { FONTS } from '@/app/_layout';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
-import { ActivityIndicator, Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Dimensions, Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 interface ActivityInputProps {
   onAddActivity: (name: string) => void;
@@ -33,6 +33,36 @@ export const ActivityInput: React.FC<ActivityInputProps> = ({
 }) => {
   const [activityName, setActivityName] = useState('');
 
+  // Get screen width for responsive design
+  const screenWidth = Dimensions.get('window').width;
+  const isNarrowScreen = screenWidth < 360; // Very narrow screens
+  const isSmallScreen = screenWidth < 400; // Small screens
+  const isExtremelyNarrow = screenWidth < 320; // Extremely narrow screens
+  const isMediumScreen = screenWidth < 500; // Medium screens
+  
+  // Dynamic minWidth based on screen size for better text centering (matching RouletteWheel)
+  const getResponsiveMinWidth = () => {
+    // Smaller minWidth on narrow screens allows text to center better
+    // when content is shorter than the container width
+    if (screenWidth < 320) return 260; // Very narrow - smaller minWidth for better centering
+    if (screenWidth < 360) return 280; // Narrow
+    if (screenWidth < 400) return 300; // Small  
+    if (screenWidth < 500) return 330; // Medium
+    return 340; // Wide screens - original value
+  };
+  
+  // Responsive width settings
+  const containerMinWidth = getResponsiveMinWidth();
+  const containerMaxWidth = isSmallScreen ? '95%' : '90%';
+  const containerMarginHorizontal = isNarrowScreen ? 8 : 16;
+  
+  // Adjust padding based on screen width
+  const inputPaddingRight = isNarrowScreen ? 120 : isSmallScreen ? 130 : 140;
+  const charCounterRight = isNarrowScreen ? 100 : isSmallScreen ? 110 : 120;
+  
+  // Adjust font size for extremely narrow screens
+  const inputFontSize = isExtremelyNarrow ? 14 : 16;
+
   const handleTextChange = (text: string) => {
     // Limit text input to MAX_ACTIVITY_LENGTH characters
     if (text.length <= MAX_ACTIVITY_LENGTH) {
@@ -59,13 +89,17 @@ export const ActivityInput: React.FC<ActivityInputProps> = ({
   const isNearLimit = remainingChars <= 5;
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, {
+      minWidth: containerMinWidth,
+      maxWidth: containerMaxWidth,
+      marginHorizontal: containerMarginHorizontal,
+    }]}>
       <View style={styles.inputContainer}>
         <TextInput
-          style={styles.input}
+          style={[styles.input, { paddingRight: inputPaddingRight, fontSize: inputFontSize }]}
           value={activityName}
           onChangeText={handleTextChange}
-          placeholder="Enter new activity..."
+          placeholder="Type new activity"
           placeholderTextColor="#666"
           onSubmitEditing={handleAddActivity}
           maxLength={MAX_ACTIVITY_LENGTH}
@@ -74,47 +108,49 @@ export const ActivityInput: React.FC<ActivityInputProps> = ({
         {activityName.length > 0 && (
           <Text allowFontScaling={false} style={[
             styles.charCounter, 
+            { right: charCounterRight },
             isNearLimit ? styles.charCounterNearLimit : null
           ]}>
             {remainingChars}
           </Text>
         )}
-      </View>
-      
-      <View style={styles.buttonsContainer}>
-        <TouchableOpacity 
-          style={[styles.addButton, isLoading && styles.buttonDisabled]} 
-          onPress={handleAddActivity}
-          disabled={isLoading || isSuggesting}
-        >
-          {isLoading ? (
-            <ActivityIndicator size="small" color="#94c4f5" />
-          ) : (
-            <Ionicons name="add-circle" size={32} color="#94c4f5" />
-          )}
-        </TouchableOpacity>
         
-        <TouchableOpacity 
-          style={[styles.suggestButton, isSuggesting && styles.buttonDisabled]} 
-          onPress={onSuggestActivity}
-          disabled={isLoading || isSuggesting}
-        >
-          {isSuggesting ? (
-            <ActivityIndicator size="small" color="#f5c09f" />
-          ) : (
-            <Text allowFontScaling={false} style={styles.suggestButtonText}>✨</Text>
-          )}
-        </TouchableOpacity>
-        
-        {onSaveLoad && (
-          <TouchableOpacity
-            style={styles.saveLoadButton}
-            onPress={onSaveLoad}
+        {/* All buttons inside the input container for narrow screens */}
+        <View style={styles.buttonsContainer}>
+          <TouchableOpacity 
+            style={[styles.addButton, isLoading && styles.buttonDisabled]} 
+            onPress={handleAddActivity}
             disabled={isLoading || isSuggesting}
           >
-            <Text allowFontScaling={false} style={styles.saveLoadButtonText}>💾</Text>
+            {isLoading ? (
+              <ActivityIndicator size="small" color="#94c4f5" />
+            ) : (
+              <Ionicons name="add-circle" size={32} color="#94c4f5" />
+            )}
           </TouchableOpacity>
-        )}
+          
+          <TouchableOpacity 
+            style={[styles.suggestButton, isSuggesting && styles.buttonDisabled]} 
+            onPress={onSuggestActivity}
+            disabled={isLoading || isSuggesting}
+          >
+            {isSuggesting ? (
+              <ActivityIndicator size="small" color="#f5c09f" />
+            ) : (
+              <Text allowFontScaling={false} style={styles.suggestButtonText}>✨</Text>
+            )}
+          </TouchableOpacity>
+          
+          {onSaveLoad && (
+            <TouchableOpacity
+              style={styles.saveLoadButton}
+              onPress={onSaveLoad}
+              disabled={isLoading || isSuggesting}
+            >
+              <Text allowFontScaling={false} style={styles.saveLoadButtonText}>💾</Text>
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
       
       {/* AI Suggestion Popup */}
@@ -162,16 +198,12 @@ export const ActivityInput: React.FC<ActivityInputProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row',
     alignItems: 'center',
     padding: 16,
     backgroundColor: '#fff',
     borderRadius: 12,
     alignSelf: 'center',
     width: 'auto',
-    minWidth: 340,
-    maxWidth: '90%',
-    marginHorizontal: 16,
     marginVertical: 8,
     marginBottom: 20,
     elevation: 2,
@@ -183,25 +215,25 @@ const styles = StyleSheet.create({
     borderColor: '#E8F4FC',
   },
   inputContainer: {
-    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     position: 'relative',
+    width: '100%',
   },
   input: {
     flex: 1,
     height: 40,
-    fontSize: 16,
+    // fontSize will be set dynamically inline
     fontFamily: FONTS.jua,
     color: '#333',
-    paddingRight: 30, // Make room for the character counter
+    // paddingRight will be set dynamically inline
     borderWidth: 0,
     borderColor: 'transparent',
     outline: 'none', // For web compatibility
   },
   charCounter: {
     position: 'absolute',
-    right: 5,
+    // right will be set dynamically inline
     fontSize: 12,
     fontFamily: FONTS.jua,
     color: '#999',
@@ -212,21 +244,22 @@ const styles = StyleSheet.create({
   buttonsContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginLeft: 8,
+    position: 'absolute',
+    right: 0,
+    gap: 4, // Space between buttons
   },
   suggestButton: {
-    padding: 4,
-    width: 36,
-    height: 36,
+    padding: 2,
+    width: 32,
+    height: 32,
     justifyContent: 'center',
     alignItems: 'center',
   },
   suggestButtonText: {
-    fontSize: 18,
+    fontSize: 16,
   },
   addButton: {
-    marginRight: 8,
-    padding: 4,
+    padding: 2,
   },
   buttonDisabled: {
     opacity: 0.5,
@@ -304,15 +337,16 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   saveLoadButton: {
-    marginLeft: 6,
-    padding: 4,
+    padding: 2,
     borderRadius: 6,
     backgroundColor: 'transparent',
     alignItems: 'center',
     justifyContent: 'center',
+    width: 32,
+    height: 32,
   },
   saveLoadButtonText: {
-    fontSize: 24,
+    fontSize: 20,
     fontFamily: FONTS.jua,
     color: '#94c4f5',
   },

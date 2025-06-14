@@ -1,8 +1,8 @@
+import { FONTS } from '@/app/_layout';
 import * as Haptics from 'expo-haptics';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, Dimensions, Easing, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Svg, { Circle, G, Path, Text as SvgText } from 'react-native-svg';
-import { FONTS } from '../app/_layout';
 import { playClickSound, playSpinningSound, playSuccessSound, stopSpinningSound } from '../utils/soundUtils';
 import { ThemedText } from './ThemedText';
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
@@ -53,6 +53,27 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
 }) => {
   // Get screen dimensions for web platform
   const screenData = Dimensions.get('window');
+  
+  // Responsive width settings (matching ActivityInput)
+  const screenWidth = screenData.width;
+  const isNarrowScreen = screenWidth < 360; // Very narrow screens
+  const isSmallScreen = screenWidth < 400; // Small screens
+  const isMediumScreen = screenWidth < 500; // Medium screens
+  
+  // Dynamic minWidth based on screen size for better text centering (matching RouletteWheel)
+  const getResponsiveMinWidth = () => {
+    // Smaller minWidth on narrow screens allows text to center better
+    // when content is shorter than the container width
+    if (screenWidth < 320) return 260; // Very narrow - smaller minWidth for better centering
+    if (screenWidth < 360) return 280; // Narrow
+    if (screenWidth < 400) return 300; // Small  
+    if (screenWidth < 500) return 330; // Medium
+    return 340; // Wide screens - original value
+  };
+  
+  const containerMinWidth = getResponsiveMinWidth();
+  const containerMaxWidth = isSmallScreen ? '95%' : '90%';
+  const containerMarginHorizontal = isNarrowScreen ? 8 : 16;
   
   // Calculate wheel size with platform-specific limits
   const WHEEL_SIZE = useMemo(() => {
@@ -813,15 +834,23 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
       </View>
 
       {/* Last selected activity box - positioned relative to avoid flickering */}
-      <View style={styles.lastActivityContainer}>
+      <View style={[styles.lastActivityContainer, {
+        minWidth: containerMinWidth,
+        maxWidth: containerMaxWidth,
+        marginHorizontal: containerMarginHorizontal,
+      }]}>
         <View style={styles.lastActivityContent}>
-          <ThemedText style={styles.lastActivityLabel}>Last selected activity:</ThemedText>
-          <ThemedText style={styles.lastActivityText}>
-            {previousSelectedActivity 
-              ? (previousSelectedActivity.emoji ? `${previousSelectedActivity.emoji} ${previousSelectedActivity.name}` : previousSelectedActivity.name)
-              : ""
-            }
-          </ThemedText>
+          <View style={styles.labelContainer}>
+            <Text allowFontScaling={false} style={styles.lastActivityLabel}>Last selected activity:</Text>
+          </View>
+          <View style={styles.activityTextContainer}>
+            <Text allowFontScaling={false} style={styles.lastActivityText}>
+              {previousSelectedActivity 
+                ? (previousSelectedActivity.emoji ? `${previousSelectedActivity.emoji} ${previousSelectedActivity.name}` : previousSelectedActivity.name)
+                : ""
+              }
+            </Text>
+          </View>
         </View>
       </View>
 
@@ -939,26 +968,29 @@ const styles = StyleSheet.create({
   },
   instructionContainer: {
     alignItems: 'center',
-    padding: 5,
-    paddingHorizontal: 20,
-    marginTop: 10, // Fixed margin instead of absolute positioning
+    padding: 8,
+    paddingHorizontal: 12, // Reduced from 20 for narrow screens
+    marginTop: 8,
+    width: '100%',
   },
   instructionRow: {
-    flexDirection: 'row',
+    flexDirection: 'column', // Stack vertically on narrow screens
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 15,
+    gap: 8, // Reduced gap
+    width: '100%',
   },
   instructionText: {
-    fontSize: 16,
+    fontSize: 16, // Reduced from 16
     color: '#666',
     fontFamily: FONTS.jua,
     textAlign: 'center',
+    paddingHorizontal: 4,
   },
   resetButton: {
     backgroundColor: '#4e4370',
     paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingVertical: 8,
     borderRadius: 20,
     elevation: 2,
     shadowColor: '#000',
@@ -975,11 +1007,10 @@ const styles = StyleSheet.create({
   lastActivityContainer: {
     alignSelf: 'center', // Center the container
     width: 'auto', // Let content determine width
-    minWidth: 340, // Minimum width
-    maxWidth: '90%', // Maximum width relative to parent
-    marginHorizontal: 16, // Fixed horizontal margins like ActivityInput
-    marginTop: 20, // Fixed margin instead of absolute positioning
-    padding: 15,
+    marginVertical: 8, // Added to match ActivityInput
+    marginTop: 5,
+    marginBottom: 7, // Added to match ActivityInput
+    padding: 16, // Changed from 15 to match ActivityInput
     backgroundColor: '#fff',
     borderRadius: 12,
     borderWidth: 2,
@@ -989,24 +1020,40 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.2,
     shadowRadius: 1.41,
+    // Add explicit centering
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   lastActivityContent: {
     alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+  },
+  labelContainer: {
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   lastActivityLabel: {
-    fontSize: 14,
+    fontSize: 16,
     color: '#666',
-    fontFamily: FONTS.jua,
+    fontFamily: FONTS.jua, // Back to original font
+    textAlign: 'center',
+  },
+  activityTextContainer: {
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   lastActivityText: {
-    fontSize: 24,
+    fontSize: 22,
     color: '#4e4370',
-    fontFamily: FONTS.jua,
-    textAlign: 'center',
+    fontFamily: FONTS.jua, // Back to original font
     marginTop: 4,
+    textAlign: 'center',
   },
   copyrightContainer: {
-    marginTop: 20, // Fixed margin instead of absolute positioning
+    marginTop: 10, // Fixed margin instead of absolute positioning
     paddingHorizontal: 10,
     alignItems: 'center',
     justifyContent: 'center',

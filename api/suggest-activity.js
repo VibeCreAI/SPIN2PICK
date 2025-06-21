@@ -11,16 +11,24 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'API key not configured' });
   }
 
-  const { existingActivities } = req.body;
+  const { existingActivities, declinedSuggestions = [] } = req.body;
 
   if (!Array.isArray(existingActivities)) {
     return res.status(400).json({ error: 'Existing activities must be an array' });
+  }
+
+  if (!Array.isArray(declinedSuggestions)) {
+    return res.status(400).json({ error: 'Declined suggestions must be an array' });
   }
 
   try {
     const activitiesList = existingActivities.length > 0 
       ? existingActivities.join(', ') 
       : 'No activities yet';
+
+    const declinedList = declinedSuggestions.length > 0 
+      ? declinedSuggestions.join(', ') 
+      : 'None declined yet';
 
     // Practical prompt for recognizable, common activities
     const systemPrompt = `You are a practical activity expert for kids aged 3-12. Your goal is to suggest simple, recognizable activities that kids and parents easily understand.
@@ -42,14 +50,18 @@ OUTPUT FORMAT:
 - NO explanations, quotes, or extra text`;
 
     const userPrompt = `Current activities: ${activitiesList}
+Previously declined suggestions: ${declinedList}
 
 Suggest ONE simple, recognizable activity that:
 1. Is different from ALL existing activities
-2. Is a common activity most kids know
-3. Is age-appropriate for kids (3-12 years)
-4. Is practical and easy to understand
+2. Is NOT any of the previously declined suggestions
+3. Is a common activity most kids know
+4. Is age-appropriate for kids (3-12 years)
+5. Is practical and easy to understand
 
 Focus on well-known activities. If existing activities are mostly physical, consider arts/crafts or quiet activities. If mostly indoor, consider simple outdoor activities.
+
+IMPORTANT: Do not suggest any activity from the declined list even if it's different from existing activities.
 
 Activity name only:`;
 

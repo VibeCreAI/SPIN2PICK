@@ -32,6 +32,7 @@ const DEFAULT_ACTIVITIES: Activity[] = generateDefaultActivities();
 
 const STORAGE_KEY = 'SPIN2PICK_ACTIVITIES';
 const SPIN_COUNT_KEY = 'SPIN2PICK_SPIN_COUNT';
+const DECLINED_SUGGESTIONS_KEY = 'SPIN2PICK_DECLINED_SUGGESTIONS';
 
 // Error Boundary Component to prevent black screens
 class ErrorBoundary extends React.Component {
@@ -181,6 +182,46 @@ export default function HomeScreen() {
     saveSpinCount();
   }, [spinCount, isLoading]);
 
+  // Helper functions for managing declined suggestions
+  const getDeclinedSuggestions = async (): Promise<string[]> => {
+    try {
+      const stored = await AsyncStorage.getItem(DECLINED_SUGGESTIONS_KEY);
+      return stored ? JSON.parse(stored) : [];
+    } catch (error) {
+      console.error('Error loading declined suggestions:', error);
+      return [];
+    }
+  };
+
+  const storeDeclinedSuggestion = async (suggestion: string): Promise<void> => {
+    try {
+      const current = await getDeclinedSuggestions();
+      
+      // Add the new declined suggestion if it's not already there
+      if (!current.includes(suggestion)) {
+        const updated = [...current, suggestion];
+        
+        // Keep only the last 20 declined suggestions to prevent unlimited growth
+        const limited = updated.slice(-20);
+        
+        await AsyncStorage.setItem(DECLINED_SUGGESTIONS_KEY, JSON.stringify(limited));
+        console.log('💾 Stored declined suggestion:', suggestion);
+        console.log('📝 Total declined suggestions:', limited.length);
+      }
+    } catch (error) {
+      console.error('Error storing declined suggestion:', error);
+    }
+  };
+
+  const clearDeclinedSuggestions = async (): Promise<void> => {
+    try {
+      await AsyncStorage.removeItem(DECLINED_SUGGESTIONS_KEY);
+      console.log('🧹 Cleared all declined suggestions');
+    } catch (error) {
+      console.error('Error clearing declined suggestions:', error);
+    }
+  };
+
   const onLayout = (event: LayoutChangeEvent) => {
     const { width } = event.nativeEvent.layout;
     setContainerWidth(width);
@@ -235,9 +276,12 @@ export default function HomeScreen() {
   const handleSuggestActivity = async () => {
     setIsSuggestingActivity(true);
     try {
-      // Get AI suggested activity
+      // Get existing activities and declined suggestions
       const existingActivityNames = activities.map(a => a.name);
-      const suggestedActivityName = await getAISuggestedActivity(existingActivityNames);
+      const declinedSuggestions = await getDeclinedSuggestions();
+      
+      // Get AI suggested activity with both existing and declined activities
+      const suggestedActivityName = await getAISuggestedActivity(existingActivityNames, declinedSuggestions);
       
       // Show popup with suggestion instead of directly adding
       setPendingSuggestion(suggestedActivityName);
@@ -287,10 +331,15 @@ export default function HomeScreen() {
     }
   };
 
-  const handleDeclineSuggestion = () => {
+  const handleDeclineSuggestion = async () => {
+    if (pendingSuggestion) {
+      // Store the declined suggestion
+      await storeDeclinedSuggestion(pendingSuggestion);
+      console.log('❌ Declined AI suggestion:', pendingSuggestion);
+    }
+    
     setShowSuggestionPopup(false);
     setPendingSuggestion(null);
-    console.log('❌ Declined AI suggestion');
   };
 
   const handleDeleteActivity = (id: string) => {

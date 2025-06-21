@@ -122,17 +122,19 @@ export const getEmoji = async (activityName: string): Promise<string> => {
 /**
  * Get an AI-suggested activity based on existing activities
  * @param existingActivities Array of existing activity names
+ * @param declinedSuggestions Array of previously declined suggestion names
  * @returns A promise that resolves to a suggested activity name
  */
-export const getAISuggestedActivity = async (existingActivities: string[]): Promise<string> => {
+export const getAISuggestedActivity = async (existingActivities: string[], declinedSuggestions: string[] = []): Promise<string> => {
   console.log('🚀 Starting AI suggestion request...');
   console.log('📝 Existing activities:', existingActivities);
+  console.log('🚫 Declined suggestions:', declinedSuggestions);
   
   try {
     const baseUrl = getApiBaseUrl();
     console.log('🌐 API Base URL:', baseUrl);
     
-    const requestBody = { existingActivities };
+    const requestBody = { existingActivities, declinedSuggestions };
     console.log('📦 Request body:', JSON.stringify(requestBody, null, 2));
     
     console.log('📡 Making fetch request...');
@@ -153,7 +155,7 @@ export const getAISuggestedActivity = async (existingActivities: string[]): Prom
       console.error('   Status:', response.status, response.statusText);
       console.error('   Error body:', errorText);
       console.log('🔄 Falling back to random activity');
-      return getRandomFallbackActivity(existingActivities);
+      return getRandomFallbackActivity([...existingActivities, ...declinedSuggestions]);
     }
 
     console.log('✅ Response OK, parsing JSON...');
@@ -165,7 +167,7 @@ export const getAISuggestedActivity = async (existingActivities: string[]): Prom
     if (!data.choices || !Array.isArray(data.choices) || data.choices.length === 0) {
       console.error('❌ Invalid response structure - no choices array');
       console.log('🔄 Falling back to random activity');
-      return getRandomFallbackActivity(existingActivities);
+      return getRandomFallbackActivity([...existingActivities, ...declinedSuggestions]);
     }
     
     const choice = data.choices[0];
@@ -174,7 +176,7 @@ export const getAISuggestedActivity = async (existingActivities: string[]): Prom
     if (!choice.message || !choice.message.content) {
       console.error('❌ Invalid choice structure - no message.content');
       console.log('🔄 Falling back to random activity');
-      return getRandomFallbackActivity(existingActivities);
+      return getRandomFallbackActivity([...existingActivities, ...declinedSuggestions]);
     }
     
     let rawResponse = choice.message.content;
@@ -215,7 +217,7 @@ export const getAISuggestedActivity = async (existingActivities: string[]): Prom
         console.log(`   [${i}]: "${char}" (code: ${code})`);
       }
       console.log('🔄 Falling back to random activity');
-      return getRandomFallbackActivity(existingActivities);
+      return getRandomFallbackActivity([...existingActivities, ...declinedSuggestions]);
     }
     console.log('✅ Basic validation passed');
 
@@ -224,9 +226,18 @@ export const getAISuggestedActivity = async (existingActivities: string[]): Prom
       console.log('   Suggested:', JSON.stringify(suggestedActivity));
       console.log('   Existing:', existingActivities);
       console.log('🔄 Falling back to random activity');
-      return getRandomFallbackActivity(existingActivities);
+      return getRandomFallbackActivity([...existingActivities, ...declinedSuggestions]);
     }
-    console.log('✅ Not a duplicate');
+    console.log('✅ Not a duplicate from existing activities');
+
+    if (declinedSuggestions.includes(suggestedActivity)) {
+      console.log('❌ VALIDATION FAILED: Previously declined activity suggested');
+      console.log('   Suggested:', JSON.stringify(suggestedActivity));
+      console.log('   Declined:', declinedSuggestions);
+      console.log('🔄 Falling back to random activity');
+      return getRandomFallbackActivity([...existingActivities, ...declinedSuggestions]);
+    }
+    console.log('✅ Not a previously declined suggestion');
 
     console.log('🎉 ALL VALIDATIONS PASSED!');
     console.log('✅ Accepting AI suggestion:', JSON.stringify(suggestedActivity));
@@ -238,7 +249,7 @@ export const getAISuggestedActivity = async (existingActivities: string[]): Prom
     console.error('   Error message:', error instanceof Error ? error.message : String(error));
     console.error('   Full error:', error);
     console.log('🔄 Falling back to random activity');
-    return getRandomFallbackActivity(existingActivities);
+    return getRandomFallbackActivity([...existingActivities, ...declinedSuggestions]);
   }
 };
 

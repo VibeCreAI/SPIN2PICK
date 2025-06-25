@@ -1,0 +1,255 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# SPIN2PICK Directory Structure Guide
+
+This rule documents the complete directory structure of the SPIN2PICK project - a React Native/Expo roulette wheel app for activity selection.
+
+## Project Overview
+SPIN2PICK is a cross-platform (iOS, Android, Web) roulette wheel application built with:
+- **Framework**: React Native with Expo
+- **Language**: TypeScript
+- **Deployment**: Vercel (web), EAS Build (mobile)
+- **Monetization**: AdMob integration
+
+## Root Directory Structure
+
+```
+SPIN2PICK/
+├── 📱 app/                      # Main application code (Expo Router)
+├── 🧩 components/               # Reusable React components
+├── 🔧 utils/                    # Utility functions and helpers
+├── 🎨 assets/                   # Static assets (images, fonts, sounds)
+├── 🌐 api/                      # Serverless API functions
+├── 📄 public/                   # Web public assets and SEO files
+├── ⚙️ constants/                # App-wide constants and configurations
+├── 🪝 hooks/                    # Custom React hooks
+├── 📜 scripts/                  # Build and utility scripts
+├── 🤖 android/                  # Android-specific native code
+├── 🌐 web/                      # Web-specific configurations
+├── 📊 dist/                     # Built web application (generated)
+├── 📦 node_modules/             # Dependencies (generated)
+├── 🔧 .expo/                    # Expo CLI cache (generated)
+├── 🔧 .vercel/                  # Vercel deployment cache (generated)
+└── 📝 Configuration Files       # Package.json, tsconfig, etc.
+```
+
+## Core Application Structure
+
+### 📱 `/app` - Main Application (Expo Router)
+```
+app/
+├── index.tsx                    # Main app entry point with roulette wheel
+├── _layout.tsx                  # Root layout with navigation setup
+├── +html.tsx                    # HTML template for web builds
+├── +not-found.tsx              # 404 error page
+└── (tabs)/                     # Tab-based navigation (currently empty)
+```
+
+**Key Files:**
+- `index.tsx` (756 lines) - Main roulette wheel screen with game logic
+- `_layout.tsx` - Navigation setup, font loading, tab configuration
+- `+html.tsx` - Web SEO setup, AdSense integration, meta tags
+
+### 🧩 `/components` - React Components
+```
+components/
+├── RouletteWheel.tsx           # Core roulette wheel component (1108 lines)
+├── SaveLoadModal.tsx           # Save/load activity lists modal (711 lines)
+├── ActivityInput.tsx           # Activity input and management (354 lines)
+├── AdBanner.tsx                # AdMob banner component (mobile)
+├── AdBanner.web.tsx            # Web banner placeholder
+├── GoogleAdSense.tsx           # Google AdSense integration (web)
+├── Celebration.tsx             # Win celebration animations
+├── ThemedText.tsx              # Theme-aware text component
+├── ThemedView.tsx              # Theme-aware view component
+├── StyledText.tsx              # Styled text component
+├── Text.tsx                    # Base text component
+├── Collapsible.tsx             # Collapsible content component
+├── ExternalLink.tsx            # External link component
+├── HapticTab.tsx               # Haptic feedback tab component
+├── HelloWave.tsx               # Animated wave component
+├── ParallaxScrollView.tsx      # Parallax scroll view
+└── ui/                         # Platform-specific UI components
+    ├── IconSymbol.tsx          # Cross-platform icon system
+    ├── IconSymbol.ios.tsx      # iOS-specific icon implementation
+    ├── TabBarBackground.tsx    # Tab bar background
+    └── TabBarBackground.ios.tsx # iOS-specific tab bar background
+```
+
+**Component Categories:**
+- **Core Game Components**: `RouletteWheel.tsx`, `ActivityInput.tsx`, `SaveLoadModal.tsx`
+- **Monetization**: `AdBanner.tsx`, `GoogleAdSense.tsx`
+- **UI/UX**: `Celebration.tsx`, themed components, haptic feedback
+- **Platform-specific**: `/ui` subdirectory for iOS/Android differences
+
+### 🔧 `/utils` - Utility Functions
+```
+utils/
+├── emojiUtils.ts               # Emoji management and utilities (427 lines)
+├── colorUtils.ts               # Color generation and theming (131 lines)
+├── soundUtils.ts               # Audio playback management (97 lines)
+├── adMobUtils.ts               # AdMob integration (mobile)
+└── adMobUtils.web.ts           # Web ad utilities
+```
+
+**Utility Categories:**
+- **Game Logic**: Emoji handling, color generation
+- **Media**: Sound effects and audio management
+- **Monetization**: Platform-specific ad implementations
+
+### 🎨 `/assets` - Static Assets
+```
+assets/
+├── images/                     # App icons and graphics
+│   ├── icon.png               # App icon (1MB)
+│   ├── adaptive-icon.png      # Android adaptive icon (1MB)
+│   ├── splash.png             # Splash screen image
+│   ├── splash-icon.png        # Splash screen icon
+│   ├── favicon.png            # Web favicon
+│   └── og_image_spin2pick.png # Social media preview image
+├── fonts/                      # Custom fonts
+│   ├── GamjaFlower-Regular.ttf # Korean-style decorative font (12MB)
+│   ├── Jua_400Regular.ttf     # Korean round font (2MB)
+│   ├── Nunito_400Regular.ttf  # Primary UI font
+│   ├── Nunito_700Bold.ttf     # Bold variant
+│   ├── SpaceMono-Regular.ttf  # Monospace font
+│   └── Ionicons.ttf           # Icon font
+└── sounds/                     # Audio effects
+    ├── README.md              # Sound attribution and licensing
+    ├── spinning.mp3           # Wheel spinning sound (235KB)
+    ├── click.mp3              # UI click sound (19KB)
+    └── success.mp3            # Win celebration sound (39KB)
+```
+
+### 🌐 `/api` - Serverless Functions
+```
+api/
+├── suggest-activity.js         # AI activity suggestion endpoint (106 lines)
+└── get-emoji.js               # Emoji fetching service (58 lines)
+```
+
+**API Features:**
+- Activity suggestion using AI/external services
+- Emoji management and retrieval
+- Designed for Vercel serverless deployment
+
+### 📄 `/public` - Web Public Assets
+```
+public/
+├── ads.txt                     # AdSense verification
+├── robots.txt                  # Search engine crawling rules
+├── sitemap.xml                 # SEO sitemap
+├── favicon.png                 # Web favicon
+└── og_image_spin2pick.png     # Social media preview
+```
+
+### ⚙️ `/constants` - Configuration
+```
+constants/
+└── Colors.ts                   # Theme colors and design tokens (27 lines)
+```
+
+### 🪝 `/hooks` - Custom React Hooks
+```
+hooks/
+├── useColorScheme.ts           # Color scheme detection (mobile)
+├── useColorScheme.web.ts       # Color scheme detection (web)
+└── useThemeColor.ts            # Theme color management
+```
+
+### 📜 `/scripts` - Build Scripts
+```
+scripts/
+└── reset-project.js            # Project reset utility (113 lines)
+```
+
+## Configuration Files (Root Level)
+
+### Package Management
+- `package.json` - Dependencies and scripts (63 lines)
+- `package-lock.json` - Dependency lock file (13,559 lines)
+
+### TypeScript & Linting
+- `tsconfig.json` - TypeScript configuration (18 lines)
+- `eslint.config.js` - ESLint configuration (11 lines)
+- `.eslintrc.custom-rules.js` - Custom ESLint rules (44 lines)
+
+### Build & Deployment
+- `eas.json` - Expo Application Services configuration (32 lines)
+- `vercel.json` - Vercel deployment configuration (14 lines)
+- `metro.config.js` - Metro bundler configuration (14 lines)
+- `app.json` - Expo app configuration (86 lines)
+- `expo-env.d.ts` - Expo TypeScript declarations (3 lines)
+
+### PowerShell Scripts (Windows)
+- `build-android.ps1` - Android build script (17 lines)
+- `build-android-fresh.ps1` - Fresh Android build (35 lines)
+- `build-preview.ps1` - Preview build script (61 lines)
+- `build-preview.bat` - Batch version of preview build (19 lines)
+- `eas-build-no-warning.ps1` - EAS build without warnings (28 lines)
+- `fix-eas-git.ps1` - Git fixes for EAS builds (64 lines)
+- `fix-splash-screen.ps1` - Splash screen fixes (44 lines)
+- `git-fix.ps1` - General git fixes (27 lines)
+
+### Documentation
+- `README.md` - Project documentation (178 lines)
+- `FONT_SCALING_GUIDE.md` - Font scaling guide (113 lines)
+
+## Generated/Cache Directories
+- `.expo/` - Expo CLI cache and temporary files
+- `.vercel/` - Vercel deployment cache
+- `dist/` - Built web application
+- `node_modules/` - NPM dependencies
+- `android/` - Generated Android project files
+- `web/` - Web-specific generated files
+
+## File Size Insights
+**Largest Files:**
+- `GamjaFlower-Regular.ttf` (12MB) - Decorative Korean font
+- `Jua_400Regular.ttf` (2MB) - Korean UI font
+- `icon.png` & `adaptive-icon.png` (1MB each) - High-res app icons
+- `package-lock.json` (492KB) - Dependency lock file
+
+**Most Complex Components:**
+- `RouletteWheel.tsx` (1,108 lines) - Core wheel logic
+- `index.tsx` (756 lines) - Main app screen
+- `SaveLoadModal.tsx` (711 lines) - Data persistence
+
+## Development Guidelines
+
+### File Organization Rules
+1. **Components**: All reusable UI components in `/components`
+2. **Business Logic**: Core utilities in `/utils`
+3. **Static Assets**: Organized by type in `/assets`
+4. **Platform-specific**: Use `.ios.tsx` and `.web.tsx` extensions
+5. **API Routes**: Serverless functions in `/api`
+
+### Naming Conventions
+- **Components**: PascalCase (e.g., `RouletteWheel.tsx`)
+- **Utilities**: camelCase (e.g., `emojiUtils.ts`)
+- **Constants**: PascalCase files, SCREAMING_SNAKE_CASE exports
+- **Assets**: kebab-case with descriptive names
+
+### Key Dependencies
+- **Core**: React Native, Expo, TypeScript
+- **Navigation**: Expo Router
+- **Animations**: React Native Reanimated
+- **Ads**: AdMob (mobile), AdSense (web)
+- **Audio**: Expo AV
+- **Build**: EAS Build, Vercel
+
+### Platform Support
+- **iOS**: Native app via EAS Build
+- **Android**: Native app via EAS Build  
+- **Web**: Progressive Web App via Vercel
+
+## Architecture Patterns
+- **Component Composition**: Themed components with consistent API
+- **Platform Abstraction**: Separate web/mobile implementations where needed
+- **Asset Management**: Organized by media type with proper attribution
+- **Configuration**: Environment-specific settings in dedicated files
+- **Build Automation**: PowerShell scripts for Windows development workflow
+

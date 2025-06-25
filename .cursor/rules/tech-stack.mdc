@@ -1,0 +1,607 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# SPIN2PICK Technology Stack Guide
+
+This rule documents the complete technology stack, current versions, and best practices for the SPIN2PICK project.
+
+## Core Framework Stack
+
+### React & React Native
+```json
+{
+  "react": "19.0.0",
+  "react-dom": "19.0.0", 
+  "react-native": "0.79.2"
+}
+```
+
+**React 19 New Features & Best Practices:**
+- **Server Components**: Use React Server Components for better performance
+- **Concurrent Features**: Leverage automatic batching and concurrent rendering
+- **New Hooks**: Use `useId()`, `useDeferredValue()`, `useTransition()`
+- **Suspense**: Enhanced Suspense for data fetching and code splitting
+
+```typescript
+// ✅ Good: Use new React 19 patterns
+import { useTransition, useDeferredValue } from 'react';
+
+function SearchComponent() {
+  const [isPending, startTransition] = useTransition();
+  const deferredQuery = useDeferredValue(searchQuery);
+  
+  const handleSearch = (query: string) => {
+    startTransition(() => {
+      setSearchQuery(query);
+    });
+  };
+}
+```
+
+### Expo Platform
+```json
+{
+  "expo": "~53.0.9",
+  "expo-router": "~5.0.6",
+  "@expo/cli": "^0.24.13"
+}
+```
+
+**Expo SDK 53 Features:**
+- **Expo Router v5**: File-based routing with improved performance
+- **New Architecture**: Fabric and TurboModules support
+- **Better Web Support**: Enhanced web compatibility
+- **EAS Build**: Improved build times and caching
+
+**Best Practices:**
+```typescript
+// ✅ Good: Use Expo Router v5 patterns
+// app/_layout.tsx
+import { Stack } from 'expo-router';
+
+export default function RootLayout() {
+  return (
+    <Stack>
+      <Stack.Screen name="index" options={{ title: 'Spin2Pick' }} />
+      <Stack.Screen name="settings" options={{ title: 'Settings' }} />
+    </Stack>
+  );
+}
+
+// ✅ Good: Use expo-constants for app configuration
+import Constants from 'expo-constants';
+
+const config = {
+  apiUrl: Constants.expoConfig?.extra?.apiUrl || 'https://api.example.com',
+  adMobId: Constants.expoConfig?.extra?.adMobId
+};
+```
+
+## TypeScript Configuration
+```json
+{
+  "typescript": "~5.8.3",
+  "@types/react": "~19.0.10"
+}
+```
+
+**TypeScript 5.8 Features:**
+- **Improved Performance**: Faster type checking
+- **Better Inference**: Enhanced type inference for complex patterns
+- **Decorators**: Stage 3 decorators support
+
+**Configuration Best Practices:**
+```json
+// tsconfig.json - Recommended settings
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx"
+  }
+}
+```
+
+## Animation & Interaction Libraries
+
+### React Native Reanimated
+```json
+{
+  "react-native-reanimated": "~3.17.4",
+  "react-native-gesture-handler": "~2.24.0"
+}
+```
+
+**Reanimated 3.17 Best Practices:**
+```typescript
+// ✅ Good: Use worklets for better performance
+import { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
+
+function RouletteWheel() {
+  const rotation = useSharedValue(0);
+  
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ rotate: `${rotation.value}deg` }]
+    };
+  });
+  
+  const spin = () => {
+    'worklet';
+    rotation.value = withSpring(rotation.value + 360, {
+      damping: 10,
+      stiffness: 100
+    });
+  };
+}
+
+// ✅ Good: Use gesture handler for complex interactions
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+
+const panGesture = Gesture.Pan()
+  .onBegin(() => {
+    'worklet';
+    // Handle gesture start
+  })
+  .onUpdate((event) => {
+    'worklet';
+    translateX.value = event.translationX;
+  })
+  .onEnd(() => {
+    'worklet';
+    translateX.value = withSpring(0);
+  });
+```
+
+## Navigation & Routing
+```json
+{
+  "@react-navigation/native": "^7.1.6",
+  "@react-navigation/bottom-tabs": "^7.3.10",
+  "@react-navigation/elements": "^2.3.8"
+}
+```
+
+**Navigation 7.x Best Practices:**
+```typescript
+// ✅ Good: Use type-safe navigation with Expo Router
+import { Link, router } from 'expo-router';
+
+// Declarative navigation
+<Link href="/settings">Go to Settings</Link>
+
+// Programmatic navigation
+router.push('/profile');
+router.replace('/login');
+
+// ✅ Good: Type-safe navigation params
+type RootStackParamList = {
+  Home: undefined;
+  Profile: { userId: string };
+  Settings: { theme: 'light' | 'dark' };
+};
+```
+
+## State Management & Storage
+```json
+{
+  "@react-native-async-storage/async-storage": "^2.1.2"
+}
+```
+
+**AsyncStorage 2.x Best Practices:**
+```typescript
+// ✅ Good: Use proper error handling and typing
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+class StorageService {
+  static async setItem<T>(key: string, value: T): Promise<void> {
+    try {
+      const jsonValue = JSON.stringify(value);
+      await AsyncStorage.setItem(key, jsonValue);
+    } catch (error) {
+      console.error('Error saving data:', error);
+      throw error;
+    }
+  }
+  
+  static async getItem<T>(key: string): Promise<T | null> {
+    try {
+      const jsonValue = await AsyncStorage.getItem(key);
+      return jsonValue != null ? JSON.parse(jsonValue) : null;
+    } catch (error) {
+      console.error('Error reading data:', error);
+      return null;
+    }
+  }
+}
+
+// ✅ Good: Use with React hooks
+function useAsyncStorage<T>(key: string, defaultValue: T) {
+  const [value, setValue] = useState<T>(defaultValue);
+  
+  useEffect(() => {
+    StorageService.getItem<T>(key).then(stored => {
+      if (stored !== null) setValue(stored);
+    });
+  }, [key]);
+  
+  const updateValue = useCallback(async (newValue: T) => {
+    setValue(newValue);
+    await StorageService.setItem(key, newValue);
+  }, [key]);
+  
+  return [value, updateValue] as const;
+}
+```
+
+## Media & Graphics Libraries
+
+### SVG & Graphics
+```json
+{
+  "react-native-svg": "15.11.2",
+  "react-native-confetti-cannon": "^1.5.2"
+}
+```
+
+**React Native SVG 15.x Best Practices:**
+```typescript
+// ✅ Good: Use SVG for scalable graphics
+import Svg, { Circle, Path, G } from 'react-native-svg';
+
+function WheelSegment({ startAngle, endAngle, color }: SegmentProps) {
+  return (
+    <Svg width="100%" height="100%">
+      <G rotation={startAngle} origin="150, 150">
+        <Path
+          d={`M 150 150 L 150 50 A 100 100 0 0 1 ${endX} ${endY} Z`}
+          fill={color}
+          stroke="#fff"
+          strokeWidth={2}
+        />
+      </G>
+    </Svg>
+  );
+}
+
+// ✅ Good: Optimize SVG performance
+const MemoizedWheelSegment = React.memo(WheelSegment);
+```
+
+### Audio & Haptics
+```json
+{
+  "expo-audio": "~0.4.5",
+  "expo-haptics": "~14.1.4"
+}
+```
+
+**Audio & Haptics Best Practices:**
+```typescript
+// ✅ Good: Use Expo Audio with proper resource management
+import { Audio } from 'expo-audio';
+
+class SoundManager {
+  private sounds: Map<string, Audio.Sound> = new Map();
+  
+  async loadSound(name: string, uri: string): Promise<void> {
+    try {
+      const { sound } = await Audio.Sound.createAsync({ uri });
+      this.sounds.set(name, sound);
+    } catch (error) {
+      console.error(`Failed to load sound ${name}:`, error);
+    }
+  }
+  
+  async playSound(name: string): Promise<void> {
+    const sound = this.sounds.get(name);
+    if (sound) {
+      await sound.replayAsync();
+    }
+  }
+  
+  // ✅ Important: Clean up resources
+  async cleanup(): Promise<void> {
+    for (const sound of this.sounds.values()) {
+      await sound.unloadAsync();
+    }
+    this.sounds.clear();
+  }
+}
+
+// ✅ Good: Use haptics appropriately
+import * as Haptics from 'expo-haptics';
+
+function handleSpinStart() {
+  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+}
+
+function handleSpinEnd() {
+  Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+}
+```
+
+## Monetization & Ads
+```json
+{
+  "react-native-google-mobile-ads": "^15.3.1"
+}
+```
+
+**Google Mobile Ads 15.x Best Practices:**
+```typescript
+// ✅ Good: Initialize ads properly
+import mobileAds, { 
+  BannerAd, 
+  BannerAdSize, 
+  TestIds,
+  InterstitialAd,
+  AdEventType
+} from 'react-native-google-mobile-ads';
+
+// Initialize on app start
+mobileAds()
+  .initialize()
+  .then(adapterStatuses => {
+    console.log('AdMob initialized:', adapterStatuses);
+  });
+
+// ✅ Good: Use test ads during development
+const adUnitId = __DEV__ 
+  ? TestIds.BANNER 
+  : 'ca-app-pub-xxxxxxxxxxxxx/yyyyyyyyyy';
+
+function AdBanner() {
+  return (
+    <BannerAd
+      unitId={adUnitId}
+      size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
+      requestOptions={{
+        requestNonPersonalizedAdsOnly: true,
+      }}
+      onAdLoaded={() => console.log('Banner ad loaded')}
+      onAdFailedToLoad={error => console.log('Banner ad failed:', error)}
+    />
+  );
+}
+
+// ✅ Good: Handle interstitial ads properly
+const interstitial = InterstitialAd.createForAdRequest(adUnitId);
+
+interstitial.addAdEventListener(AdEventType.LOADED, () => {
+  interstitial.show();
+});
+
+interstitial.addAdEventListener(AdEventType.ERROR, error => {
+  console.error('Interstitial error:', error);
+});
+```
+
+## Development & Build Tools
+
+### Linting & Code Quality
+```json
+{
+  "eslint": "^9.25.0",
+  "eslint-config-expo": "~9.2.0"
+}
+```
+
+**ESLint 9.x Configuration:**
+```javascript
+// eslint.config.js - Flat Config
+import { FlatCompat } from '@eslint/eslintrc';
+import js from '@eslint/js';
+
+const compat = new FlatCompat({
+  baseDirectory: __dirname,
+  recommendedConfig: js.configs.recommended,
+});
+
+export default [
+  ...compat.extends('expo', '@react-native'),
+  {
+    rules: {
+      'react-hooks/exhaustive-deps': 'warn',
+      'react-native/no-unused-styles': 'error',
+      '@typescript-eslint/no-unused-vars': 'error',
+      'prefer-const': 'error'
+    }
+  }
+];
+```
+
+### Build & Deployment
+```json
+{
+  "gh-pages": "^6.3.0"
+}
+```
+
+**Deployment Best Practices:**
+```json
+// package.json - Optimized scripts
+{
+  "scripts": {
+    "web": "EXPO_PLATFORM=web expo start --web",
+    "web-safe": "expo start --web --offline",
+    "predeploy": "expo export -p web",
+    "deploy": "gh-pages --nojekyll -d dist",
+    "build:web": "expo export -p web --output-dir dist",
+    "build:android": "eas build --platform android",
+    "build:ios": "eas build --platform ios"
+  }
+}
+```
+
+## Version Management Strategy
+
+### Dependency Versioning
+- **Expo packages**: Use `~` for patch updates (e.g., `~53.0.9`)
+- **React/React Native**: Pin exact versions for stability
+- **Third-party libraries**: Use `^` for minor updates (e.g., `^15.3.1`)
+
+### Update Strategy
+```bash
+# Check for outdated packages
+npx expo install --fix
+
+# Update Expo SDK
+npx expo install --latest
+
+# Check for breaking changes
+npx expo doctor
+```
+
+## Performance Optimization
+
+### Bundle Size Optimization
+```typescript
+// ✅ Good: Use dynamic imports for code splitting
+const LazyModal = lazy(() => import('./SaveLoadModal'));
+
+// ✅ Good: Tree shake unused exports
+export { default as RouletteWheel } from './RouletteWheel';
+export { default as ActivityInput } from './ActivityInput';
+
+// ✅ Good: Optimize images
+import { Image } from 'expo-image';
+
+<Image
+  source={{ uri: imageUrl }}
+  cachePolicy="memory-disk"
+  contentFit="cover"
+  transition={200}
+/>
+```
+
+### Memory Management
+```typescript
+// ✅ Good: Clean up resources in useEffect
+useEffect(() => {
+  const subscription = someService.subscribe();
+  
+  return () => {
+    subscription.unsubscribe();
+  };
+}, []);
+
+// ✅ Good: Use React.memo for expensive components
+const ExpensiveComponent = React.memo(({ data }: Props) => {
+  return <ComplexCalculation data={data} />;
+});
+```
+
+## Security Best Practices
+
+### Environment Variables
+```typescript
+// ✅ Good: Use expo-constants for sensitive data
+import Constants from 'expo-constants';
+
+const config = {
+  apiKey: Constants.expoConfig?.extra?.apiKey,
+  adMobId: Constants.expoConfig?.extra?.adMobId,
+};
+
+// app.config.js
+export default {
+  expo: {
+    extra: {
+      apiKey: process.env.API_KEY,
+      adMobId: process.env.ADMOB_APP_ID,
+    },
+  },
+};
+```
+
+### Data Validation
+```typescript
+// ✅ Good: Validate user inputs
+import { z } from 'zod';
+
+const ActivitySchema = z.object({
+  name: z.string().min(1).max(100),
+  emoji: z.string().emoji(),
+  color: z.string().regex(/^#[0-9A-F]{6}$/i),
+});
+
+function validateActivity(data: unknown) {
+  return ActivitySchema.parse(data);
+}
+```
+
+## Testing Strategy
+
+### Recommended Testing Stack
+```json
+{
+  "jest": "^29.0.0",
+  "@testing-library/react-native": "^12.0.0",
+  "detox": "^20.0.0"
+}
+```
+
+**Testing Best Practices:**
+```typescript
+// ✅ Good: Test components with proper mocking
+import { render, fireEvent } from '@testing-library/react-native';
+import RouletteWheel from '../RouletteWheel';
+
+jest.mock('react-native-reanimated', () => ({
+  useSharedValue: jest.fn(() => ({ value: 0 })),
+  useAnimatedStyle: jest.fn(() => ({})),
+  withSpring: jest.fn(),
+}));
+
+test('spins wheel when button pressed', () => {
+  const { getByTestId } = render(<RouletteWheel activities={mockActivities} />);
+  
+  fireEvent.press(getByTestId('spin-button'));
+  
+  expect(getByTestId('wheel')).toHaveAnimatedStyle({ transform: [{ rotate: '360deg' }] });
+});
+```
+
+## Troubleshooting Common Issues
+
+### Metro Configuration
+```javascript
+// metro.config.js - Handle SVG and other assets
+const { getDefaultConfig } = require('expo/metro-config');
+
+const config = getDefaultConfig(__dirname);
+
+config.transformer.assetPlugins = ['expo-asset/tools/hashAssetFiles'];
+
+module.exports = config;
+```
+
+### Gradle Configuration (Android)
+```gradle
+// android/app/build.gradle
+android {
+  compileSdkVersion 34
+  
+  defaultConfig {
+    multiDexEnabled true
+    minSdkVersion 21
+    targetSdkVersion 34
+  }
+}
+```
+
+This technology stack provides a solid foundation for cross-platform mobile development with modern React Native, Expo, and TypeScript patterns.
+

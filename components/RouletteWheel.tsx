@@ -407,19 +407,70 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
         const midAngleDegrees = startAngleDegrees + sliceAngleDegrees / 2;
         const textAngleRad = (midAngleDegrees - 90) * (Math.PI / 180);
         
-        // Position text closer to the center, but not too close
-        const textRadius = CENTER * 0.56; // Adjusted from 0.5 to 0.58 to move text slightly away from center
-        const textX = CENTER + textRadius * Math.cos(textAngleRad);
-        const textY = CENTER + textRadius * Math.sin(textAngleRad);
+        // DYNAMIC CONCENTRIC WHEELS - Size increases with activity count
+        // More activities = both wheels move further from center for better space utilization
         
-        // Position emoji near the outer edge of the wheel
-        const emojiRadius = CENTER * 0.83; // Adjusted from 0.85 to 0.8 for better spacing with text
-        const emojiX = CENTER + emojiRadius * Math.cos(textAngleRad);
-        const emojiY = CENTER + emojiRadius * Math.sin(textAngleRad);
+        // Outer wheel for emojis (dynamically expanding outward)
+        const getEmojiWheelRadius = (activityCount: number) => {
+          // As activities increase, emoji wheel moves closer to edge for more space
+          const baseRadius = 0.75; // Starting point for few activities
+          const expansionRate = 0.008; // How much to expand per activity
+          const maxRadius = 0.88; // Maximum safe distance from edge
+          
+          const dynamicRadius = baseRadius + (activityCount * expansionRate);
+          return CENTER * Math.min(dynamicRadius, maxRadius);
+        };
+
+        // Inner wheel for text (dynamically expanding but always inside emoji wheel)
+        const getTextWheelRadius = (activityCount: number, hasEmoji: boolean) => {
+          if (!hasEmoji) {
+            // If no emoji, text can expand more into the middle-outer zone
+            const baseRadius = 0.60;
+            const expansionRate = 0.006;
+            const maxRadius = 0.75;
+            
+            const dynamicRadius = baseRadius + (activityCount * expansionRate);
+            return CENTER * Math.min(dynamicRadius, maxRadius);
+          }
+          
+          // Text wheel - CLOSER to emoji wheel with smaller gap
+          const baseRadius = 0.58; // Start much closer to emoji wheel
+          const expansionRate = 0.01; // Slightly faster expansion to keep close
+          const maxRadius = 0.80; // Higher maximum for better space usage
+          
+          const dynamicRadius = baseRadius + (activityCount * expansionRate);
+          return CENTER * Math.min(dynamicRadius, maxRadius);
+        };
+
+                          const emojiRadius = getEmojiWheelRadius(activities.length);
+         const textRadius = getTextWheelRadius(activities.length, !!activity.emoji);
+         
+         // TEXT ALIGNMENT FIX - All text starts from same distance from center
+         // Instead of centering text at radius, we position it to start at the text wheel boundary
+         const textStartX = CENTER + textRadius * Math.cos(textAngleRad);
+         const textStartY = CENTER + textRadius * Math.sin(textAngleRad);
         
-        // Unified font size
-        const fontSize = 14;
-        const emojiFontSize = 22;
+        // Dynamic font sizes based on activity count
+        const getDynamicSizes = (activityCount: number) => {
+          // Base sizes for optimal readability
+          const baseTextSize = 14;
+          const baseEmojiSize = 22;
+          
+          // Scaling factors based on activity count
+          if (activityCount <= 4) return { textSize: baseTextSize, emojiSize: baseEmojiSize + 4 }; // Larger for few items
+          if (activityCount <= 6) return { textSize: baseTextSize, emojiSize: baseEmojiSize }; // Standard
+          if (activityCount <= 8) return { textSize: baseTextSize - 1, emojiSize: baseEmojiSize - 2 }; // Slightly smaller
+          if (activityCount <= 12) return { textSize: baseTextSize - 2, emojiSize: baseEmojiSize - 4 }; // Smaller
+          if (activityCount <= 16) return { textSize: baseTextSize - 3, emojiSize: baseEmojiSize - 6 }; // Much smaller
+          return { textSize: Math.max(baseTextSize - 4, 8), emojiSize: Math.max(baseEmojiSize - 8, 12) }; // Minimum readable
+        };
+
+        const { textSize: fontSize, emojiSize: emojiFontSize } = getDynamicSizes(activities.length);
+
+        // Calculate emoji position using the new function
+        const emojiPositionRadius = emojiRadius;
+        const emojiX = CENTER + emojiPositionRadius * Math.cos(textAngleRad);
+        const emojiY = CENTER + emojiPositionRadius * Math.sin(textAngleRad);
         
         // Calculate text rotation angle
         const textRotationAngle = midAngleDegrees + 90;
@@ -430,15 +481,87 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
           `rgba(${parseInt(sliceColor.slice(1, 3), 16)}, ${parseInt(sliceColor.slice(3, 5), 16)}, ${parseInt(sliceColor.slice(5, 7), 16)}, 0.7)` : 
           sliceColor;
 
-        // Simple word wrap function
-        const wordWrap = (text: string): string[] => {
-          let maxChars: number;
+        // SMART CHARACTER LIMITS for concentric wheel system
+        // Calculate available space in the inner text wheel
+        const getDynamicMaxChars = (activityCount: number, sliceAngleDegrees: number, hasEmoji: boolean) => {
+          // Calculate the arc length available in the text wheel
+          const textWheelCircumference = 2 * Math.PI * textRadius;
+          const availableArcLength = (sliceAngleDegrees / 360) * textWheelCircumference;
           
-          // Adjust max characters based on slice width
-          if (sliceAngleDegrees < 35) maxChars = 10;       // Increased from 6 to 7
-          else if (sliceAngleDegrees < 45) maxChars = 10;  // Increased from 7 to 8
-          else if (sliceAngleDegrees < 60) maxChars = 10;  // Increased from 8 to 9
-          else maxChars = 10;                             // Increased from 9 to 10
+          // Estimate character width based on font size (more conservative approximation)
+          const avgCharWidth = fontSize * 0.7; // More conservative character width
+          const maxCharsFromSpace = Math.floor(availableArcLength / avgCharWidth);
+          
+          // FORCE SINGLE LINE for many activities to save vertical space
+          if (activityCount >= 12) {
+            // For many activities, be very restrictive
+            return Math.max(Math.min(maxCharsFromSpace, 8), 3); // Very short single-line
+          }
+          
+          // For fewer activities, ENCOURAGE WRAPPING by using lower character limits
+          if (activityCount <= 4) {
+            // Force wrapping for wide slices to utilize vertical space better
+            return Math.min(maxCharsFromSpace, 8); // Lower limit to encourage wrapping
+          }
+          if (activityCount <= 6) {
+            return Math.min(maxCharsFromSpace, 9); // Encourage wrapping
+          }
+          if (activityCount <= 8) {
+            return Math.min(maxCharsFromSpace, 10); // Standard
+          }
+          if (activityCount <= 10) {
+            return Math.min(maxCharsFromSpace, 12); // Getting tighter
+          }
+          
+          // For 11+ activities, be restrictive
+          return Math.max(Math.min(maxCharsFromSpace, 7), 4); // Short but readable
+        };
+
+        const wordWrap = (text: string): string[] => {
+          const maxChars = getDynamicMaxChars(activities.length, sliceAngleDegrees, !!activity.emoji);
+          
+          // Debug logging for dynamic concentric wheel system (can be removed later)
+          if (activity.id === activities[0]?.id) {
+            const textWheelCircumference = 2 * Math.PI * textRadius;
+            const availableArcLength = (sliceAngleDegrees / 360) * textWheelCircumference;
+            const avgCharWidth = fontSize * 0.7;
+            const maxCharsFromSpace = Math.floor(availableArcLength / avgCharWidth);
+            
+            console.log(`🎯 Dynamic Concentric Wheels for ${activities.length} activities:`);
+            console.log(`   📏 Text wheel: ${(textRadius/CENTER*100).toFixed(1)}% | Emoji wheel: ${(emojiRadius/CENTER*100).toFixed(1)}%`);
+            console.log(`   🔤 Font sizes: text=${fontSize}px, emoji=${emojiFontSize}px`);
+            console.log(`   📐 Arc calc: ${availableArcLength.toFixed(1)}px ÷ ${avgCharWidth.toFixed(1)}px = ${maxCharsFromSpace} chars`);
+            console.log(`   📝 Final limit: ${maxChars} chars (after activity-based cap)`);
+            console.log(`   🎨 Slice angle: ${sliceAngleDegrees.toFixed(1)}°`);
+            console.log(`   ✨ Text alignment: START from wheel boundary (not centered)`);
+          }
+          
+          // FORCE SINGLE LINE for many activities by truncating if necessary
+          if (activities.length >= 12) {
+            if (text.length <= maxChars) {
+              return [text];
+            } else {
+              // Try to truncate at word boundary first
+              const words = text.split(' ');
+              if (words.length > 1) {
+                // Try to fit first word(s)
+                let truncated = words[0];
+                for (let i = 1; i < words.length; i++) {
+                  const candidate = truncated + ' ' + words[i];
+                  if (candidate.length <= maxChars - 1) {
+                    truncated = candidate;
+                  } else {
+                    break;
+                  }
+                }
+                if (truncated.length < text.length) {
+                  return [truncated + '…'];
+                }
+              }
+              // Fall back to character truncation
+              return [text.substring(0, maxChars - 1) + '…'];
+            }
+          }
           
           // No wrapping needed for short text
           if (text.length <= maxChars) return [text];
@@ -492,14 +615,14 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
           if (textLines.length === 1) {
             return (
               <SvgText
-                x={textX}
-                y={textY}
+                x={textStartX}
+                y={textStartY}
                 fill="#4e4370"
                 fontSize={fontSize}
                 fontFamily={FONTS.jua}
-                textAnchor="middle"
+                textAnchor="start"
                 alignmentBaseline="middle"
-                transform={`rotate(${textRotationAngle}, ${textX}, ${textY})`}
+                transform={`rotate(${textRotationAngle}, ${textStartX}, ${textStartY})`}
                 textDecoration="none"
               >
                 {activity.name}
@@ -508,25 +631,34 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
           } 
           // Multi-line text needs specific alignment
           else {
-            const lineSpacing = fontSize * 1.15;
+            // Dynamic line spacing based on font size and activity count
+            const getLineSpacing = (fontSize: number, activityCount: number) => {
+              const baseSpacing = fontSize * 1.15;
+              // Tighter spacing for more activities to fit better
+              if (activityCount <= 6) return baseSpacing;
+              if (activityCount <= 12) return fontSize * 1.1;
+              return fontSize * 1.05; // Tighter for many activities
+            };
+            
+            const lineSpacing = getLineSpacing(fontSize, activities.length);
             const totalHeight = textLines.length * lineSpacing;
             const verticalOffset = -(totalHeight / 2) + (lineSpacing / 2);
             
             return textLines.map((line, index) => {
               // Calculate vertical position for this line
-              const lineY = textY + verticalOffset + (index * lineSpacing);
+              const lineY = textStartY + verticalOffset + (index * lineSpacing);
               
               return (
                 <SvgText
                   key={`line-${index}`}
-                  x={textX}
+                  x={textStartX}
                   y={lineY}
                   fill="#4e4370"
                   fontSize={fontSize}
                   fontFamily={FONTS.jua}
-                  textAnchor="middle"
+                  textAnchor="start"
                   alignmentBaseline="middle"
-                  transform={`rotate(${textRotationAngle}, ${textX}, ${textY})`}
+                  transform={`rotate(${textRotationAngle}, ${textStartX}, ${textStartY})`}
                   textDecoration="none"
                 >
                   {line}

@@ -610,7 +610,8 @@ export default function HomeScreen() {
             onPress={() => {}} // Prevent closing when tapping inside popup
           >
             <Text allowFontScaling={false} style={[styles.popupTitle, { color: currentTheme.uiColors.primary }]}>Reset Activities 🔄</Text>
-            <Text allowFontScaling={false} style={[styles.popupMessage, { color: currentTheme.uiColors.secondary }]}>How many random activities do you want? (Max 100)</Text>
+            <Text allowFontScaling={false} style={[styles.popupMessage, { color: currentTheme.uiColors.secondary }]}>How many random activities do you want?</Text>
+            <Text allowFontScaling={false} style={[styles.popupMessage, { color: currentTheme.uiColors.secondary, fontSize: 14, textAlign: 'center', marginTop: -5, marginBottom: 15 }]}>(Max 100)</Text>
             <TextInput
               style={[styles.resetCountInput, { 
                 borderColor: currentTheme.uiColors.primary,

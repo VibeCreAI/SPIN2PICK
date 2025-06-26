@@ -368,7 +368,19 @@ const FALLBACK_ACTIVITY_PAIRS = [
   { name: 'Robot Dance', emoji: '🤖' },
   { name: 'Animal Sounds', emoji: '🐄' },
   { name: 'Tongue Twisters', emoji: '👅' },
-  { name: 'Joke Telling', emoji: '😂' }
+  { name: 'Joke Telling', emoji: '😂' },
+  
+  // Additional Activities (91-100)
+  { name: 'Make Paper Planes', emoji: '✈️' },
+  { name: 'Hula Hooping', emoji: '🤹' },
+  { name: 'Face Painting', emoji: '🎨' },
+  { name: 'Meditation', emoji: '🧘' },
+  { name: 'Photography', emoji: '📷' },
+  { name: 'Origami Animals', emoji: '🦢' },
+  { name: 'Invisible Rope', emoji: '🪢' },
+  { name: 'Mirror Games', emoji: '🪞' },
+  { name: 'Sound Effects', emoji: '🔊' },
+  { name: 'Time Capsule', emoji: '⏰' }
 ];
 
 // Extract just the activity names for backward compatibility
@@ -424,9 +436,13 @@ export const getRandomFallbackActivityPair = (existingActivities: string[]): { n
  * Generate random default activities for first-time app installation
  */
 export const generateRandomDefaultActivities = (count: number = 8): Array<{ name: string; emoji: string }> => {
+  // Ensure we don't exceed our available unique activities
+  const maxAvailable = FALLBACK_ACTIVITY_PAIRS.length; // 100 activities
+  const actualCount = Math.min(count, maxAvailable);
+  
   // Shuffle the activity pairs array
   const shuffled = [...FALLBACK_ACTIVITY_PAIRS].sort(() => Math.random() - 0.5);
   
-  // Take the first 'count' activities
-  return shuffled.slice(0, count);
+  // Take the first 'actualCount' activities (up to 100)
+  return shuffled.slice(0, actualCount);
 }; 

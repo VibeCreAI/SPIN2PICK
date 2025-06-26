@@ -610,7 +610,7 @@ export default function HomeScreen() {
             onPress={() => {}} // Prevent closing when tapping inside popup
           >
             <Text allowFontScaling={false} style={[styles.popupTitle, { color: currentTheme.uiColors.primary }]}>Reset Activities 🔄</Text>
-            <Text allowFontScaling={false} style={[styles.popupMessage, { color: currentTheme.uiColors.secondary }]}>How many random activities do you want?</Text>
+            <Text allowFontScaling={false} style={[styles.popupMessage, { color: currentTheme.uiColors.secondary }]}>How many random activities do you want? (Max 100)</Text>
             <TextInput
               style={[styles.resetCountInput, { 
                 borderColor: currentTheme.uiColors.primary,
@@ -619,11 +619,12 @@ export default function HomeScreen() {
               keyboardType="numeric"
               onChangeText={(text: string) => {
                 const num = parseInt(text, 10);
-                if (!isNaN(num) && num > 0) {
+                if (!isNaN(num) && num > 0 && num <= 100) {
                   setResetCount(num);
                 } else if (text === '') {
                   setResetCount(0); // Allow empty input temporarily
                 }
+                // Silently ignore values > 100
               }}
               value={resetCount.toString()}
               placeholder="8"

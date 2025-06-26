@@ -2,6 +2,7 @@ import { FONTS } from '@/app/_layout';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Dimensions, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useTheme } from '../hooks/useTheme';
 import { Activity } from '../utils/colorUtils';
 
 export interface SaveSlot {
@@ -28,6 +29,7 @@ export const SaveLoadModal: React.FC<SaveLoadModalProps> = ({
   currentActivities,
   onLoadActivities,
 }) => {
+  const { currentTheme } = useTheme();
   const [saveSlots, setSaveSlots] = useState<(SaveSlot | null)[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -169,31 +171,50 @@ export const SaveLoadModal: React.FC<SaveLoadModalProps> = ({
     const isEmpty = !slot;
 
     return (
-      <View key={index} style={[styles.slotContainer, isEmpty ? styles.emptySlot : styles.filledSlot]}>
+      <View key={index} style={[
+        styles.slotContainer, 
+        isEmpty ? styles.emptySlot : styles.filledSlot,
+        {
+          backgroundColor: currentTheme.uiColors.cardBackground,
+          borderColor: isEmpty ? currentTheme.uiColors.secondary : currentTheme.uiColors.primary,
+        }
+      ]}>
         {isEmpty ? (
           <View style={styles.slotContent}>
-            <Text allowFontScaling={false} style={styles.slotSubtext}>Slot {index + 1} - Empty</Text>
-            <TouchableOpacity style={[styles.actionButton, styles.saveButton]} onPress={() => handleSavePress(index)}>
-              <Text allowFontScaling={false} style={styles.actionButtonText}>💾 Save Here</Text>
+            <Text allowFontScaling={false} style={[styles.slotSubtext, { color: currentTheme.uiColors.secondary }]}>Slot {index + 1} - Empty</Text>
+            <TouchableOpacity 
+              style={[styles.actionButton, styles.saveButton, { backgroundColor: currentTheme.uiColors.accent }]} 
+              onPress={() => handleSavePress(index)}
+            >
+              <Text allowFontScaling={false} style={[styles.actionButtonText, { color: currentTheme.uiColors.buttonText }]}>💾 Save Here</Text>
             </TouchableOpacity>
           </View>
         ) : (
           <View style={styles.slotContent}>
             <View style={styles.slotInfo}>
-              <Text allowFontScaling={false} style={styles.slotName}>{slot.name}</Text>
-              <Text allowFontScaling={false} style={styles.slotDetails}>
+              <Text allowFontScaling={false} style={[styles.slotName, { color: currentTheme.uiColors.primary }]}>{slot.name}</Text>
+              <Text allowFontScaling={false} style={[styles.slotDetails, { color: currentTheme.uiColors.secondary }]}>
                 {slot.activities.length} activities • {new Date(slot.createdAt).toLocaleDateString()}
               </Text>
             </View>
             <View style={styles.slotActions}>
-              <TouchableOpacity style={[styles.actionButton, styles.loadButton]} onPress={() => handleLoadPress(index)}>
-                <Text allowFontScaling={false} style={styles.actionButtonText}>📂 Load</Text>
+              <TouchableOpacity 
+                style={[styles.actionButton, styles.loadButton, { backgroundColor: currentTheme.uiColors.accent }]} 
+                onPress={() => handleLoadPress(index)}
+              >
+                <Text allowFontScaling={false} style={[styles.actionButtonText, { color: currentTheme.uiColors.buttonText }]}>📂 Load</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={[styles.actionButton, styles.overwriteButton]} onPress={() => handleSavePress(index, true)}>
-                <Text allowFontScaling={false} style={styles.actionButtonText}>✏️ Overwrite</Text>
+              <TouchableOpacity 
+                style={[styles.actionButton, styles.overwriteButton, { backgroundColor: '#f5c09f' }]} 
+                onPress={() => handleSavePress(index, true)}
+              >
+                <Text allowFontScaling={false} style={[styles.actionButtonText, { color: '#fff' }]}>✏️ Overwrite</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={[styles.actionButton, styles.deleteButton]} onPress={() => handleDeletePress(index)}>
-                <Text allowFontScaling={false} style={styles.actionButtonText}>🗑️ Delete</Text>
+              <TouchableOpacity 
+                style={[styles.actionButton, styles.deleteButton, { backgroundColor: '#f59f9f' }]} 
+                onPress={() => handleDeletePress(index)}
+              >
+                <Text allowFontScaling={false} style={[styles.actionButtonText, { color: '#fff' }]}>🗑️ Delete</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -205,15 +226,29 @@ export const SaveLoadModal: React.FC<SaveLoadModalProps> = ({
   const renderConfirmationModal = () => (
     <Modal visible={confirmationModal.visible} transparent animationType="fade" onRequestClose={() => setConfirmationModal({ ...confirmationModal, visible: false })}>
       <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setConfirmationModal({ ...confirmationModal, visible: false })}>
-        <TouchableOpacity style={[styles.popupContainer, { width: containerWidth }]} activeOpacity={1}>
-          <Text allowFontScaling={false} style={styles.popupTitle}>{confirmationModal.title}</Text>
-          <Text allowFontScaling={false} style={styles.popupMessage}>{confirmationModal.message}</Text>
+        <TouchableOpacity 
+          style={[styles.popupContainer, { 
+            width: containerWidth,
+            backgroundColor: currentTheme.uiColors.modalBackground,
+            borderColor: currentTheme.uiColors.primary,
+            borderWidth: 2,
+          }]} 
+          activeOpacity={1}
+        >
+          <Text allowFontScaling={false} style={[styles.popupTitle, { color: currentTheme.uiColors.primary }]}>{confirmationModal.title}</Text>
+          <Text allowFontScaling={false} style={[styles.popupMessage, { color: currentTheme.uiColors.secondary }]}>{confirmationModal.message}</Text>
           <View style={styles.popupButtons}>
-            <TouchableOpacity style={[styles.popupButton, styles.cancelButton]} onPress={() => setConfirmationModal({ ...confirmationModal, visible: false })}>
-              <Text allowFontScaling={false} style={styles.popupButtonText}>Cancel</Text>
+            <TouchableOpacity 
+              style={[styles.popupButton, styles.cancelButton, { backgroundColor: '#f59f9f' }]} 
+              onPress={() => setConfirmationModal({ ...confirmationModal, visible: false })}
+            >
+              <Text allowFontScaling={false} style={[styles.popupButtonText, { color: '#fff' }]}>Cancel</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={[styles.popupButton, styles.confirmButton]} onPress={confirmationModal.onConfirm}>
-              <Text allowFontScaling={false} style={styles.popupButtonText}>Confirm</Text>
+            <TouchableOpacity 
+              style={[styles.popupButton, styles.confirmButton, { backgroundColor: currentTheme.uiColors.accent }]} 
+              onPress={confirmationModal.onConfirm}
+            >
+              <Text allowFontScaling={false} style={[styles.popupButtonText, { color: currentTheme.uiColors.buttonText }]}>Confirm</Text>
             </TouchableOpacity>
           </View>
         </TouchableOpacity>
@@ -224,26 +259,45 @@ export const SaveLoadModal: React.FC<SaveLoadModalProps> = ({
   const renderSaveInputModal = () => (
     <Modal visible={saveModal.visible} transparent animationType="fade" onRequestClose={() => setSaveModal({ ...saveModal, visible: false })}>
       <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setSaveModal({ ...saveModal, visible: false })}>
-        <TouchableOpacity style={[styles.popupContainer, { width: containerWidth }]} activeOpacity={1}>
-          <Text allowFontScaling={false} style={styles.popupTitle}>{saveModal.isOverwrite ? '✏️ Overwrite Save' : '💾 Save Activities'}</Text>
-          <Text allowFontScaling={false} style={styles.popupMessage}>Enter a name for this save:</Text>
+        <TouchableOpacity 
+          style={[styles.popupContainer, { 
+            width: containerWidth,
+            backgroundColor: currentTheme.uiColors.modalBackground,
+            borderColor: currentTheme.uiColors.primary,
+            borderWidth: 2,
+          }]} 
+          activeOpacity={1}
+        >
+          <Text allowFontScaling={false} style={[styles.popupTitle, { color: currentTheme.uiColors.primary }]}>{saveModal.isOverwrite ? '✏️ Overwrite Save' : '💾 Save Activities'}</Text>
+          <Text allowFontScaling={false} style={[styles.popupMessage, { color: currentTheme.uiColors.secondary }]}>Enter a name for this save:</Text>
           <TextInput
-            style={styles.saveNameInput}
+            style={[styles.saveNameInput, { 
+              borderColor: currentTheme.uiColors.primary,
+              color: currentTheme.uiColors.text,
+              backgroundColor: currentTheme.uiColors.cardBackground,
+            }]}
             value={saveName}
             onChangeText={(text) => setSaveName(text.slice(0, MAX_SAVE_NAME_LENGTH))}
             placeholder="My Awesome Activities"
-            placeholderTextColor="#999"
+            placeholderTextColor={currentTheme.uiColors.secondary}
             maxLength={MAX_SAVE_NAME_LENGTH}
             autoFocus
             allowFontScaling={false}
           />
-          <Text allowFontScaling={false} style={styles.charCounter}>{MAX_SAVE_NAME_LENGTH - saveName.length} characters remaining</Text>
+          <Text allowFontScaling={false} style={[styles.charCounter, { color: currentTheme.uiColors.secondary }]}>{MAX_SAVE_NAME_LENGTH - saveName.length} characters remaining</Text>
           <View style={styles.popupButtons}>
-            <TouchableOpacity style={[styles.popupButton, styles.cancelButton]} onPress={() => setSaveModal({ visible: false, slotIndex: null, isOverwrite: false })}>
-              <Text allowFontScaling={false} style={styles.popupButtonText}>Cancel</Text>
+            <TouchableOpacity 
+              style={[styles.popupButton, styles.cancelButton, { backgroundColor: '#f59f9f' }]} 
+              onPress={() => setSaveModal({ visible: false, slotIndex: null, isOverwrite: false })}
+            >
+              <Text allowFontScaling={false} style={[styles.popupButtonText, { color: '#fff' }]}>Cancel</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={[styles.popupButton, styles.confirmButton]} onPress={handleSaveToSlot} disabled={isLoading || !saveName.trim()}>
-              {isLoading ? <ActivityIndicator color="#fff" /> : <Text allowFontScaling={false} style={styles.popupButtonText}>Save</Text>}
+            <TouchableOpacity 
+              style={[styles.popupButton, styles.confirmButton, { backgroundColor: currentTheme.uiColors.accent }]} 
+              onPress={handleSaveToSlot} 
+              disabled={isLoading || !saveName.trim()}
+            >
+              {isLoading ? <ActivityIndicator color={currentTheme.uiColors.buttonText} /> : <Text allowFontScaling={false} style={[styles.popupButtonText, { color: currentTheme.uiColors.buttonText }]}>Save</Text>}
             </TouchableOpacity>
           </View>
         </TouchableOpacity>
@@ -254,11 +308,22 @@ export const SaveLoadModal: React.FC<SaveLoadModalProps> = ({
   const renderSuccessModal = () => (
     <Modal visible={successModal.visible} transparent animationType="fade" onRequestClose={() => setSuccessModal({ visible: false, message: '' })}>
       <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setSuccessModal({ visible: false, message: '' })}>
-        <TouchableOpacity style={[styles.popupContainer, { width: containerWidth }]} activeOpacity={1}>
-          <Text allowFontScaling={false} style={styles.popupTitle}>✅ Success!</Text>
-          <Text allowFontScaling={false} style={styles.popupMessage}>{successModal.message}</Text>
-          <TouchableOpacity style={[styles.popupButton, styles.confirmButton, { flex: 0, width: '100%' }]} onPress={() => setSuccessModal({ visible: false, message: '' })}>
-            <Text allowFontScaling={false} style={styles.popupButtonText}>OK</Text>
+        <TouchableOpacity 
+          style={[styles.popupContainer, { 
+            width: containerWidth,
+            backgroundColor: currentTheme.uiColors.modalBackground,
+            borderColor: currentTheme.uiColors.primary,
+            borderWidth: 2,
+          }]} 
+          activeOpacity={1}
+        >
+          <Text allowFontScaling={false} style={[styles.popupTitle, { color: currentTheme.uiColors.primary }]}>✅ Success!</Text>
+          <Text allowFontScaling={false} style={[styles.popupMessage, { color: currentTheme.uiColors.secondary }]}>{successModal.message}</Text>
+          <TouchableOpacity 
+            style={[styles.popupButton, styles.confirmButton, { flex: 0, width: '100%', backgroundColor: currentTheme.uiColors.accent }]} 
+            onPress={() => setSuccessModal({ visible: false, message: '' })}
+          >
+            <Text allowFontScaling={false} style={[styles.popupButtonText, { color: currentTheme.uiColors.buttonText }]}>OK</Text>
           </TouchableOpacity>
         </TouchableOpacity>
       </TouchableOpacity>
@@ -269,18 +334,29 @@ export const SaveLoadModal: React.FC<SaveLoadModalProps> = ({
     <>
       <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
         <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={onClose}>
-          <TouchableOpacity style={[styles.modalContainer, { width: containerWidth }]} activeOpacity={1}>
-            <Text allowFontScaling={false} style={styles.modalTitle}>💾 Save & Load</Text>
-            <Text allowFontScaling={false} style={styles.modalSubtitle}>Manage your activity sets</Text>
+          <TouchableOpacity 
+            style={[styles.modalContainer, { 
+              width: containerWidth,
+              backgroundColor: currentTheme.backgroundColor,
+              borderColor: currentTheme.uiColors.primary,
+              borderWidth: 2,
+            }]} 
+            activeOpacity={1}
+          >
+            <Text allowFontScaling={false} style={[styles.modalTitle, { color: currentTheme.uiColors.primary }]}>💾 Save & Load</Text>
+            <Text allowFontScaling={false} style={[styles.modalSubtitle, { color: currentTheme.uiColors.secondary }]}>Manage your activity sets</Text>
             {isLoading ? (
-              <ActivityIndicator size="large" color="#4e4370" />
+              <ActivityIndicator size="large" color={currentTheme.uiColors.primary} />
             ) : (
               <ScrollView style={styles.slotsScroll} contentContainerStyle={styles.slotsContainer}>
                 {saveSlots.map(renderSlot)}
               </ScrollView>
             )}
-            <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-              <Text allowFontScaling={false} style={styles.closeButtonText}>Close</Text>
+            <TouchableOpacity 
+              style={[styles.closeButton, { backgroundColor: currentTheme.uiColors.primary }]} 
+              onPress={onClose}
+            >
+              <Text allowFontScaling={false} style={[styles.closeButtonText, { color: currentTheme.uiColors.buttonText }]}>Close</Text>
             </TouchableOpacity>
           </TouchableOpacity>
         </TouchableOpacity>
@@ -301,7 +377,6 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   modalContainer: {
-    backgroundColor: '#f3efff',
     borderRadius: 16,
     padding: 20,
     width: '100%',
@@ -316,13 +391,11 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 24,
     fontFamily: FONTS.jua,
-    color: '#4e4370',
     marginBottom: 4,
   },
   modalSubtitle: {
     fontSize: 14,
     fontFamily: FONTS.jua,
-    color: '#666',
     marginBottom: 16,
   },
   slotsScroll: {
@@ -338,14 +411,10 @@ const styles = StyleSheet.create({
     borderWidth: 2,
   },
   emptySlot: {
-    backgroundColor: '#fff',
-    borderColor: '#d0cde1',
     borderStyle: 'dashed',
     alignItems: 'center',
   },
   filledSlot: {
-    backgroundColor: '#fff',
-    borderColor: '#c1b2f5',
   },
   slotContent: {
     gap: 8,
@@ -356,17 +425,14 @@ const styles = StyleSheet.create({
   slotName: {
     fontSize: 18,
     fontFamily: FONTS.jua,
-    color: '#4e4370',
   },
   slotDetails: {
     fontSize: 12,
     fontFamily: FONTS.jua,
-    color: '#666',
   },
   slotSubtext: {
     fontSize: 14,
     fontFamily: FONTS.jua,
-    color: '#999',
     marginBottom: 4,
   },
   slotActions: {
@@ -384,23 +450,17 @@ const styles = StyleSheet.create({
   actionButtonText: {
     fontSize: 14,
     fontFamily: FONTS.jua,
-    color: '#fff',
   },
   saveButton: {
-    backgroundColor: '#94c4f5',
     paddingHorizontal: 24,
   },
   loadButton: {
-    backgroundColor: '#94c4f5',
   },
   overwriteButton: {
-    backgroundColor: '#f5c09f',
   },
   deleteButton: {
-    backgroundColor: '#f59f9f',
   },
   closeButton: {
-    backgroundColor: '#4e4370',
     paddingVertical: 12,
     paddingHorizontal: 32,
     borderRadius: 20,
@@ -409,10 +469,8 @@ const styles = StyleSheet.create({
   closeButtonText: {
     fontSize: 16,
     fontFamily: FONTS.jua,
-    color: '#fff',
   },
   popupContainer: {
-    backgroundColor: '#fff',
     borderRadius: 16,
     padding: 20,
     width: '100%',
@@ -422,12 +480,10 @@ const styles = StyleSheet.create({
   popupTitle: {
     fontSize: 20,
     fontFamily: FONTS.jua,
-    color: '#4e4370',
   },
   popupMessage: {
     fontSize: 16,
     fontFamily: FONTS.jua,
-    color: '#666',
     textAlign: 'center',
   },
   popupButtons: {
@@ -444,28 +500,22 @@ const styles = StyleSheet.create({
   popupButtonText: {
     fontSize: 16,
     fontFamily: FONTS.jua,
-    color: '#fff',
   },
   cancelButton: {
-    backgroundColor: '#f59f9f',
   },
   confirmButton: {
-    backgroundColor: '#94c4f5',
   },
   saveNameInput: {
     borderWidth: 2,
-    borderColor: '#e0e0e0',
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
     fontFamily: FONTS.jua,
-    color: '#333',
     textAlign: 'center',
     width: '100%',
   },
   charCounter: {
     fontSize: 12,
     fontFamily: FONTS.jua,
-    color: '#999',
   },
 });

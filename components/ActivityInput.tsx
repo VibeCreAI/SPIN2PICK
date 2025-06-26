@@ -1,14 +1,14 @@
 import { FONTS } from '@/app/_layout';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
-    Dimensions,
-    Modal,
-    Platform,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View
+  Dimensions,
+  Modal,
+  Platform,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import { useTheme } from '../hooks/useTheme';
 import { ThemedView } from './ThemedView';
@@ -226,7 +226,10 @@ export const ActivityInput: React.FC<ActivityInputProps> = ({
                 ]} 
                 onPress={onDeclineSuggestion}
               >
-                <Text allowFontScaling={false} style={styles.declineButtonText}>No thanks ❌</Text>
+                <View style={styles.buttonTextContainer}>
+                  <Text allowFontScaling={false} style={styles.declineButtonText}>Nope!</Text>
+                  <Text allowFontScaling={false} style={styles.declineButtonIcon}>❌</Text>
+                </View>
               </TouchableOpacity>
               
               <TouchableOpacity 
@@ -391,5 +394,15 @@ const styles = StyleSheet.create({
   acceptButtonText: {
     fontSize: 16,
     fontFamily: FONTS.jua,
+  },
+  buttonTextContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  declineButtonIcon: {
+    fontSize: 14,
+    fontFamily: FONTS.jua,
+    marginLeft: 4,
+    color: '#fff',
   },
 }); 

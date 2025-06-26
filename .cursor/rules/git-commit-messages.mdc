@@ -1,17 +1,17 @@
 ---
-description: Git Commit Message Creation
+description: 
 globs: 
 alwaysApply: false
 ---
 # Git Commit Message Summaries
 
-## Rule: Always provide git commit messages after code changes
+## Provide git commit messages for previouse code change sessions.
 
 After every code modification, bug fix, or feature implementation, you MUST provide a short, copy-paste ready git commit message summary.
 
 ### Format Requirements:
 
-1. **Keep it concise** (50 characters or less for the title)
+1. **Keep it concise** (100 characters or less for the title)
 2. **Use imperative mood** (Fix, Add, Update, Remove, etc.)
 3. **Be specific** about what changed
 4. **Format consistently**

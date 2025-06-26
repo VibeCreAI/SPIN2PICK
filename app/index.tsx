@@ -465,7 +465,6 @@ export default function HomeScreen() {
             <View style={styles.headerContainer}>
               <View style={styles.titleContainer}>
                 <ThemedText type="title" style={[styles.title, { color: currentTheme.uiColors.primary }]}>SPIN 2 PICK</ThemedText>
-                <ThemedText style={[styles.subtitle, { color: currentTheme.uiColors.secondary }]}>✨ for AI suggestion | 💾 to save or load</ThemedText>
               </View>
             </View>
             
@@ -480,6 +479,8 @@ export default function HomeScreen() {
               onAcceptSuggestion={handleAcceptSuggestion}
               onDeclineSuggestion={handleDeclineSuggestion}
             />
+            
+            <ThemedText style={[styles.subtitle, { color: currentTheme.uiColors.secondary }]}>Press ✨ for AI suggestion!</ThemedText>
 
             {containerWidth > 0 ? (
               (() => {
@@ -708,14 +709,14 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 52,
     textAlign: 'center',
-    marginTop: 36,
-    marginBottom: 10,
+    marginTop: 30,
+    marginBottom: 0,
     fontFamily: FONTS.jua,
   },
   subtitle: {
     fontSize: 16,
     textAlign: 'center',
-    marginBottom: 0,
+    marginBottom: 10,
     fontFamily: FONTS.jua,
   },
   fixedBottomContainer: {

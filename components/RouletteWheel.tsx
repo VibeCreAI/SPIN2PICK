@@ -460,8 +460,8 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
           if (activityCount <= 4) return { textSize: baseTextSize, emojiSize: baseEmojiSize + 4 }; // Larger for few items
           if (activityCount <= 6) return { textSize: baseTextSize, emojiSize: baseEmojiSize }; // Standard
           if (activityCount <= 8) return { textSize: baseTextSize - 1, emojiSize: baseEmojiSize - 2 }; // Slightly smaller
-          if (activityCount <= 12) return { textSize: baseTextSize - 2, emojiSize: baseEmojiSize - 4 }; // Smaller
-          if (activityCount <= 16) return { textSize: baseTextSize - 3, emojiSize: baseEmojiSize - 6 }; // Much smaller
+          if (activityCount <= 14) return { textSize: baseTextSize - 2, emojiSize: baseEmojiSize - 3 }; // Smaller
+          if (activityCount <= 26) return { textSize: baseTextSize - 3, emojiSize: baseEmojiSize - 4 }; // Much smaller
           return { textSize: Math.max(baseTextSize - 4, 8), emojiSize: Math.max(baseEmojiSize - 8, 12) }; // Minimum readable
         };
 

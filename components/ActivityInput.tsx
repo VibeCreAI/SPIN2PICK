@@ -1,5 +1,5 @@
 import { FONTS } from '@/app/_layout';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useState } from 'react';
 import {
   Dimensions,
   Modal,
@@ -45,27 +45,39 @@ export const ActivityInput: React.FC<ActivityInputProps> = ({
   const { currentTheme } = useTheme();
   const [inputText, setInputText] = useState('');
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [screenDimensions, setScreenDimensions] = useState(Dimensions.get('window'));
+  
+  // Get correct initial dimensions - fix for SSR/web initial render
+  const getInitialDimensions = () => {
+    if (typeof window !== 'undefined') {
+      // Web: Use actual window dimensions from the start
+      return {
+        width: window.innerWidth,
+        height: window.innerHeight,
+        scale: 1,
+        fontScale: 1,
+      };
+    }
+    // Mobile: Use React Native Dimensions
+    return Dimensions.get('window');
+  };
+
+  // Initialize with correct dimensions from the start - no flash/adjustment needed
+  const [screenDimensions, setScreenDimensions] = useState(getInitialDimensions());
 
   // Update screen dimensions when they change
   useEffect(() => {
     const subscription = Dimensions.addEventListener('change', ({ window }) => {
+      console.log('📱 ActivityInput: Dimensions changed to:', window.width);
       setScreenDimensions(window);
     });
 
     return () => subscription?.remove();
   }, []);
 
-  // Fix for production web: force dimension recalculation after mount
-  useEffect(() => {
-    // This addresses SSR/hydration dimension mismatch issues on Vercel
-    const timer = setTimeout(() => {
-      const currentDimensions = Dimensions.get('window');
-      setScreenDimensions(currentDimensions);
-    }, 0);
-
-    return () => clearTimeout(timer);
-  }, []);
+  // Optional: Log initial dimensions for debugging
+  useLayoutEffect(() => {
+    console.log('🎯 ActivityInput: Initial dimensions set to:', screenDimensions.width);
+  }, []); // Run once to log initial state
 
   // Get screen dimensions for responsive design
   const screenData = screenDimensions;
@@ -75,6 +87,8 @@ export const ActivityInput: React.FC<ActivityInputProps> = ({
   const isNarrowScreen = screenWidth < 360; // Very narrow screens
   const isSmallScreen = screenWidth < 400; // Small screens
   const isMediumScreen = screenWidth < 500; // Medium screens
+  
+  console.log('📐 ActivityInput: Current screenWidth:', screenWidth, 'isNarrowScreen:', isNarrowScreen);
   
   // Dynamic minWidth based on screen size for better text centering (matching RouletteWheel)
   const getResponsiveMinWidth = () => {
@@ -88,8 +102,27 @@ export const ActivityInput: React.FC<ActivityInputProps> = ({
   };
   
   const containerMinWidth = getResponsiveMinWidth();
-  const containerMaxWidth = isSmallScreen ? '95%' : '90%';
+  
+  // Use pixel-based maxWidth with smaller percentages to fix SSR without being too wide
+  const containerMaxWidth = isSmallScreen 
+    ? Math.floor(screenWidth * 0.85) // 85% instead of 95%
+    : Math.floor(screenWidth * 0.80); // 80% instead of 90%
+    
   const containerMarginHorizontal = isNarrowScreen ? 8 : 16;
+
+  console.log('📏 ActivityInput: Calculated dimensions:', {
+    containerMinWidth,
+    containerMaxWidth,
+    containerMarginHorizontal,
+    screenWidth
+  });
+
+  console.log('🔧 ActivityInput: MaxWidth calculation:', {
+    screenWidth,
+    percentage: isSmallScreen ? '85%' : '80%',
+    pixelValue: containerMaxWidth,
+    isSmallScreen
+  });
 
   const handleSubmit = useCallback(() => {
     const trimmedText = inputText.trim();
@@ -120,7 +153,12 @@ export const ActivityInput: React.FC<ActivityInputProps> = ({
   }, []);
 
   return (
-    <ThemedView lightColor="transparent" darkColor="transparent" style={[styles.container, { width: screenWidth }]}>
+    <ThemedView 
+      key={`${screenWidth}-${isNarrowScreen}-${isSmallScreen}-${isMediumScreen}`}
+      lightColor="transparent" 
+      darkColor="transparent" 
+      style={[styles.container, { width: screenWidth }]}
+    >
       {/* Main Input Card - matching lastActivityContainer styling */}
       <ThemedView 
         lightColor={currentTheme.uiColors.cardBackground}

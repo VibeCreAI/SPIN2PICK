@@ -11,6 +11,8 @@ import {
   View
 } from 'react-native';
 import { useTheme } from '../hooks/useTheme';
+import { Activity } from '../utils/colorUtils';
+import { DeleteActivitiesModal } from './DeleteActivitiesModal';
 import { ThemedView } from './ThemedView';
 
 interface ActivityInputProps {
@@ -23,6 +25,8 @@ interface ActivityInputProps {
   showSuggestionPopup: boolean;
   onAcceptSuggestion: () => void;
   onDeclineSuggestion: () => void;
+  activities: Activity[];
+  onDeleteActivity: (activityName: string) => void;
 }
 
 export const ActivityInput: React.FC<ActivityInputProps> = ({
@@ -35,12 +39,25 @@ export const ActivityInput: React.FC<ActivityInputProps> = ({
   showSuggestionPopup,
   onAcceptSuggestion,
   onDeclineSuggestion,
+  activities,
+  onDeleteActivity,
 }) => {
   const { currentTheme } = useTheme();
   const [inputText, setInputText] = useState('');
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [screenDimensions, setScreenDimensions] = useState(Dimensions.get('window'));
+
+  // Update screen dimensions when they change
+  useEffect(() => {
+    const subscription = Dimensions.addEventListener('change', ({ window }) => {
+      setScreenDimensions(window);
+    });
+
+    return () => subscription?.remove();
+  }, []);
 
   // Get screen dimensions for responsive design
-  const screenData = Dimensions.get('window');
+  const screenData = screenDimensions;
   
   // Responsive width settings (matching RouletteWheel)
   const screenWidth = screenData.width;
@@ -52,10 +69,10 @@ export const ActivityInput: React.FC<ActivityInputProps> = ({
   const getResponsiveMinWidth = () => {
     // Smaller minWidth on narrow screens allows text to center better
     // when content is shorter than the container width
-    if (screenWidth < 320) return 260; // Very narrow - smaller minWidth for better centering
-    if (screenWidth < 360) return 280; // Narrow
-    if (screenWidth < 400) return 300; // Small  
-    if (screenWidth < 500) return 340; // Medium
+    if (screenWidth < 320) return 240; // Very narrow - smaller minWidth for better centering
+    if (screenWidth < 360) return 260; // Narrow
+    if (screenWidth < 400) return 280; // Small  
+    if (screenWidth < 500) return 300; // Medium
     return 340; // Wide screens - original value
   };
   
@@ -92,7 +109,7 @@ export const ActivityInput: React.FC<ActivityInputProps> = ({
   }, []);
 
   return (
-    <ThemedView lightColor="transparent" darkColor="transparent" style={styles.container}>
+    <ThemedView lightColor="transparent" darkColor="transparent" style={[styles.container, { width: screenWidth }]}>
       {/* Main Input Card - matching lastActivityContainer styling */}
       <ThemedView 
         lightColor={currentTheme.uiColors.cardBackground}
@@ -117,7 +134,7 @@ export const ActivityInput: React.FC<ActivityInputProps> = ({
           <ThemedView 
             lightColor={currentTheme.uiColors.cardBackground}
             darkColor={currentTheme.uiColors.cardBackground}
-            style={styles.inputRow}
+            style={[styles.inputRow, { gap: isNarrowScreen ? 4 : 8 }]}
           >
             <TextInput
               style={[
@@ -142,7 +159,7 @@ export const ActivityInput: React.FC<ActivityInputProps> = ({
             <ThemedView 
               lightColor={currentTheme.uiColors.cardBackground}
               darkColor={currentTheme.uiColors.cardBackground}
-              style={styles.rightButtons}
+              style={[styles.rightButtons, { gap: isNarrowScreen ? 2 : 4 }]}
             >
               <TouchableOpacity 
                 style={styles.iconButton}
@@ -169,6 +186,24 @@ export const ActivityInput: React.FC<ActivityInputProps> = ({
                   { color: currentTheme.uiColors.primary }
                 ]}>
                   {isSuggesting ? '🤔' : '✨'}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                style={styles.iconButton}
+                onPress={() => setShowDeleteModal(true)}
+                disabled={activities.length === 0}
+                activeOpacity={0.7}
+              >
+                <Text allowFontScaling={false} style={[
+                  styles.iconButtonText,
+                  { 
+                    color: activities.length === 0 
+                      ? currentTheme.uiColors.secondary 
+                      : currentTheme.uiColors.primary 
+                  }
+                ]}>
+                  🗑️
                 </Text>
               </TouchableOpacity>
             </ThemedView>
@@ -249,6 +284,17 @@ export const ActivityInput: React.FC<ActivityInputProps> = ({
           </TouchableOpacity>
         </TouchableOpacity>
       </Modal>
+
+      {/* Delete Activities Modal */}
+      <DeleteActivitiesModal
+        visible={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        activities={activities}
+        onDeleteActivity={(activityName: string) => {
+          onDeleteActivity(activityName);
+          // Keep modal open to allow multiple deletions
+        }}
+      />
     </ThemedView>
   );
 };
@@ -263,11 +309,10 @@ const styles = StyleSheet.create({
   // Main card container - matching lastActivityContainer styling exactly
   inputCard: {
     alignSelf: 'center', // Center the container (matching lastActivityContainer)
-    width: 'auto', // Let content determine width (matching lastActivityContainer)
     marginVertical: 8, // Matching lastActivityContainer
     marginTop: 5, // Matching lastActivityContainer
     marginBottom: 7, // Matching lastActivityContainer
-    padding: 16, // Matching lastActivityContainer (changed from 15)
+    padding: 12, // Matching lastActivityContainer (changed from 15)
     borderRadius: 12, // Matching lastActivityContainer
     borderWidth: 2, // Matching lastActivityContainer
     elevation: 2, // Matching lastActivityContainer
@@ -289,16 +334,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     width: '100%',
-    gap: 8,
+    gap: 7,
   },
   // Text input - takes most of the space
   textInput: {
     flex: 1,
-    fontSize: 18, // Slightly smaller than lastActivityText (22) but still prominent
+    minWidth: 60, // Minimum width to ensure it's always usable
+    fontSize: 16, // Slightly smaller than lastActivityText (22) but still prominent
     fontFamily: FONTS.jua, // Matching lastActivityText
     textAlign: 'center', // Matching lastActivityText
     paddingVertical: Platform.OS === 'ios' ? 8 : 4,
-    paddingHorizontal: 12,
+    paddingHorizontal: 8, // Reduced from 12 to save space
     borderWidth: 1,
     borderColor: 'rgba(0,0,0,0.1)',
     borderRadius: 8,
@@ -316,11 +362,11 @@ const styles = StyleSheet.create({
   },
   // Icon buttons - no background, just the icon
   iconButton: {
-    padding: 8,
+    padding: 4, // Reduced from 6 to save space
     alignItems: 'center',
     justifyContent: 'center',
-    minWidth: 32,
-    minHeight: 32,
+    minWidth: 24, // Reduced from 28 for better space usage
+    minHeight: 24, // Reduced from 28 for better space usage
   },
   iconButtonText: {
     fontSize: 18,

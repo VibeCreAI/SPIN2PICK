@@ -368,6 +368,13 @@ export default function HomeScreen() {
     }
   };
 
+  const handleDeleteActivityByName = (activityName: string) => {
+    const updatedActivities = activities.filter(activity => activity.name !== activityName);
+    // Reassign colors optimally after deletion with current theme
+    const recoloredActivities = reassignAllColors(updatedActivities, currentTheme.wheelColors);
+    setActivities(recoloredActivities);
+  };
+
   const handleConfirmDelete = () => {
     if (activityToDelete) {
       const updatedActivities = activities.filter(activity => activity.id !== activityToDelete.id);
@@ -478,9 +485,11 @@ export default function HomeScreen() {
               showSuggestionPopup={showSuggestionPopup}
               onAcceptSuggestion={handleAcceptSuggestion}
               onDeclineSuggestion={handleDeclineSuggestion}
+              activities={activities}
+              onDeleteActivity={handleDeleteActivityByName}
             />
             
-            <ThemedText style={[styles.subtitle, { color: currentTheme.uiColors.secondary }]}>Press ✨ for AI suggestion!</ThemedText>
+            <ThemedText style={[styles.subtitle, { color: currentTheme.uiColors.secondary }]}>Press ✨ for AI suggestions, 🗑️ to delete!</ThemedText>
 
             {containerWidth > 0 ? (
               (() => {

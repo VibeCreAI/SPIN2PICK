@@ -14,7 +14,7 @@ This rule documents the complete technology stack, current versions, and best pr
 {
   "react": "19.0.0",
   "react-dom": "19.0.0", 
-  "react-native": "0.79.2"
+  "react-native": "0.79.4"
 }
 ```
 
@@ -43,29 +43,42 @@ function SearchComponent() {
 ### Expo Platform
 ```json
 {
-  "expo": "~53.0.9",
-  "expo-router": "~5.0.6",
+  "expo": "53.0.12",
+  "expo-router": "~5.1.0",
   "@expo/cli": "^0.24.13"
 }
 ```
 
-**Expo SDK 53 Features:**
-- **Expo Router v5**: File-based routing with improved performance
+**Expo SDK 53.0.12 Features:**
+- **Expo Router v5.1**: Enhanced file-based routing with typed routes support
 - **New Architecture**: Fabric and TurboModules support
 - **Better Web Support**: Enhanced web compatibility
 - **EAS Build**: Improved build times and caching
+- **Enhanced Performance**: Better bundle optimization and startup times
 
 **Best Practices:**
 ```typescript
-// ✅ Good: Use Expo Router v5 patterns
+// ✅ Good: Use Expo Router v5.1 patterns with typed routes
 // app/_layout.tsx
 import { Stack } from 'expo-router';
 
 export default function RootLayout() {
   return (
     <Stack>
-      <Stack.Screen name="index" options={{ title: 'Spin2Pick' }} />
-      <Stack.Screen name="settings" options={{ title: 'Settings' }} />
+      <Stack.Screen 
+        name="index" 
+        options={{ 
+          title: 'Spin2Pick',
+          headerShown: false 
+        }} 
+      />
+      <Stack.Screen 
+        name="settings" 
+        options={{ 
+          title: 'Settings',
+          presentation: 'modal' 
+        }} 
+      />
     </Stack>
   );
 }
@@ -74,8 +87,9 @@ export default function RootLayout() {
 import Constants from 'expo-constants';
 
 const config = {
-  apiUrl: Constants.expoConfig?.extra?.apiUrl || 'https://api.example.com',
-  adMobId: Constants.expoConfig?.extra?.adMobId
+  apiUrl: Constants.expoConfig?.extra?.apiBaseUrl || 'https://api.example.com',
+  adMobId: Constants.expoConfig?.extra?.adMobId,
+  enableAIFeatures: Constants.expoConfig?.extra?.enableAIFeatures
 };
 ```
 
@@ -280,10 +294,72 @@ function WheelSegment({ startAngle, endAngle, color }: SegmentProps) {
 const MemoizedWheelSegment = React.memo(WheelSegment);
 ```
 
+### Modern Image & UI Components
+```json
+{
+  "expo-image": "~2.3.0",
+  "expo-blur": "~14.1.5",
+  "expo-symbols": "~0.4.5",
+  "@expo-google-fonts/slackey": "^0.3.0"
+}
+```
+
+**Expo Image 2.3 Best Practices:**
+```typescript
+// ✅ Good: Use expo-image for better performance
+import { Image } from 'expo-image';
+
+function OptimizedImage({ uri, alt }: ImageProps) {
+  return (
+    <Image
+      source={{ uri }}
+      cachePolicy="memory-disk"
+      contentFit="cover"
+      transition={200}
+      recyclingKey={uri} // Optimization for lists
+      placeholder={{ blurhash: 'L6PZfSi_.AyE_3t7t7R**0o#DgR4' }}
+      style={{ width: 200, height: 200 }}
+    />
+  );
+}
+
+// ✅ Good: Use expo-blur for modern UI effects
+import { BlurView } from 'expo-blur';
+
+function BlurredBackground() {
+  return (
+    <BlurView intensity={50} style={StyleSheet.absoluteFill}>
+      <Text>Content over blur</Text>
+    </BlurView>
+  );
+}
+
+// ✅ Good: Use SF Symbols with expo-symbols (iOS)
+import { SymbolView } from 'expo-symbols';
+
+function IconButton({ name, onPress }: IconButtonProps) {
+  return (
+    <Pressable onPress={onPress}>
+      <SymbolView
+        name={name}
+        size={24}
+        tintColor="#007AFF"
+        animationSpec={{
+          effect: {
+            type: 'bounce'
+          }
+        }}
+        fallback={<Text>{name}</Text>} // Fallback for Android
+      />
+    </Pressable>
+  );
+}
+```
+
 ### Audio & Haptics
 ```json
 {
-  "expo-audio": "~0.4.5",
+  "expo-audio": "~0.4.6",
   "expo-haptics": "~14.1.4"
 }
 ```
@@ -330,6 +406,45 @@ function handleSpinStart() {
 
 function handleSpinEnd() {
   Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+}
+```
+
+## Web Integration & Development
+```json
+{
+  "react-native-webview": "13.13.5",
+  "expo-web-browser": "~14.2.0",
+  "expo-dev-client": "~5.2.1"
+}
+```
+
+**WebView & Browser Best Practices:**
+```typescript
+// ✅ Good: Use WebView for embedded content
+import { WebView } from 'react-native-webview';
+
+function EmbeddedWebContent({ uri }: WebContentProps) {
+  return (
+    <WebView
+      source={{ uri }}
+      style={{ flex: 1 }}
+      onLoad={() => console.log('WebView loaded')}
+      onError={(error) => console.error('WebView error:', error)}
+      allowsInlineMediaPlayback
+      mediaPlaybackRequiresUserAction={false}
+    />
+  );
+}
+
+// ✅ Good: Use expo-web-browser for external links
+import * as WebBrowser from 'expo-web-browser';
+
+async function openExternalLink(url: string) {
+  const result = await WebBrowser.openBrowserAsync(url, {
+    presentationStyle: WebBrowser.WebBrowserPresentationStyle.POPOVER,
+    controlsColor: '#007AFF',
+  });
+  console.log('Browser result:', result);
 }
 ```
 
@@ -432,16 +547,18 @@ export default [
 
 **Deployment Best Practices:**
 ```json
-// package.json - Optimized scripts
+// package.json - Current optimized scripts
 {
   "scripts": {
+    "start": "expo start",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
     "web": "EXPO_PLATFORM=web expo start --web",
     "web-safe": "expo start --web --offline",
-    "predeploy": "expo export -p web",
+    "lint": "expo lint",
     "deploy": "gh-pages --nojekyll -d dist",
-    "build:web": "expo export -p web --output-dir dist",
-    "build:android": "eas build --platform android",
-    "build:ios": "eas build --platform ios"
+    "predeploy": "expo export -p web",
+    "deploy-gh-pages": "npm run predeploy && npm run deploy"
   }
 }
 ```
@@ -449,7 +566,7 @@ export default [
 ## Version Management Strategy
 
 ### Dependency Versioning
-- **Expo packages**: Use `~` for patch updates (e.g., `~53.0.9`)
+- **Expo packages**: Use `~` for patch updates (e.g., `~2.3.0`)
 - **React/React Native**: Pin exact versions for stability
 - **Third-party libraries**: Use `^` for minor updates (e.g., `^15.3.1`)
 
@@ -476,7 +593,7 @@ const LazyModal = lazy(() => import('./SaveLoadModal'));
 export { default as RouletteWheel } from './RouletteWheel';
 export { default as ActivityInput } from './ActivityInput';
 
-// ✅ Good: Optimize images
+// ✅ Good: Use expo-image for optimized images
 import { Image } from 'expo-image';
 
 <Image
@@ -484,6 +601,7 @@ import { Image } from 'expo-image';
   cachePolicy="memory-disk"
   contentFit="cover"
   transition={200}
+  recyclingKey={imageId}
 />
 ```
 
@@ -514,6 +632,8 @@ import Constants from 'expo-constants';
 const config = {
   apiKey: Constants.expoConfig?.extra?.apiKey,
   adMobId: Constants.expoConfig?.extra?.adMobId,
+  apiBaseUrl: Constants.expoConfig?.extra?.apiBaseUrl,
+  enableAIFeatures: Constants.expoConfig?.extra?.enableAIFeatures,
 };
 
 // app.config.js
@@ -522,6 +642,8 @@ export default {
     extra: {
       apiKey: process.env.API_KEY,
       adMobId: process.env.ADMOB_APP_ID,
+      apiBaseUrl: process.env.API_BASE_URL,
+      enableAIFeatures: process.env.ENABLE_AI_FEATURES,
     },
   },
 };

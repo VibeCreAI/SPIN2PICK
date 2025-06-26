@@ -49,16 +49,16 @@ app/
 ```
 
 **Key Files:**
-- `index.tsx` (756 lines) - Main roulette wheel screen with game logic
+- `index.tsx` (758 lines) - Main roulette wheel screen with game logic
 - `_layout.tsx` - Navigation setup, font loading, tab configuration
 - `+html.tsx` - Web SEO setup, AdSense integration, meta tags
 
 ### 🧩 `/components` - React Components
 ```
 components/
-├── RouletteWheel.tsx           # Core roulette wheel component (1108 lines)
+├── RouletteWheel.tsx           # Core roulette wheel component (1113 lines)
 ├── SaveLoadModal.tsx           # Save/load activity lists modal (711 lines)
-├── ActivityInput.tsx           # Activity input and management (354 lines)
+├── ActivityInput.tsx           # Activity input and management (366 lines)
 ├── AdBanner.tsx                # AdMob banner component (mobile)
 ├── AdBanner.web.tsx            # Web banner placeholder
 ├── GoogleAdSense.tsx           # Google AdSense integration (web)
@@ -88,7 +88,7 @@ components/
 ### 🔧 `/utils` - Utility Functions
 ```
 utils/
-├── emojiUtils.ts               # Emoji management and utilities (427 lines)
+├── emojiUtils.ts               # Emoji management and utilities (432 lines)
 ├── colorUtils.ts               # Color generation and theming (131 lines)
 ├── soundUtils.ts               # Audio playback management (97 lines)
 ├── adMobUtils.ts               # AdMob integration (mobile)
@@ -181,13 +181,13 @@ scripts/
 - `eas.json` - Expo Application Services configuration (32 lines)
 - `vercel.json` - Vercel deployment configuration (14 lines)
 - `metro.config.js` - Metro bundler configuration (14 lines)
-- `app.json` - Expo app configuration (86 lines)
+- `app.config.js` - Expo app configuration (92 lines)
 - `expo-env.d.ts` - Expo TypeScript declarations (3 lines)
 
 ### PowerShell Scripts (Windows)
 - `build-android.ps1` - Android build script (17 lines)
 - `build-android-fresh.ps1` - Fresh Android build (35 lines)
-- `build-preview.ps1` - Preview build script (61 lines)
+- `build-preview-fixed.ps1` - Fixed preview build script (61 lines)
 - `build-preview.bat` - Batch version of preview build (19 lines)
 - `eas-build-no-warning.ps1` - EAS build without warnings (28 lines)
 - `fix-eas-git.ps1` - Git fixes for EAS builds (64 lines)
@@ -214,8 +214,8 @@ scripts/
 - `package-lock.json` (492KB) - Dependency lock file
 
 **Most Complex Components:**
-- `RouletteWheel.tsx` (1,108 lines) - Core wheel logic
-- `index.tsx` (756 lines) - Main app screen
+- `RouletteWheel.tsx` (1,113 lines) - Core wheel logic
+- `index.tsx` (758 lines) - Main app screen
 - `SaveLoadModal.tsx` (711 lines) - Data persistence
 
 ## Development Guidelines

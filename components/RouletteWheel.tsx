@@ -217,7 +217,7 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
 
   // Pulsing animation for the wheel - only when not spinning
   const startPulseAnimation = useCallback(() => {
-    if (isSpinning) return; // Don't pulse when spinning
+    if (isSpinning) return; // Don&apos;t pulse when spinning
     
     // Stop any existing pulse animation first
     if (pulseAnimationRef.current) {
@@ -861,7 +861,7 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
     const normalizedAngle = (angle + 360) % 360;
     
     // Calculate which slice index this angle falls into
-    // We need to account for the wheel's current rotation
+    // We need to account for the wheel&apos;s current rotation
     const effectiveAngle = (normalizedAngle + currentRotationDegrees.current) % 360;
     const sliceIndex = Math.floor(effectiveAngle / sliceAngle);
     
@@ -1149,7 +1149,7 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
             ]}
           >
             <ThemedText style={styles.resultSubtext}>
-              Let's play:
+              Let&apos;s play:
             </ThemedText>
             <ThemedText style={styles.resultCenterText}>
               {selectedActivity.emoji ? `${selectedActivity.emoji} ${selectedActivity.name}` : selectedActivity.name}

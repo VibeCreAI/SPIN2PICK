@@ -47,9 +47,9 @@ export const SaveLoadModal: React.FC<SaveLoadModalProps> = ({
   const [successModal, setSuccessModal] = useState({ visible: false, message: '' });
 
   // Get screen width for responsive design
-  const screenWidth = Dimensions.get('window').width;
-  const isSmallScreen = screenWidth < 400;
-  const containerMaxWidth = isSmallScreen ? '95%' : '90%';
+    const screenWidth = Dimensions.get('window').width;
+  const MODAL_MAX_WIDTH = 500; // Maximum width for the modal
+  const containerWidth = screenWidth < MODAL_MAX_WIDTH ? '95%' : MODAL_MAX_WIDTH;
 
   useEffect(() => {
     if (visible) {
@@ -205,7 +205,7 @@ export const SaveLoadModal: React.FC<SaveLoadModalProps> = ({
   const renderConfirmationModal = () => (
     <Modal visible={confirmationModal.visible} transparent animationType="fade" onRequestClose={() => setConfirmationModal({ ...confirmationModal, visible: false })}>
       <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setConfirmationModal({ ...confirmationModal, visible: false })}>
-        <TouchableOpacity style={[styles.popupContainer, { maxWidth: containerMaxWidth }]} activeOpacity={1}>
+        <TouchableOpacity style={[styles.popupContainer, { width: containerWidth }]} activeOpacity={1}>
           <Text allowFontScaling={false} style={styles.popupTitle}>{confirmationModal.title}</Text>
           <Text allowFontScaling={false} style={styles.popupMessage}>{confirmationModal.message}</Text>
           <View style={styles.popupButtons}>
@@ -224,7 +224,7 @@ export const SaveLoadModal: React.FC<SaveLoadModalProps> = ({
   const renderSaveInputModal = () => (
     <Modal visible={saveModal.visible} transparent animationType="fade" onRequestClose={() => setSaveModal({ ...saveModal, visible: false })}>
       <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setSaveModal({ ...saveModal, visible: false })}>
-        <TouchableOpacity style={[styles.popupContainer, { maxWidth: containerMaxWidth }]} activeOpacity={1}>
+        <TouchableOpacity style={[styles.popupContainer, { width: containerWidth }]} activeOpacity={1}>
           <Text allowFontScaling={false} style={styles.popupTitle}>{saveModal.isOverwrite ? '✏️ Overwrite Save' : '💾 Save Activities'}</Text>
           <Text allowFontScaling={false} style={styles.popupMessage}>Enter a name for this save:</Text>
           <TextInput
@@ -254,7 +254,7 @@ export const SaveLoadModal: React.FC<SaveLoadModalProps> = ({
   const renderSuccessModal = () => (
     <Modal visible={successModal.visible} transparent animationType="fade" onRequestClose={() => setSuccessModal({ visible: false, message: '' })}>
       <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setSuccessModal({ visible: false, message: '' })}>
-        <TouchableOpacity style={[styles.popupContainer, { maxWidth: containerMaxWidth }]} activeOpacity={1}>
+        <TouchableOpacity style={[styles.popupContainer, { width: containerWidth }]} activeOpacity={1}>
           <Text allowFontScaling={false} style={styles.popupTitle}>✅ Success!</Text>
           <Text allowFontScaling={false} style={styles.popupMessage}>{successModal.message}</Text>
           <TouchableOpacity style={[styles.popupButton, styles.confirmButton, { flex: 0, width: '100%' }]} onPress={() => setSuccessModal({ visible: false, message: '' })}>
@@ -269,7 +269,7 @@ export const SaveLoadModal: React.FC<SaveLoadModalProps> = ({
     <>
       <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
         <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={onClose}>
-          <TouchableOpacity style={[styles.modalContainer, { maxWidth: containerMaxWidth }]} activeOpacity={1}>
+          <TouchableOpacity style={[styles.modalContainer, { width: containerWidth }]} activeOpacity={1}>
             <Text allowFontScaling={false} style={styles.modalTitle}>💾 Save & Load</Text>
             <Text allowFontScaling={false} style={styles.modalSubtitle}>Manage your activity sets</Text>
             {isLoading ? (

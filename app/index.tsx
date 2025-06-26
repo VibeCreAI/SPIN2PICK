@@ -7,7 +7,7 @@ import { SaveLoadModal } from '@/components/SaveLoadModal';
 import { ThemedText } from '@/components/ThemedText';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useCallback, useEffect, useState } from 'react';
-import { Dimensions, KeyboardAvoidingView, LayoutChangeEvent, Modal, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View, ViewStyle } from 'react-native';
+import { Dimensions, KeyboardAvoidingView, LayoutChangeEvent, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, ViewStyle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { initializeInterstitialAd, showInterstitialAd } from '../utils/adMobUtils';
 import { PASTEL_COLORS, reassignAllColors, type Activity } from '../utils/colorUtils';
@@ -15,10 +15,10 @@ import { getAISuggestedActivity, getEmoji } from '../utils/emojiUtils';
 import { initSounds, unloadSounds } from '../utils/soundUtils';
 
 // Generate random default activities for variety on first install
-const generateDefaultActivities = (): Activity[] => {
+const generateDefaultActivities = (count: number = 8): Activity[] => {
   // Import the function dynamically to avoid circular dependencies
   const { generateRandomDefaultActivities } = require('../utils/emojiUtils');
-  const randomPairs = generateRandomDefaultActivities(8);
+  const randomPairs = generateRandomDefaultActivities(count);
   
   return randomPairs.map((pair: { name: string; emoji: string }, index: number) => ({
     id: (index + 1).toString(),
@@ -80,7 +80,8 @@ export default function HomeScreen() {
   const [activityToDelete, setActivityToDelete] = useState<Activity | null>(null);
 
   // New state for reset confirmation
-  const [showResetConfirmation, setShowResetConfirmation] = useState(false);
+    const [showResetConfirmation, setShowResetConfirmation] = useState(false);
+  const [resetCount, setResetCount] = useState(8); // Default to 8
 
   // New state for save/load functionality
   const [showSaveLoadModal, setShowSaveLoadModal] = useState(false);
@@ -110,7 +111,9 @@ export default function HomeScreen() {
   };
   
   const containerMinWidth = getResponsiveMinWidth();
-  const containerMaxWidth = isSmallScreen ? '95%' : '90%';
+  const containerMaxWidth = 500; // Maximum width for modals
+  const MODAL_MAX_WIDTH = 500; // Maximum width for the modal
+  const modalWidth = screenWidth < MODAL_MAX_WIDTH ? '95%' : MODAL_MAX_WIDTH;
 
   // Load saved activities and initialize sounds when app starts
   useEffect(() => {
@@ -292,7 +295,7 @@ export default function HomeScreen() {
       console.log('✨ AI suggested activity:', suggestedActivityName);
     } catch (error) {
       console.error('Error suggesting activity:', error);
-      alert('Sorry, I couldn\'t suggest an activity right now. Please try again!');
+      alert('Sorry, I couldn&apos;t suggest an activity right now. Please try again!');
     } finally {
       setIsSuggestingActivity(false);
     }
@@ -374,7 +377,7 @@ export default function HomeScreen() {
 
   const handleConfirmReset = () => {
     // Generate new random default activities
-    const newDefaultActivities = generateDefaultActivities();
+    const newDefaultActivities = generateDefaultActivities(resetCount);
     setActivities(newDefaultActivities);
     setShowResetConfirmation(false);
     // Clear any selected activity
@@ -501,7 +504,7 @@ export default function HomeScreen() {
         </View>
       </KeyboardAvoidingView>
       
-      {/* Fixed elements that shouldn't move with keyboard */}
+      {/* Fixed elements that shouldn&apos;t move with keyboard */}
       <View style={styles.fixedBottomContainer}>
         {/* Banner Ad at the bottom */}
         <AdBanner />
@@ -565,17 +568,31 @@ export default function HomeScreen() {
           onPress={handleCancelReset}
         >
           <TouchableOpacity 
-            style={[styles.popupContainer, {
-              minWidth: containerMinWidth,
-              maxWidth: containerMaxWidth,
-            }]}
+            style={[styles.popupContainer, { width: modalWidth }]} 
             activeOpacity={1}
             onPress={() => {}} // Prevent closing when tapping inside popup
           >
             <Text allowFontScaling={false} style={styles.popupTitle}>Reset Activities 🔄</Text>
-            <Text allowFontScaling={false} style={styles.popupMessage}>Are you sure you want to reset?</Text>
+            <Text allowFontScaling={false} style={styles.popupMessage}>How many random activities do you want?</Text>
+            <TextInput
+              style={styles.resetCountInput}
+              keyboardType="numeric"
+              onChangeText={(text: string) => {
+                const num = parseInt(text, 10);
+                if (!isNaN(num) && num > 0) {
+                  setResetCount(num);
+                } else if (text === '') {
+                  setResetCount(0); // Allow empty input temporarily
+                }
+              }}
+              value={resetCount.toString()}
+              placeholder="8"
+              placeholderTextColor="#999"
+              maxLength={3}
+              allowFontScaling={false}
+            />
             <Text allowFontScaling={false} style={styles.resetWarningText}>
-              Current activities will be deleted and replaced with 8 random activities.
+              Current activities will be deleted and replaced with {resetCount} random activities.
             </Text>
             
             <View style={styles.popupButtonsContainer}>
@@ -754,5 +771,17 @@ const styles = StyleSheet.create({
   },
   titleContainer: {
     flex: 1,
+  },
+  resetCountInput: {
+    borderWidth: 2,
+    borderColor: '#e0e0e0',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    fontFamily: FONTS.jua,
+    color: '#333',
+    textAlign: 'center',
+    width: '100%',
+    marginBottom: 10,
   },
 }); 

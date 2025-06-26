@@ -5,6 +5,8 @@ import { Celebration } from '@/components/Celebration';
 import { RouletteWheel } from '@/components/RouletteWheel';
 import { SaveLoadModal } from '@/components/SaveLoadModal';
 import { ThemedText } from '@/components/ThemedText';
+import { ThemeSelectionModal } from '@/components/ThemeSelectionModal';
+import { useTheme } from '@/hooks/useTheme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Dimensions, KeyboardAvoidingView, LayoutChangeEvent, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, ViewStyle } from 'react-native';
@@ -63,6 +65,7 @@ class ErrorBoundary extends React.Component {
 }
 
 export default function HomeScreen() {
+  const { currentTheme } = useTheme();
   const [activities, setActivities] = useState<Activity[]>(DEFAULT_ACTIVITIES);
   const [showCelebration, setShowCelebration] = useState(false);
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
@@ -80,7 +83,7 @@ export default function HomeScreen() {
   const [activityToDelete, setActivityToDelete] = useState<Activity | null>(null);
 
   // New state for reset confirmation
-    const [showResetConfirmation, setShowResetConfirmation] = useState(false);
+  const [showResetConfirmation, setShowResetConfirmation] = useState(false);
   const [resetCount, setResetCount] = useState(8); // Default to 8
 
   // New state for save/load functionality
@@ -88,6 +91,9 @@ export default function HomeScreen() {
   
   // New state for tracking newly added activity
   const [newlyAddedActivityId, setNewlyAddedActivityId] = useState<string | null>(null);
+
+  // New state for theme selection
+  const [showThemeModal, setShowThemeModal] = useState(false);
 
   // Get screen dimensions for responsive design
   const screenData = Dimensions.get('window');
@@ -115,6 +121,15 @@ export default function HomeScreen() {
   const MODAL_MAX_WIDTH = 500; // Maximum width for the modal
   const modalWidth = screenWidth < MODAL_MAX_WIDTH ? '95%' : MODAL_MAX_WIDTH;
 
+  // Update activities with theme colors when theme changes
+  useEffect(() => {
+    if (activities.length > 0) {
+      const rethemedActivities = reassignAllColors(activities, currentTheme.wheelColors);
+      setActivities(rethemedActivities);
+      console.log('🎨 Updated activity colors for theme:', currentTheme.displayName);
+    }
+  }, [currentTheme.id]); // Only run when theme ID changes
+
   // Load saved activities and initialize sounds when app starts
   useEffect(() => {
     const initialize = async () => {
@@ -129,8 +144,8 @@ export default function HomeScreen() {
         const savedActivities = await AsyncStorage.getItem(STORAGE_KEY);
         if (savedActivities) {
           const parsedActivities = JSON.parse(savedActivities);
-          // Reassign colors to ensure optimal distribution
-          const recoloredActivities = reassignAllColors(parsedActivities);
+          // Reassign colors to ensure optimal distribution with current theme
+          const recoloredActivities = reassignAllColors(parsedActivities, currentTheme.wheelColors);
           setActivities(recoloredActivities);
         }
         
@@ -241,13 +256,13 @@ export default function HomeScreen() {
       const newActivity: Activity = {
         id: Date.now().toString(),
         name,
-        color: PASTEL_COLORS[0], // Temporary color, will be reassigned
+        color: currentTheme.wheelColors[0], // Temporary color, will be reassigned
         emoji,
       };
       
-      // Add the new activity and reassign all colors optimally
+      // Add the new activity and reassign all colors optimally with current theme
       const updatedActivities = [...activities, newActivity];
-      const recoloredActivities = reassignAllColors(updatedActivities);
+      const recoloredActivities = reassignAllColors(updatedActivities, currentTheme.wheelColors);
       setActivities(recoloredActivities);
       
       // Set the newly added activity for highlighting
@@ -260,13 +275,13 @@ export default function HomeScreen() {
       const newActivity: Activity = {
         id: Date.now().toString(),
         name,
-        color: PASTEL_COLORS[0], // Temporary color, will be reassigned
+        color: currentTheme.wheelColors[0], // Temporary color, will be reassigned
         emoji: '🎲', // Default fallback
       };
       
-      // Add the new activity and reassign all colors optimally
+      // Add the new activity and reassign all colors optimally with current theme
       const updatedActivities = [...activities, newActivity];
-      const recoloredActivities = reassignAllColors(updatedActivities);
+      const recoloredActivities = reassignAllColors(updatedActivities, currentTheme.wheelColors);
       setActivities(recoloredActivities);
       
       // Set the newly added activity for highlighting
@@ -275,8 +290,6 @@ export default function HomeScreen() {
       setIsAddingActivity(false);
     }
   };
-
-
 
   const handleSuggestActivity = async () => {
     setIsSuggestingActivity(true);
@@ -313,13 +326,13 @@ export default function HomeScreen() {
       const newActivity: Activity = {
         id: Date.now().toString(),
         name: pendingSuggestion,
-        color: PASTEL_COLORS[0], // Temporary color, will be reassigned
+        color: currentTheme.wheelColors[0], // Temporary color, will be reassigned
         emoji,
       };
       
-      // Add the new activity and reassign all colors optimally
+      // Add the new activity and reassign all colors optimally with current theme
       const updatedActivities = [...activities, newActivity];
-      const recoloredActivities = reassignAllColors(updatedActivities);
+      const recoloredActivities = reassignAllColors(updatedActivities, currentTheme.wheelColors);
       setActivities(recoloredActivities);
       
       // Set the newly added activity for highlighting
@@ -331,44 +344,44 @@ export default function HomeScreen() {
       alert('Sorry, there was an error adding the activity. Please try again!');
     } finally {
       setIsAddingActivity(false);
-      setShowSuggestionPopup(false);
       setPendingSuggestion(null);
+      setShowSuggestionPopup(false);
     }
   };
 
   const handleDeclineSuggestion = async () => {
-    if (pendingSuggestion) {
-      // Store the declined suggestion
-      await storeDeclinedSuggestion(pendingSuggestion);
-      console.log('❌ Declined AI suggestion:', pendingSuggestion);
-    }
+    if (!pendingSuggestion) return;
     
-    setShowSuggestionPopup(false);
+    // Store the declined suggestion
+    await storeDeclinedSuggestion(pendingSuggestion);
+    
+    console.log('❌ Declined AI suggestion:', pendingSuggestion);
     setPendingSuggestion(null);
+    setShowSuggestionPopup(false);
   };
 
   const handleDeleteActivity = (id: string) => {
-    // Find the activity to delete and show confirmation popup
-    const activityToDelete = activities.find(activity => activity.id === id);
-    if (activityToDelete) {
-      setActivityToDelete(activityToDelete);
+    const activityToRemove = activities.find(activity => activity.id === id);
+    if (activityToRemove) {
+      setActivityToDelete(activityToRemove);
       setShowDeleteConfirmation(true);
     }
   };
 
   const handleConfirmDelete = () => {
     if (activityToDelete) {
-      const activitiesAfterDeletion = activities.filter(activity => activity.id !== activityToDelete.id);
-      const recoloredActivities = reassignAllColors(activitiesAfterDeletion);
+      const updatedActivities = activities.filter(activity => activity.id !== activityToDelete.id);
+      // Reassign colors optimally after deletion with current theme
+      const recoloredActivities = reassignAllColors(updatedActivities, currentTheme.wheelColors);
       setActivities(recoloredActivities);
+      setActivityToDelete(null);
+      setShowDeleteConfirmation(false);
     }
-    setShowDeleteConfirmation(false);
-    setActivityToDelete(null);
   };
 
   const handleCancelDelete = () => {
-    setShowDeleteConfirmation(false);
     setActivityToDelete(null);
+    setShowDeleteConfirmation(false);
   };
 
   const handleReset = () => {
@@ -376,9 +389,10 @@ export default function HomeScreen() {
   };
 
   const handleConfirmReset = () => {
-    // Generate new random default activities
+    // Generate new random default activities with current theme colors
     const newDefaultActivities = generateDefaultActivities(resetCount);
-    setActivities(newDefaultActivities);
+    const themedActivities = reassignAllColors(newDefaultActivities, currentTheme.wheelColors);
+    setActivities(themedActivities);
     setShowResetConfirmation(false);
     // Clear any selected activity
     setSelectedActivity(null);
@@ -421,25 +435,37 @@ export default function HomeScreen() {
   }, []);
 
   const handleLoadActivities = (loadedActivities: Activity[]) => {
-    // Reassign colors to ensure optimal distribution
-    const recoloredActivities = reassignAllColors(loadedActivities);
+    // Reassign colors to ensure optimal distribution with current theme
+    const recoloredActivities = reassignAllColors(loadedActivities, currentTheme.wheelColors);
     setActivities(recoloredActivities);
   };
 
-  const handleOpenSaveLoad = () => {
-    setShowSaveLoadModal(true);
-  };
+
 
   const handleCloseSaveLoad = () => {
     setShowSaveLoadModal(false);
   };
 
+  const handleOpenTheme = () => {
+    setShowThemeModal(true);
+  };
+
+  const handleCloseTheme = () => {
+    setShowThemeModal(false);
+  };
+
+  const handleSaveLoad = (loadedActivities: Activity[]) => {
+    // Reassign colors to ensure optimal distribution with current theme
+    const recoloredActivities = reassignAllColors(loadedActivities, currentTheme.wheelColors);
+    setActivities(recoloredActivities);
+  };
+
   const renderContent = () => (
-          <View style={styles.container} onLayout={onLayout}>
+          <View style={[styles.container, { backgroundColor: currentTheme.backgroundColor }]} onLayout={onLayout}>
             <View style={styles.headerContainer}>
               <View style={styles.titleContainer}>
-                <ThemedText type="title" style={styles.title}>SPIN 2 PICK</ThemedText>
-                <ThemedText style={styles.subtitle}>✨ for AI suggestion | 💾 to save or load</ThemedText>
+                <ThemedText type="title" style={[styles.title, { color: currentTheme.uiColors.primary }]}>SPIN 2 PICK</ThemedText>
+                <ThemedText style={[styles.subtitle, { color: currentTheme.uiColors.secondary }]}>✨ for AI suggestion | 💾 to save or load</ThemedText>
               </View>
             </View>
             
@@ -453,7 +479,6 @@ export default function HomeScreen() {
               showSuggestionPopup={showSuggestionPopup}
               onAcceptSuggestion={handleAcceptSuggestion}
               onDeclineSuggestion={handleDeclineSuggestion}
-              onSaveLoad={handleOpenSaveLoad}
             />
 
             {containerWidth > 0 ? (
@@ -471,12 +496,14 @@ export default function HomeScreen() {
                       newlyAddedActivityId={newlyAddedActivityId}
                       onNewActivityIndicatorComplete={handleNewActivityIndicatorComplete}
                       onReset={handleReset}
+                      onOpenTheme={handleOpenTheme}
+                      onSaveLoad={handleSaveLoad}
                     />
                   </ErrorBoundary>
                 );
               })()
             ) : (
-              <ThemedText style={{textAlign: 'center', marginVertical: 20}}>Loading wheel...</ThemedText>
+              <ThemedText style={{textAlign: 'center', marginVertical: 20, color: currentTheme.uiColors.text}}>Loading wheel...</ThemedText>
             )}
 
             {showCelebration && <Celebration onComplete={handleCelebrationComplete} />}
@@ -484,14 +511,14 @@ export default function HomeScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: currentTheme.backgroundColor }]}>
       <KeyboardAvoidingView 
-        style={styles.keyboardAvoidingView}
+        style={[styles.keyboardAvoidingView, { backgroundColor: currentTheme.backgroundColor }]}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={0}
         enabled={Platform.OS === 'ios'}
       >
-        <View style={styles.mainContainer}>
+        <View style={[styles.mainContainer, { backgroundColor: currentTheme.backgroundColor }]}>
           {/* ScrollView for all platforms */}
           <ScrollView 
             style={styles.scrollContainer}
@@ -505,7 +532,7 @@ export default function HomeScreen() {
       </KeyboardAvoidingView>
       
       {/* Fixed elements that shouldn&apos;t move with keyboard */}
-      <View style={styles.fixedBottomContainer}>
+      <View style={[styles.fixedBottomContainer, { backgroundColor: currentTheme.backgroundColor }]}>
         {/* Banner Ad at the bottom */}
         <AdBanner />
       </View>
@@ -526,29 +553,34 @@ export default function HomeScreen() {
             style={[styles.popupContainer, {
               minWidth: containerMinWidth,
               maxWidth: containerMaxWidth,
+              backgroundColor: currentTheme.uiColors.modalBackground,
+              borderColor: currentTheme.uiColors.primary,
             }]}
             activeOpacity={1}
             onPress={() => {}} // Prevent closing when tapping inside popup
           >
-            <Text allowFontScaling={false} style={styles.popupTitle}>Remove Activity 🗑️</Text>
-            <Text allowFontScaling={false} style={styles.popupMessage}>Are you sure you want to remove:</Text>
-            <Text allowFontScaling={false} style={styles.activityToDeleteText}>
+            <Text allowFontScaling={false} style={[styles.popupTitle, { color: currentTheme.uiColors.primary }]}>Remove Activity 🗑️</Text>
+            <Text allowFontScaling={false} style={[styles.popupMessage, { color: currentTheme.uiColors.secondary }]}>Are you sure you want to remove:</Text>
+            <Text allowFontScaling={false} style={[styles.activityToDeleteText, { 
+              color: currentTheme.uiColors.text,
+              backgroundColor: currentTheme.uiColors.cardBackground,
+            }]}>
               {activityToDelete ? (activityToDelete.emoji ? `${activityToDelete.emoji} ${activityToDelete.name}` : activityToDelete.name) : ''}
             </Text>
             
             <View style={styles.popupButtonsContainer}>
               <TouchableOpacity 
-                style={[styles.popupButton, styles.cancelButton]} 
+                style={[styles.popupButton, styles.cancelButton, { backgroundColor: '#f59f9f' }]} 
                 onPress={handleCancelDelete}
               >
                 <Text allowFontScaling={false} style={styles.cancelButtonText}>Cancel ❌</Text>
               </TouchableOpacity>
               
               <TouchableOpacity 
-                style={[styles.popupButton, styles.confirmButton]} 
+                style={[styles.popupButton, styles.confirmButton, { backgroundColor: currentTheme.uiColors.accent }]} 
                 onPress={handleConfirmDelete}
               >
-                <Text allowFontScaling={false} style={styles.confirmButtonText}>Remove ✅</Text>
+                <Text allowFontScaling={false} style={[styles.confirmButtonText, { color: currentTheme.uiColors.buttonText }]}>Remove ✅</Text>
               </TouchableOpacity>
             </View>
           </TouchableOpacity>
@@ -568,14 +600,21 @@ export default function HomeScreen() {
           onPress={handleCancelReset}
         >
           <TouchableOpacity 
-            style={[styles.popupContainer, { width: modalWidth }]} 
+            style={[styles.popupContainer, { 
+              width: modalWidth,
+              backgroundColor: currentTheme.uiColors.modalBackground,
+              borderColor: currentTheme.uiColors.primary,
+            }]} 
             activeOpacity={1}
             onPress={() => {}} // Prevent closing when tapping inside popup
           >
-            <Text allowFontScaling={false} style={styles.popupTitle}>Reset Activities 🔄</Text>
-            <Text allowFontScaling={false} style={styles.popupMessage}>How many random activities do you want?</Text>
+            <Text allowFontScaling={false} style={[styles.popupTitle, { color: currentTheme.uiColors.primary }]}>Reset Activities 🔄</Text>
+            <Text allowFontScaling={false} style={[styles.popupMessage, { color: currentTheme.uiColors.secondary }]}>How many random activities do you want?</Text>
             <TextInput
-              style={styles.resetCountInput}
+              style={[styles.resetCountInput, { 
+                borderColor: currentTheme.uiColors.primary,
+                color: currentTheme.uiColors.text,
+              }]}
               keyboardType="numeric"
               onChangeText={(text: string) => {
                 const num = parseInt(text, 10);
@@ -587,32 +626,41 @@ export default function HomeScreen() {
               }}
               value={resetCount.toString()}
               placeholder="8"
-              placeholderTextColor="#999"
+              placeholderTextColor={currentTheme.uiColors.secondary}
               maxLength={3}
               allowFontScaling={false}
             />
-            <Text allowFontScaling={false} style={styles.resetWarningText}>
+            <Text allowFontScaling={false} style={[styles.resetWarningText, { 
+              color: '#d9534f',
+              backgroundColor: currentTheme.uiColors.cardBackground,
+            }]}>
               Current activities will be deleted and replaced with {resetCount} random activities.
             </Text>
             
             <View style={styles.popupButtonsContainer}>
               <TouchableOpacity 
-                style={[styles.popupButton, styles.cancelButton]} 
+                style={[styles.popupButton, styles.cancelButton, { backgroundColor: '#f59f9f' }]} 
                 onPress={handleCancelReset}
               >
                 <Text allowFontScaling={false} style={styles.cancelButtonText}>Cancel ❌</Text>
               </TouchableOpacity>
               
               <TouchableOpacity 
-                style={[styles.popupButton, styles.confirmButton]} 
+                style={[styles.popupButton, styles.confirmButton, { backgroundColor: currentTheme.uiColors.accent }]} 
                 onPress={handleConfirmReset}
               >
-                <Text allowFontScaling={false} style={styles.confirmButtonText}>Reset ✅</Text>
+                <Text allowFontScaling={false} style={[styles.confirmButtonText, { color: currentTheme.uiColors.buttonText }]}>Reset ✅</Text>
               </TouchableOpacity>
             </View>
           </TouchableOpacity>
         </TouchableOpacity>
       </Modal>
+      
+      {/* Theme Selection Modal */}
+      <ThemeSelectionModal
+        visible={showThemeModal}
+        onClose={handleCloseTheme}
+      />
       
       {/* Save/Load Modal */}
       <SaveLoadModal
@@ -628,7 +676,6 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#f3efff',
     ...(Platform.OS === 'web' && {
       minHeight: '100vh' as any,
     }),
@@ -641,7 +688,6 @@ const styles = StyleSheet.create({
   } as ViewStyle,
   mainContainer: {
     flex: 1,
-    backgroundColor: '#f3efff',
     ...(Platform.OS === 'web' && {
       minHeight: '100vh' as any,
     }),
@@ -664,18 +710,16 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 36,
     marginBottom: 10,
-    color: '#4e4370',
     fontFamily: FONTS.jua,
   },
   subtitle: {
     fontSize: 16,
     textAlign: 'center',
     marginBottom: 0,
-    color: '#666',
     fontFamily: FONTS.jua,
   },
   fixedBottomContainer: {
-    backgroundColor: '#f3efff',
+    // backgroundColor: '#f3efff', // Now using theme background
   },
   // Deletion confirmation popup styles (consistent with AI suggestion popup)
   modalOverlay: {
@@ -688,6 +732,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     padding: 20,
     borderRadius: 12,
+    borderWidth: 2,
     width: 'auto',
     minWidth: 280,
     maxWidth: 400,
@@ -703,21 +748,17 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontFamily: FONTS.jua,
     marginBottom: 10,
-    color: '#4e4370',
   },
   popupMessage: {
     fontSize: 16,
     fontFamily: FONTS.jua,
     marginBottom: 10,
-    color: '#666',
   },
   activityToDeleteText: {
     fontSize: 18,
     fontFamily: FONTS.jua,
     marginBottom: 20,
-    color: '#333',
     textAlign: 'center',
-    backgroundColor: '#f0f0f0',
     padding: 10,
     borderRadius: 8,
     width: '100%',
@@ -726,9 +767,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: FONTS.jua,
     marginBottom: 20,
-    color: '#d9534f',
     textAlign: 'center',
-    backgroundColor: '#fff5f5',
     padding: 12,
     borderRadius: 8,
     borderWidth: 1,
@@ -749,7 +788,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   cancelButton: {
-    backgroundColor: '#f59f9f',
+    // backgroundColor: '#f59f9f', // Moved to inline styles
   },
   cancelButtonText: {
     fontSize: 16,
@@ -757,29 +796,28 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   confirmButton: {
-    backgroundColor: '#94c4f5',
+    // backgroundColor: '#94c4f5', // Now using theme colors
   },
   confirmButtonText: {
     fontSize: 16,
     fontFamily: FONTS.jua,
-    color: '#fff',
+    // color: '#fff', // Now using theme colors
   },
   headerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 16,
+    width: '100%',
   },
   titleContainer: {
     flex: 1,
   },
   resetCountInput: {
     borderWidth: 2,
-    borderColor: '#e0e0e0',
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
     fontFamily: FONTS.jua,
-    color: '#333',
     textAlign: 'center',
     width: '100%',
     marginBottom: 10,

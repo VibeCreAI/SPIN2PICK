@@ -3,7 +3,10 @@ import * as Haptics from 'expo-haptics';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, Dimensions, Easing, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Svg, { Circle, G, Path, Text as SvgText } from 'react-native-svg';
+import { useTheme } from '../hooks/useTheme';
 import { playClickSound, playSpinningSound, playSuccessSound, stopSpinningSound } from '../utils/soundUtils';
+import { SaveLoadModal } from './SaveLoadModal';
+import { ThemeButton } from './ThemeButton';
 import { ThemedText } from './ThemedText';
 import { ThemedView } from './ThemedView';
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
@@ -39,6 +42,8 @@ interface RouletteWheelProps {
   newlyAddedActivityId?: string | null; // ID of the newly added activity to highlight
   onNewActivityIndicatorComplete?: () => void; // Callback when indicator animation completes
   onReset?: () => void; // Callback for reset button
+  onOpenTheme?: () => void; // Callback for theme button
+  onSaveLoad?: (loadedActivities: Activity[]) => void; // Callback for save/load button
 }
 
 export const RouletteWheel: React.FC<RouletteWheelProps> = ({
@@ -51,7 +56,11 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
   newlyAddedActivityId,
   onNewActivityIndicatorComplete,
   onReset,
+  onOpenTheme,
+  onSaveLoad,
 }) => {
+  const { currentTheme } = useTheme();
+  
   // Get screen dimensions for web platform
   const screenData = Dimensions.get('window');
   
@@ -98,7 +107,7 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
   const [previousSelectedActivity, setPreviousSelectedActivity] = useState<Activity | null>(null);
   
   // Animation values
-  const pulseAnim = useRef(new Animated.Value(1)).current;
+  const pulseValue = useRef(new Animated.Value(1)).current;
   const bounceAnim = useRef(new Animated.Value(0)).current;
   const fadeAnim = useRef(new Animated.Value(0.7)).current;
   const scaleAnim = useRef(new Animated.Value(0.9)).current;
@@ -113,6 +122,9 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
   const lastFrameTime = useRef(0);
   const animationFrameId = useRef<number | null>(null);
   const pulseAnimationRef = useRef<any>(null);
+
+  // State management
+  const [showSaveLoadModal, setShowSaveLoadModal] = useState(false);
 
   // Optimize rotation listener with throttling to reduce flickering
   const updateRotation = useCallback((value: number) => {
@@ -215,9 +227,9 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
     }
   }, [newlyAddedActivityId]);
 
-  // Pulsing animation for the wheel - only when not spinning
-  const startPulseAnimation = useCallback(() => {
-    if (isSpinning) return; // Don&apos;t pulse when spinning
+  // Pulsing animation for the SPIN button only - optimized for performance
+  const startSpinButtonPulse = useCallback(() => {
+    if (isSpinning) return; // Don't pulse when spinning
     
     // Stop any existing pulse animation first
     if (pulseAnimationRef.current) {
@@ -226,13 +238,13 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
     
     pulseAnimationRef.current = Animated.loop(
       Animated.sequence([
-        Animated.timing(pulseAnim, {
-          toValue: 1.05,
+        Animated.timing(pulseValue, {
+          toValue: 1.1,
           duration: 1000,
           easing: Easing.inOut(Easing.ease),
           useNativeDriver: Platform.OS !== 'web',
         }),
-        Animated.timing(pulseAnim, {
+        Animated.timing(pulseValue, {
           toValue: 1,
           duration: 1000,
           easing: Easing.inOut(Easing.ease),
@@ -242,9 +254,9 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
     );
     
     pulseAnimationRef.current.start();
-  }, [isSpinning, pulseAnim]);
+  }, [isSpinning, pulseValue]);
 
-  // Initialize animations when component mounts (moved here after startPulseAnimation declaration)
+  // Initialize animations when component mounts
   useEffect(() => {
     // Start scale animation for wheel appearance
     Animated.spring(scaleAnim, {
@@ -254,14 +266,14 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
       useNativeDriver: Platform.OS !== 'web',
     }).start();
     
-    // Start the pulsing animation
-    startPulseAnimation();
+    // Start the SPIN button pulsing animation (removed wheel pulse)
+    startSpinButtonPulse();
     
     // Cleanup function to prevent memory leaks
     return () => {
-      pulseAnim.stopAnimation();
+      pulseValue.stopAnimation();
     };
-  }, [startPulseAnimation, pulseAnim, scaleAnim]);
+  }, [startSpinButtonPulse, pulseValue, scaleAnim]);
 
   const spinWheel = useCallback(() => {
     if (isSpinning || activities.length < 2) return;
@@ -276,16 +288,12 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
       onNewActivityIndicatorComplete?.();
     }
     
-    // Stop pulse animation during spinning
-    pulseAnim.stopAnimation();
-    pulseAnim.setValue(1); // Reset to normal size
+    // Reset bounce animation before spin
+    bounceAnim.setValue(0);
     
     // Play click and spinning sounds
     playClickSound();
     playSpinningSound();
-    
-    // Reset bounce animation before spin
-    bounceAnim.setValue(0);
     
     // Generate random extra rotations (between 2-4 full rotations)
     const randomExtraRotations = Math.floor(Math.random() * 3) + 2;
@@ -315,7 +323,7 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
       setIsSpinning(false);
       
       // Restart pulse animation after spinning
-      startPulseAnimation();
+      startSpinButtonPulse();
       
       // Stop spinning sound and play success sound
       stopSpinningSound();
@@ -332,7 +340,7 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
         onActivitySelect(activities[selectedIndex]);
       }
     });
-  }, [isSpinning, activities.length, pulseAnim, bounceAnim, rotation, activities, onActivitySelect, startPulseAnimation, showNewIndicator, newIndicatorAnim, newIndicatorPulse, onNewActivityIndicatorComplete]);
+  }, [isSpinning, activities.length, pulseValue, bounceAnim, rotation, activities, onActivitySelect, startSpinButtonPulse, showNewIndicator, newIndicatorAnim, newIndicatorPulse, onNewActivityIndicatorComplete]);
 
   // Memoize rotation interpolation to prevent flickering
   const rotationInterpolation = useMemo(() => {
@@ -353,7 +361,7 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
           y={CENTER} 
           textAnchor="middle" 
           fontSize="16" 
-          fill="#333"
+                                fill={currentTheme.uiColors.text}
           fontFamily={FONTS.jua}
         >
           Add at least 2 activities!
@@ -385,7 +393,7 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
           y={CENTER - 10} 
           textAnchor="middle" 
           fontSize="18" 
-          fill="#4e4370"
+          fill={currentTheme.uiColors.primary}
           fontFamily={FONTS.jua}
           fontWeight="bold"
         >
@@ -398,7 +406,7 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
           y={CENTER + 15} 
           textAnchor="middle" 
           fontSize="12" 
-          fill="#4e4370"
+          fill={currentTheme.uiColors.primary}
           fontFamily={FONTS.jua}
           opacity="0.8"
         >
@@ -417,7 +425,7 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
         cx={CENTER} 
         cy={CENTER} 
         r={CENTER * 0.95} 
-        fill="#E8F4FC"
+        fill={currentTheme.uiColors.cardBackground}
         stroke="#FFFFFF" 
         strokeWidth={2} 
       />,
@@ -662,7 +670,7 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
               <SvgText
                 x={textStartX}
                 y={textStartY}
-                fill="#4e4370"
+                fill={currentTheme.uiColors.primary}
                 fontSize={fontSize}
                 fontFamily={FONTS.jua}
                 textAnchor="start"
@@ -698,7 +706,7 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
                   key={`line-${index}`}
                   x={textStartX}
                   y={lineY}
-                  fill="#4e4370"
+                  fill={currentTheme.uiColors.primary}
                   fontSize={fontSize}
                   fontFamily={FONTS.jua}
                   textAnchor="start"
@@ -721,7 +729,7 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
             <SvgText
               x={emojiX}
               y={emojiY}
-              fill="#333333"
+              fill={currentTheme.uiColors.text}
               fontSize={emojiFontSize}
               textAnchor="middle"
               alignmentBaseline="middle"
@@ -744,7 +752,7 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
               <AnimatedPath 
                 d={pathData} 
                 fill={fillColor}
-                stroke="#4e4370"
+                stroke={currentTheme.uiColors.primary}
                 strokeWidth={newIndicatorPulse.interpolate({
                   inputRange: [1, 1.2],
                   outputRange: [4, 6]
@@ -958,7 +966,7 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
     return () => {
       // Clean up all animations when component unmounts
       rotation.stopAnimation();
-      pulseAnim.stopAnimation();
+      pulseValue.stopAnimation();
       bounceAnim.stopAnimation();
       fadeAnim.stopAnimation();
       scaleAnim.stopAnimation();
@@ -971,7 +979,7 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
         cancelAnimationFrame(animationFrameId.current);
       }
     };
-  }, [rotation, pulseAnim, bounceAnim, fadeAnim, scaleAnim]);
+  }, [rotation, pulseValue, bounceAnim, fadeAnim, scaleAnim]);
 
   if (WHEEL_SIZE <= 0) {
     return (
@@ -1022,8 +1030,7 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
               top: 0,
               left: 0,
               transform: [
-                { rotate: rotationInterpolation },
-                { scale: pulseAnim }
+                { rotate: rotationInterpolation }
               ],
             },
           ]}
@@ -1125,14 +1132,27 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
           />
         )}
 
+        {/* SPIN Button - now with pulsing animation */}
         {canSpin && !selectedActivity && (
-          <TouchableOpacity
-            style={[styles.spinButton, styles.spinButtonCenter]}
-            onPress={spinWheel}
-            disabled={isSpinning}
-          >
-            <ThemedText style={styles.spinButtonText}>SPIN</ThemedText>
-          </TouchableOpacity>
+          <Animated.View style={[
+            styles.spinButton, 
+            styles.spinButtonCenter,
+            {
+              backgroundColor: currentTheme.uiColors.accent,
+              transform: [{ scale: pulseValue }]
+            }
+          ]}>
+            <TouchableOpacity
+              style={styles.spinButtonTouchable}
+              onPress={spinWheel}
+              disabled={isSpinning}
+            >
+              <ThemedText style={[
+                styles.spinButtonText,
+                { color: currentTheme.uiColors.buttonText }
+              ]}>SPIN</ThemedText>
+            </TouchableOpacity>
+          </Animated.View>
         )}
         
         {selectedActivity && (
@@ -1148,10 +1168,16 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
               }
             ]}
           >
-            <ThemedText style={styles.resultSubtext}>
+            <ThemedText style={[
+              styles.resultSubtext,
+              { color: currentTheme.uiColors.text }
+            ]}>
               Let&apos;s play:
             </ThemedText>
-            <ThemedText style={styles.resultCenterText}>
+            <ThemedText style={[
+              styles.resultCenterText,
+              { color: currentTheme.uiColors.primary }
+            ]}>
               {selectedActivity.emoji ? `${selectedActivity.emoji} ${selectedActivity.name}` : selectedActivity.name}
             </ThemedText>
           </Animated.View>
@@ -1163,7 +1189,10 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
       {/* Instruction text with reset button - positioned relative to avoid flickering */}
       <ThemedView lightColor="transparent" darkColor="transparent" style={styles.instructionContainer}>
         <ThemedView lightColor="transparent" darkColor="transparent" style={styles.instructionRow}>
-          <ThemedText style={styles.instructionText}>
+          <ThemedText style={[
+            styles.instructionText,
+            { color: currentTheme.uiColors.secondary }
+          ]}>
             {activities.length === 1
               ? "Tap to remove activity or add more to spin!"
               : activities.length === 2 
@@ -1173,34 +1202,91 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
                   : "Add activities to get started!"
             }
           </ThemedText>
-          {onReset && (
-            <TouchableOpacity 
-              style={styles.resetButton}
-              onPress={onReset}
-              activeOpacity={0.7}
+          
+          {/* Buttons row */}
+          <ThemedView lightColor="transparent" darkColor="transparent" style={styles.buttonsRow}>
+            {onReset && (
+              <TouchableOpacity
+                style={[
+                  styles.actionButton,
+                  { 
+                    backgroundColor: currentTheme.uiColors.accent,
+                    borderColor: currentTheme.uiColors.primary,
+                  }
+                ]}
+                onPress={onReset}
+                activeOpacity={0.8}
+              >
+                <ThemedText style={[
+                  styles.actionButtonText,
+                  { color: currentTheme.uiColors.buttonText }
+                ]}>🔄 Reset</ThemedText>
+              </TouchableOpacity>
+            )}
+
+            <TouchableOpacity
+              style={[
+                styles.actionButton,
+                { 
+                  backgroundColor: currentTheme.uiColors.accent,
+                  borderColor: currentTheme.uiColors.primary,
+                }
+              ]}
+              onPress={() => setShowSaveLoadModal(true)}
+              activeOpacity={0.8}
             >
-              <ThemedText style={styles.resetButtonText}>🔄 Reset</ThemedText>
+              <ThemedText style={[
+                styles.actionButtonText,
+                { color: currentTheme.uiColors.buttonText }
+              ]}>💾 Save/Load</ThemedText>
             </TouchableOpacity>
-          )}
+
+            {onOpenTheme && (
+              <ThemeButton onPress={onOpenTheme} />
+            )}
+          </ThemedView>
         </ThemedView>
       </ThemedView>
 
       {/* Last selected activity box - positioned relative to avoid flickering */}
       <ThemedView 
-        lightColor="#fff" 
-        darkColor="#fff" 
-        style={[styles.lastActivityContainer, {
-          minWidth: containerMinWidth,
-          maxWidth: containerMaxWidth,
-          marginHorizontal: containerMarginHorizontal,
-        }]}
+        lightColor={currentTheme.uiColors.cardBackground}
+        darkColor={currentTheme.uiColors.cardBackground}
+        style={[
+          styles.lastActivityContainer, 
+          {
+            minWidth: containerMinWidth,
+            maxWidth: containerMaxWidth,
+            marginHorizontal: containerMarginHorizontal,
+            backgroundColor: currentTheme.uiColors.cardBackground,
+            borderColor: currentTheme.uiColors.primary,
+          }
+        ]}
       >
-        <ThemedView lightColor="#fff" darkColor="#fff" style={styles.lastActivityContent}>
-          <ThemedView lightColor="#fff" darkColor="#fff" style={styles.labelContainer}>
-            <Text allowFontScaling={false} style={styles.lastActivityLabel}>Last selected activity:</Text>
+        <ThemedView 
+          lightColor={currentTheme.uiColors.cardBackground}
+          darkColor={currentTheme.uiColors.cardBackground}
+          style={styles.lastActivityContent}
+        >
+          <ThemedView 
+            lightColor={currentTheme.uiColors.cardBackground}
+            darkColor={currentTheme.uiColors.cardBackground}
+            style={styles.labelContainer}
+          >
+            <Text allowFontScaling={false} style={[
+              styles.lastActivityLabel,
+              { color: currentTheme.uiColors.secondary }
+            ]}>Last selected activity:</Text>
           </ThemedView>
-          <ThemedView lightColor="#fff" darkColor="#fff" style={styles.activityTextContainer}>
-            <Text allowFontScaling={false} style={styles.lastActivityText}>
+          <ThemedView 
+            lightColor={currentTheme.uiColors.cardBackground}
+            darkColor={currentTheme.uiColors.cardBackground}
+            style={styles.activityTextContainer}
+          >
+            <Text allowFontScaling={false} style={[
+              styles.lastActivityText,
+              { color: currentTheme.uiColors.primary }
+            ]}>
               {previousSelectedActivity 
                 ? (previousSelectedActivity.emoji ? `${previousSelectedActivity.emoji} ${previousSelectedActivity.name}` : previousSelectedActivity.name)
                 : ""
@@ -1217,6 +1303,20 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
         </ThemedText>
       </ThemedView>
 
+      {/* Save/Load Modal */}
+      {showSaveLoadModal && (
+        <SaveLoadModal
+          visible={showSaveLoadModal}
+          onClose={() => setShowSaveLoadModal(false)}
+          currentActivities={activities}
+          onLoadActivities={(loadedActivities: Activity[]) => {
+            if (onSaveLoad) {
+              onSaveLoad(loadedActivities);
+            }
+            setShowSaveLoadModal(false);
+          }}
+        />
+      )}
 
     </ThemedView>
   );
@@ -1288,7 +1388,7 @@ const styles = StyleSheet.create({
   },
   spinButtonText: {
     fontSize: 28, 
-    color: '#4e4370',
+    // color moved to inline styles for theme support
     fontFamily: FONTS.jua,
   },
   messageContainer: {
@@ -1332,13 +1432,13 @@ const styles = StyleSheet.create({
   },
   instructionText: {
     fontSize: 16, // Reduced from 16
-    color: '#666',
+    // color moved to inline styles for theme support
     fontFamily: FONTS.jua,
     textAlign: 'center',
     paddingHorizontal: 4,
   },
   resetButton: {
-    backgroundColor: '#4e4370',
+    // backgroundColor moved to inline styles for theme support
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 20,
@@ -1350,7 +1450,7 @@ const styles = StyleSheet.create({
   },
   resetButtonText: {
     fontSize: 14,
-    color: '#fff',
+    // color moved to inline styles for theme support
     fontFamily: FONTS.jua,
     textAlign: 'center',
   },
@@ -1361,10 +1461,10 @@ const styles = StyleSheet.create({
     marginTop: 5,
     marginBottom: 7, // Added to match ActivityInput
     padding: 16, // Changed from 15 to match ActivityInput
-    backgroundColor: '#fff',
+    // backgroundColor moved to inline styles for theme support
     borderRadius: 12,
     borderWidth: 2,
-    borderColor: '#E8F4FC',
+    // borderColor moved to inline styles for theme support
     elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
@@ -1386,7 +1486,7 @@ const styles = StyleSheet.create({
   },
   lastActivityLabel: {
     fontSize: 16,
-    color: '#666',
+    // color moved to inline styles for theme support
     fontFamily: FONTS.jua, // Back to original font
     textAlign: 'center',
   },
@@ -1397,7 +1497,7 @@ const styles = StyleSheet.create({
   },
   lastActivityText: {
     fontSize: 22,
-    color: '#4e4370',
+    // color moved to inline styles for theme support
     fontFamily: FONTS.jua, // Back to original font
     marginTop: 4,
     textAlign: 'center',
@@ -1423,14 +1523,14 @@ const styles = StyleSheet.create({
   },
   resultCenterText: {
     fontSize: 36,
-    color: '#4e4370',
+    // color moved to inline styles for theme support
     fontFamily: FONTS.jua,
     textAlign: 'center',
     padding: 5,
   },
   resultSubtext: {
     fontSize: 24, // Increased accordingly (was 18)
-    color: '#333',
+    // color moved to inline styles for theme support
     fontFamily: FONTS.jua,
     textAlign: 'center',
   },
@@ -1471,5 +1571,31 @@ const styles = StyleSheet.create({
     color: 'transparent',
     height: 0,
     opacity: 0,
+  },
+  buttonsRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  actionButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 2,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 1.41,
+  },
+  actionButtonText: {
+    fontSize: 14,
+    fontFamily: FONTS.jua,
+    textAlign: 'center',
+  },
+  spinButtonTouchable: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 }); 

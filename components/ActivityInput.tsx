@@ -1,43 +1,51 @@
 import { FONTS } from '@/app/_layout';
-import { Ionicons } from '@expo/vector-icons';
-import React, { useState } from 'react';
-import { ActivityIndicator, Dimensions, Modal, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import {
+    Dimensions,
+    Modal,
+    Platform,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View
+} from 'react-native';
+import { useTheme } from '../hooks/useTheme';
+import { ThemedView } from './ThemedView';
 
 interface ActivityInputProps {
   onAddActivity: (name: string) => void;
   onSuggestActivity: () => void;
   existingActivities: string[];
-  isLoading?: boolean;
-  isSuggesting?: boolean;
-  pendingSuggestion?: string | null;
-  showSuggestionPopup?: boolean;
-  onAcceptSuggestion?: () => void;
-  onDeclineSuggestion?: () => void;
-  onSaveLoad?: () => void;
+  isLoading: boolean;
+  isSuggesting: boolean;
+  pendingSuggestion: string | null;
+  showSuggestionPopup: boolean;
+  onAcceptSuggestion: () => void;
+  onDeclineSuggestion: () => void;
 }
-
-// Maximum character limit for activities
-const MAX_ACTIVITY_LENGTH = 20;
 
 export const ActivityInput: React.FC<ActivityInputProps> = ({
   onAddActivity,
   onSuggestActivity,
   existingActivities,
-  isLoading = false,
-  isSuggesting = false,
+  isLoading,
+  isSuggesting,
   pendingSuggestion,
   showSuggestionPopup,
   onAcceptSuggestion,
   onDeclineSuggestion,
-  onSaveLoad,
 }) => {
-  const [activityName, setActivityName] = useState('');
+  const { currentTheme } = useTheme();
+  const [inputText, setInputText] = useState('');
 
-  // Get screen width for responsive design
-  const screenWidth = Dimensions.get('window').width;
+  // Get screen dimensions for responsive design
+  const screenData = Dimensions.get('window');
+  
+  // Responsive width settings (matching RouletteWheel)
+  const screenWidth = screenData.width;
   const isNarrowScreen = screenWidth < 360; // Very narrow screens
   const isSmallScreen = screenWidth < 400; // Small screens
-  const isExtremelyNarrow = screenWidth < 320; // Extremely narrow screens
   const isMediumScreen = screenWidth < 500; // Medium screens
   
   // Dynamic minWidth based on screen size for better text centering (matching RouletteWheel)
@@ -47,118 +55,130 @@ export const ActivityInput: React.FC<ActivityInputProps> = ({
     if (screenWidth < 320) return 260; // Very narrow - smaller minWidth for better centering
     if (screenWidth < 360) return 280; // Narrow
     if (screenWidth < 400) return 300; // Small  
-    if (screenWidth < 500) return 330; // Medium
+    if (screenWidth < 500) return 340; // Medium
     return 340; // Wide screens - original value
   };
   
-  // Responsive width settings
   const containerMinWidth = getResponsiveMinWidth();
   const containerMaxWidth = isSmallScreen ? '95%' : '90%';
   const containerMarginHorizontal = isNarrowScreen ? 8 : 16;
-  
-  // Adjust padding for inline layout (much less padding needed now)
-  const inputPaddingRight = 8;
-  const charCounterRight = 8;
-  
-  // Adjust font size for extremely narrow screens
-  const inputFontSize = isExtremelyNarrow ? 14 : 16;
 
-  const handleTextChange = (text: string) => {
-    // Limit text input to MAX_ACTIVITY_LENGTH characters
-    if (text.length <= MAX_ACTIVITY_LENGTH) {
-      setActivityName(text);
+  const handleSubmit = useCallback(() => {
+    const trimmedText = inputText.trim();
+    if (trimmedText && !isLoading) {
+      // Check for duplicates (case-insensitive)
+      const isDuplicate = existingActivities.some(
+        activity => activity.toLowerCase() === trimmedText.toLowerCase()
+      );
+      
+      if (isDuplicate) {
+        alert('This activity already exists!');
+        return;
+      }
+      
+      onAddActivity(trimmedText);
+      setInputText('');
     }
-  };
+  }, [inputText, isLoading, onAddActivity, existingActivities]);
 
-  const handleAddActivity = () => {
-    const trimmedName = activityName.trim();
-    if (!trimmedName) {
-      alert('Please enter an activity name');
-      return;
-    }
-    if (existingActivities.includes(trimmedName)) {
-      alert('This activity already exists!');
-      return;
-    }
-    onAddActivity(trimmedName);
-    setActivityName('');
-  };
-
-  // Calculate remaining characters
-  const remainingChars = MAX_ACTIVITY_LENGTH - activityName.length;
-  const isNearLimit = remainingChars <= 5;
+  // Auto-focus effect for better UX
+  useEffect(() => {
+    // Small delay to ensure component is mounted
+    const timer = setTimeout(() => {
+      // Focus is handled by the TextInput ref if needed
+    }, 100);
+    
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
-    <View style={[styles.container, {
-      minWidth: containerMinWidth,
-      maxWidth: containerMaxWidth,
-      marginHorizontal: containerMarginHorizontal,
-    }]}>
-      <View style={styles.mainRow}>
-        <View style={styles.inputContainer}>
-          <TextInput
-            style={[styles.input, { fontSize: inputFontSize }]}
-            value={activityName}
-            onChangeText={handleTextChange}
-            placeholder="Type new activity"
-            placeholderTextColor="#666"
-            onSubmitEditing={handleAddActivity}
-            maxLength={MAX_ACTIVITY_LENGTH}
-            editable={!isLoading && !isSuggesting}
-            allowFontScaling={false}
-          />
-          {activityName.length > 0 && (
-            <Text allowFontScaling={false} style={[
-              styles.charCounter, 
-              { right: charCounterRight },
-              isNearLimit ? styles.charCounterNearLimit : null
-            ]}>
-              {remainingChars}
-            </Text>
-          )}
-        </View>
-        
-        {/* Buttons on the right side */}
-        <View style={styles.buttonsContainer}>
-          <TouchableOpacity 
-            style={[styles.addButton, isLoading && styles.buttonDisabled]} 
-            onPress={handleAddActivity}
-            disabled={isLoading || isSuggesting}
+    <ThemedView lightColor="transparent" darkColor="transparent" style={styles.container}>
+      {/* Main Input Card - matching lastActivityContainer styling */}
+      <ThemedView 
+        lightColor={currentTheme.uiColors.cardBackground}
+        darkColor={currentTheme.uiColors.cardBackground}
+        style={[
+          styles.inputCard, 
+          {
+            minWidth: containerMinWidth,
+            maxWidth: containerMaxWidth,
+            marginHorizontal: containerMarginHorizontal,
+            backgroundColor: currentTheme.uiColors.cardBackground,
+            borderColor: currentTheme.uiColors.primary,
+          }
+        ]}
+      >
+        <ThemedView 
+          lightColor={currentTheme.uiColors.cardBackground}
+          darkColor={currentTheme.uiColors.cardBackground}
+          style={styles.inputContent}
+        >
+          {/* Input Row with buttons on the right */}
+          <ThemedView 
+            lightColor={currentTheme.uiColors.cardBackground}
+            darkColor={currentTheme.uiColors.cardBackground}
+            style={styles.inputRow}
           >
-            {isLoading ? (
-              <ActivityIndicator size="small" color="#94c4f5" />
-            ) : (
-              <Ionicons name="add-circle" size={28} color="#94c4f5" />
-            )}
-          </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={[styles.suggestButton, isSuggesting && styles.buttonDisabled]} 
-            onPress={onSuggestActivity}
-            disabled={isLoading || isSuggesting}
-          >
-            {isSuggesting ? (
-              <ActivityIndicator size="small" color="#f5c09f" />
-            ) : (
-              <Text allowFontScaling={false} style={styles.suggestButtonText}>✨</Text>
-            )}
-          </TouchableOpacity>
-          
-          {onSaveLoad && (
-            <TouchableOpacity
-              style={styles.saveLoadButton}
-              onPress={onSaveLoad}
-              disabled={isLoading || isSuggesting}
+            <TextInput
+              style={[
+                styles.textInput,
+                {
+                  color: currentTheme.uiColors.text,
+                }
+              ]}
+              value={inputText}
+              onChangeText={setInputText}
+              placeholder="Enter new activity..."
+              placeholderTextColor={currentTheme.uiColors.secondary}
+              onSubmitEditing={handleSubmit}
+              returnKeyType="done"
+              autoCapitalize="words"
+              autoCorrect={true}
+              allowFontScaling={false}
+              maxLength={50}
+            />
+            
+            {/* Buttons on the right side - no background colors */}
+            <ThemedView 
+              lightColor={currentTheme.uiColors.cardBackground}
+              darkColor={currentTheme.uiColors.cardBackground}
+              style={styles.rightButtons}
             >
-              <Text allowFontScaling={false} style={styles.saveLoadButtonText}>💾</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-      </View>
-      
+              <TouchableOpacity 
+                style={styles.iconButton}
+                onPress={handleSubmit}
+                disabled={!inputText.trim() || isLoading}
+                activeOpacity={0.7}
+              >
+                <Text allowFontScaling={false} style={[
+                  styles.iconButtonText,
+                  { color: currentTheme.uiColors.primary }
+                ]}>
+                  {isLoading ? '⏳' : '➕'}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                style={styles.iconButton}
+                onPress={onSuggestActivity}
+                disabled={isSuggesting}
+                activeOpacity={0.7}
+              >
+                <Text allowFontScaling={false} style={[
+                  styles.iconButtonText,
+                  { color: currentTheme.uiColors.primary }
+                ]}>
+                  {isSuggesting ? '🤔' : '✨'}
+                </Text>
+              </TouchableOpacity>
+            </ThemedView>
+          </ThemedView>
+        </ThemedView>
+      </ThemedView>
+
       {/* AI Suggestion Popup */}
       <Modal
-        visible={showSuggestionPopup || false}
+        visible={showSuggestionPopup}
         transparent={true}
         animationType="fade"
         onRequestClose={onDeclineSuggestion}
@@ -169,128 +189,142 @@ export const ActivityInput: React.FC<ActivityInputProps> = ({
           onPress={onDeclineSuggestion}
         >
           <TouchableOpacity 
-            style={styles.popupContainer}
+            style={[
+              styles.popupContainer,
+              {
+                backgroundColor: currentTheme.uiColors.modalBackground,
+                borderColor: currentTheme.uiColors.primary,
+              }
+            ]}
             activeOpacity={1}
             onPress={() => {}} // Prevent closing when tapping inside popup
           >
-            <Text allowFontScaling={false} style={styles.popupTitle}>AI Suggestion ✨</Text>
-            <Text allowFontScaling={false} style={styles.popupMessage}>How about:</Text>
-            <Text allowFontScaling={false} style={styles.suggestedActivityText}>{pendingSuggestion}</Text>
+            <Text allowFontScaling={false} style={[
+              styles.popupTitle,
+              { color: currentTheme.uiColors.primary }
+            ]}>AI Suggestion ✨</Text>
+            <Text allowFontScaling={false} style={[
+              styles.popupMessage,
+              { color: currentTheme.uiColors.secondary }
+            ]}>How about this activity?</Text>
+            <Text allowFontScaling={false} style={[
+              styles.suggestionText,
+              { 
+                color: currentTheme.uiColors.text,
+                backgroundColor: currentTheme.uiColors.cardBackground,
+              }
+            ]}>
+              {pendingSuggestion}
+            </Text>
             
             <View style={styles.popupButtonsContainer}>
               <TouchableOpacity 
-                style={[styles.popupButton, styles.declineButton]} 
+                style={[
+                  styles.popupButton, 
+                  styles.declineButton,
+                  { backgroundColor: '#f59f9f' }
+                ]} 
                 onPress={onDeclineSuggestion}
               >
-                <Text allowFontScaling={false} style={styles.declineButtonText}>Decline ❌</Text>
+                <Text allowFontScaling={false} style={styles.declineButtonText}>No thanks ❌</Text>
               </TouchableOpacity>
               
               <TouchableOpacity 
-                style={[styles.popupButton, styles.acceptButton]} 
+                style={[
+                  styles.popupButton, 
+                  styles.acceptButton,
+                  { backgroundColor: currentTheme.uiColors.accent }
+                ]} 
                 onPress={onAcceptSuggestion}
               >
-                <Text allowFontScaling={false} style={styles.acceptButtonText}>Accept ✅</Text>
+                <Text allowFontScaling={false} style={[
+                  styles.acceptButtonText,
+                  { color: currentTheme.uiColors.buttonText }
+                ]}>Add it! ✅</Text>
               </TouchableOpacity>
             </View>
           </TouchableOpacity>
         </TouchableOpacity>
       </Modal>
-    </View>
+    </ThemedView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
-    padding: 12,
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    alignSelf: 'center',
-    width: 'auto',
-    marginVertical: 6,
-    marginBottom: 16,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 1.5,
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
+    marginVertical: 8, // Matching RouletteWheel spacing
+    marginBottom: 7, // Matching RouletteWheel spacing
+    width: '100%',
   },
-  mainRow: {
+  // Main card container - matching lastActivityContainer styling exactly
+  inputCard: {
+    alignSelf: 'center', // Center the container (matching lastActivityContainer)
+    width: 'auto', // Let content determine width (matching lastActivityContainer)
+    marginVertical: 8, // Matching lastActivityContainer
+    marginTop: 5, // Matching lastActivityContainer
+    marginBottom: 7, // Matching lastActivityContainer
+    padding: 16, // Matching lastActivityContainer (changed from 15)
+    borderRadius: 12, // Matching lastActivityContainer
+    borderWidth: 2, // Matching lastActivityContainer
+    elevation: 2, // Matching lastActivityContainer
+    shadowColor: '#000', // Matching lastActivityContainer
+    shadowOffset: { width: 0, height: 1 }, // Matching lastActivityContainer
+    shadowOpacity: 0.2, // Matching lastActivityContainer
+    shadowRadius: 1.41, // Matching lastActivityContainer
+    alignItems: 'center', // Matching lastActivityContainer
+    justifyContent: 'center', // Matching lastActivityContainer
+  },
+  // Content container - matching lastActivityContent
+  inputContent: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+  },
+  // Input row with buttons on the right
+  inputRow: {
     flexDirection: 'row',
     alignItems: 'center',
     width: '100%',
+    gap: 8,
   },
-  inputContainer: {
-    position: 'relative',
+  // Text input - takes most of the space
+  textInput: {
     flex: 1,
-    marginRight: 8,
-    minWidth: 0, // Allow flex item to shrink below content size
-  },
-  input: {
-    height: 36,
-    fontFamily: FONTS.jua,
-    color: '#333',
-    borderWidth: 0,
-    borderColor: 'transparent',
-    width: '100%',
-    paddingHorizontal: 8,
+    fontSize: 18, // Slightly smaller than lastActivityText (22) but still prominent
+    fontFamily: FONTS.jua, // Matching lastActivityText
+    textAlign: 'center', // Matching lastActivityText
+    paddingVertical: Platform.OS === 'ios' ? 8 : 4,
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.1)',
+    borderRadius: 8,
+    backgroundColor: 'rgba(255,255,255,0.5)',
     // Platform-specific outline removal for web
     ...(Platform.OS === 'web' && {
       outlineWidth: 0,
     }),
   },
-  charCounter: {
-    position: 'absolute',
-    fontSize: 12,
-    fontFamily: FONTS.jua,
-    color: '#999',
-    backgroundColor: '#fff',
-    paddingHorizontal: 4,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  charCounterNearLimit: {
-    color: '#f59f9f', // Light red when getting close to limit
-  },
-  buttonsContainer: {
+  // Right buttons container
+  rightButtons: {
     flexDirection: 'row',
-    alignItems: 'center',
     gap: 4,
+    alignItems: 'center',
   },
-  addButton: {
+  // Icon buttons - no background, just the icon
+  iconButton: {
+    padding: 8,
     alignItems: 'center',
     justifyContent: 'center',
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    minWidth: 32,
+    minHeight: 32,
   },
-  suggestButton: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-  },
-  saveLoadButton: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-  },
-  suggestButtonText: {
+  iconButtonText: {
     fontSize: 18,
+    fontFamily: FONTS.jua,
     textAlign: 'center',
   },
-  saveLoadButtonText: {
-    fontSize: 16,
-    textAlign: 'center',
-  },
-  buttonDisabled: {
-    opacity: 0.5,
-  },
+  // AI Suggestion popup styles
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
@@ -298,9 +332,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   popupContainer: {
-    backgroundColor: '#fff',
     padding: 20,
     borderRadius: 12,
+    borderWidth: 2,
     width: 'auto',
     minWidth: 280,
     maxWidth: 400,
@@ -316,21 +350,17 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontFamily: FONTS.jua,
     marginBottom: 10,
-    color: '#4e4370',
   },
   popupMessage: {
     fontSize: 16,
     fontFamily: FONTS.jua,
     marginBottom: 10,
-    color: '#666',
   },
-  suggestedActivityText: {
+  suggestionText: {
     fontSize: 18,
     fontFamily: FONTS.jua,
     marginBottom: 20,
-    color: '#333',
     textAlign: 'center',
-    backgroundColor: '#f0f0f0',
     padding: 10,
     borderRadius: 8,
     width: '100%',
@@ -348,7 +378,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   declineButton: {
-    backgroundColor: '#f59f9f',
+    // backgroundColor: '#f59f9f', // Moved to inline styles
   },
   declineButtonText: {
     fontSize: 16,
@@ -356,11 +386,10 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   acceptButton: {
-    backgroundColor: '#94c4f5',
+    // backgroundColor moved to inline styles for theme support
   },
   acceptButtonText: {
     fontSize: 16,
     fontFamily: FONTS.jua,
-    color: '#fff',
   },
 }); 

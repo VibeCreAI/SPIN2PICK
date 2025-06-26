@@ -345,8 +345,8 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
 
   // Memoize wheel rendering to reduce computational overhead
   const wheelContent = useMemo(() => {
-    if (activities.length < 2 && WHEEL_SIZE > 0) {
-      const placeholderText = activities.length === 0 ? "Add at least 2 activities!" : "Add 1 more activity!";
+    // Handle case with no activities
+    if (activities.length === 0) {
       return (
         <SvgText 
           x={CENTER} 
@@ -356,11 +356,56 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
           fill="#333"
           fontFamily={FONTS.jua}
         >
-          {placeholderText}
+          Add at least 2 activities!
         </SvgText>
       );
     }
-    if (activities.length < 2) return null;
+    
+    // For 1 activity, render a full circle wheel to show the remaining activity
+    if (activities.length === 1) {
+      const activity = activities[0];
+      const sliceColor = activity.color;
+      
+      return [
+        // Background circle
+        <Circle 
+          key="wheel-bg" 
+          cx={CENTER} 
+          cy={CENTER} 
+          r={CENTER * 0.95} 
+          fill={sliceColor}
+          stroke="#FFFFFF" 
+          strokeWidth={3} 
+        />,
+        
+        // Show the single activity in the center
+        <SvgText 
+          key="single-activity-text"
+          x={CENTER} 
+          y={CENTER - 10} 
+          textAnchor="middle" 
+          fontSize="18" 
+          fill="#4e4370"
+          fontFamily={FONTS.jua}
+          fontWeight="bold"
+        >
+          {activity.emoji ? `${activity.emoji} ${activity.name}` : activity.name}
+        </SvgText>,
+        
+        <SvgText 
+          key="single-activity-subtitle"
+          x={CENTER} 
+          y={CENTER + 15} 
+          textAnchor="middle" 
+          fontSize="12" 
+          fill="#4e4370"
+          fontFamily={FONTS.jua}
+          opacity="0.8"
+        >
+          Add more to spin!
+        </SvgText>
+      ];
+    }
 
     const numActivities = activities.length;
     const sliceAngleDegrees = 360 / numActivities;
@@ -731,26 +776,79 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
   };
 
   // Handle deleting an activity when trash icon is clicked
-  const handleDeleteActivity = (activityId: string) => {
-    if (isSpinning || activities.length <= 2) {
-      if (activities.length <= 2) {
-        alert("You need at least two activities to keep the fun going!");
-      }
+  const handleDeleteActivity = (activityId: string, fromTextClick = false) => {
+    console.log('🔥 handleDeleteActivity called:', { activityId, fromTextClick, activitiesLength: activities.length, isSpinning });
+    
+    // Only block during spinning
+    if (isSpinning) {
+      console.log('❌ Blocked: Currently spinning');
       return;
     }
 
-    // Play click sound for feedback
-    playClickSound();
-    
-    // Trigger haptic feedback if available
-    try {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    } catch (error) {
-      // Ignore if haptics not available
+    // For 1 activity, allow deletion when clicking the wheel (let parent handle confirmation)
+    if (activities.length === 1 && fromTextClick) {
+      console.log('✅ Single activity deletion - delegating to parent');
+      
+      // Play click sound for feedback
+      playClickSound();
+      
+      // Trigger haptic feedback if available
+      try {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      } catch (error) {
+        console.log('🔧 Haptics not available:', error);
+      }
+      
+      // Delete the activity (parent will handle confirmation via custom modal)
+      console.log('🗑️ Calling onActivityDelete with ID:', activityId);
+      onActivityDelete(activityId);
+      return;
     }
-    
-    // Delete the activity
-    onActivityDelete(activityId);
+
+    // For 2 activities, allow deletion when clicking text (let parent handle confirmation)
+    if (activities.length === 2 && fromTextClick) {
+      console.log('✅ Text click deletion for 2 activities - delegating to parent');
+      
+      // Play click sound for feedback
+      playClickSound();
+      
+      // Trigger haptic feedback if available
+      try {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      } catch (error) {
+        console.log('🔧 Haptics not available:', error);
+      }
+      
+      // Delete the activity (parent will handle confirmation via custom modal)
+      console.log('🗑️ Calling onActivityDelete with ID:', activityId);
+      onActivityDelete(activityId);
+      return;
+    }
+
+    // For 3+ activities, delete normally (through trash button)
+    if (activities.length > 2 && !fromTextClick) {
+      console.log('✅ Normal deletion for 3+ activities');
+      
+      // Play click sound for feedback
+      playClickSound();
+      
+      // Trigger haptic feedback if available
+      try {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      } catch (error) {
+        // Ignore if haptics not available
+      }
+      
+      // Delete the activity
+      onActivityDelete(activityId);
+    } else {
+      console.log('❌ No action taken - conditions not met:', {
+        activitiesLength: activities.length,
+        fromTextClick,
+        condition1: activities.length === 2 && fromTextClick,
+        condition2: activities.length > 2 && !fromTextClick
+      });
+    }
   };
 
   // Calculate which activity is at a specific angle
@@ -799,6 +897,62 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
     });
   }, [activities, CENTER]);
 
+  // Helper function to get text wheel radius (matches the one in renderWheel)
+  const getTextWheelRadiusHelper = (activityCount: number, hasEmoji: boolean) => {
+    if (!hasEmoji) {
+      // If no emoji, text can expand more into the middle-outer zone
+      const baseRadius = 0.60;
+      const expansionRate = 0.006;
+      const maxRadius = 0.75;
+      
+      const dynamicRadius = baseRadius + (activityCount * expansionRate);
+      return CENTER * Math.min(dynamicRadius, maxRadius);
+    }
+    
+    // Text wheel - CLOSER to emoji wheel with smaller gap
+    const baseRadius = 0.58; // Start much closer to emoji wheel
+    const expansionRate = 0.01; // Slightly faster expansion to keep close
+    const maxRadius = 0.80; // Higher maximum for better space usage
+    
+    const dynamicRadius = baseRadius + (activityCount * expansionRate);
+    return CENTER * Math.min(dynamicRadius, maxRadius);
+  };
+
+  // Create positions for text click areas (for 2 activities only)
+  const textClickPositions = useMemo(() => {
+    if (activities.length !== 2) return [];
+    
+    const sliceAngleDegrees = 360 / activities.length;
+    
+    const positions = activities.map((activity, index) => {
+      const midAngleDegrees = index * sliceAngleDegrees + sliceAngleDegrees / 2;
+      const angleRad = (midAngleDegrees - 90) * (Math.PI / 180);
+      
+      // Position click areas over the text area using dynamic text wheel radius
+      const textRadius = getTextWheelRadiusHelper(activities.length, !!activity.emoji);
+      const x = CENTER + textRadius * Math.cos(angleRad);
+      const y = CENTER + textRadius * Math.sin(angleRad);
+      
+      const position = {
+        id: activity.id,
+        x: x - 40, // Larger click area for text
+        y: y - 20,
+        angle: midAngleDegrees
+      };
+      
+      // DEBUG: Log click area positions
+      console.log(`🎯 Text click area for "${activity.name}":`, {
+        textRadius: textRadius.toFixed(1),
+        angle: midAngleDegrees.toFixed(1),
+        position: `(${position.x.toFixed(1)}, ${position.y.toFixed(1)})`
+      });
+      
+      return position;
+    });
+    
+    return positions;
+  }, [activities, CENTER]);
+
   // Comprehensive cleanup effect to prevent memory leaks
   useEffect(() => {
     return () => {
@@ -828,34 +982,37 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
   }
   
   const canSpin = activities.length >= 2;
+  const showWheel = activities.length > 0; // Always show wheel if there are activities
 
   return (
     <ThemedView lightColor="transparent" darkColor="transparent" style={styles.container}>
-      {/* Platform-specific margin adjustment for Android */}
-      <ThemedView style={[
-        styles.pointerContainer, 
-        { 
-          left: '50%', 
-          marginLeft: Platform.OS === 'android' ? -20 : -16,
-          top: -7,
-        }
-      ]}>
-        <ThemedView style={styles.pointerBorder} />
-        <ThemedView style={styles.pointer} />
-      </ThemedView>
+      {showWheel && (
+        <>
+          {/* Platform-specific margin adjustment for Android */}
+          <ThemedView style={[
+            styles.pointerContainer, 
+            { 
+              left: '50%', 
+              marginLeft: Platform.OS === 'android' ? -20 : -16,
+              top: -7,
+            }
+          ]}>
+            <ThemedView style={styles.pointerBorder} />
+            <ThemedView style={styles.pointer} />
+          </ThemedView>
 
-      <Animated.View 
-        style={{ 
-          width: WHEEL_SIZE, 
-          height: WHEEL_SIZE, 
-          alignItems: 'center', 
-          justifyContent: 'center',
-          transform: [
-            { scale: scaleAnim },
-            { perspective: 1000 }
-          ]
-        }}
-      >
+          <Animated.View 
+            style={{ 
+              width: WHEEL_SIZE, 
+              height: WHEEL_SIZE, 
+              alignItems: 'center', 
+              justifyContent: 'center',
+              transform: [
+                { scale: scaleAnim },
+                { perspective: 1000 }
+              ]
+            }}
+          >
         <Animated.View
           style={[
             {
@@ -915,6 +1072,59 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
           ))}
         </Animated.View>
 
+        {/* Text click areas for 2 activities (allows deletion by clicking text) */}
+        <Animated.View
+          style={[
+            styles.buttonOverlay,
+            {
+              width: WHEEL_SIZE,
+              height: WHEEL_SIZE,
+              transform: [{ rotate: rotationInterpolation }],
+            },
+          ]}
+          pointerEvents="box-none"
+        >
+          {!isSpinning && activities.length === 2 && textClickPositions.map((textArea) => (
+            <TouchableOpacity
+              key={`text-click-${textArea.id}`}
+              style={[
+                styles.textClickArea,
+                {
+                  left: textArea.x,
+                  top: textArea.y,
+                  transform: [{ rotate: `${textArea.angle + 90}deg` }],
+                }
+              ]}
+              onPress={() => {
+                console.log('🔴 Text click detected for activity:', textArea.id);
+                handleDeleteActivity(textArea.id, true);
+              }}
+              activeOpacity={0.5}
+              disabled={isSpinning}
+            />
+          ))}
+        </Animated.View>
+
+        {/* Single activity click area (allows deletion by clicking the whole wheel) */}
+        {!isSpinning && activities.length === 1 && (
+          <TouchableOpacity
+            style={[
+              styles.singleActivityClickArea,
+              {
+                width: WHEEL_SIZE,
+                height: WHEEL_SIZE,
+                borderRadius: WHEEL_SIZE / 2,
+              }
+            ]}
+            onPress={() => {
+              console.log('🔴 Single activity click detected for:', activities[0].id);
+              handleDeleteActivity(activities[0].id, true);
+            }}
+            activeOpacity={0.7}
+            disabled={isSpinning}
+          />
+        )}
+
         {canSpin && !selectedActivity && (
           <TouchableOpacity
             style={[styles.spinButton, styles.spinButtonCenter]}
@@ -947,12 +1157,21 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
           </Animated.View>
         )}
       </Animated.View>
+        </>
+      )}
 
       {/* Instruction text with reset button - positioned relative to avoid flickering */}
       <ThemedView lightColor="transparent" darkColor="transparent" style={styles.instructionContainer}>
         <ThemedView lightColor="transparent" darkColor="transparent" style={styles.instructionRow}>
           <ThemedText style={styles.instructionText}>
-            Tap activity name to remove 🗑️
+            {activities.length === 1
+              ? "Tap to remove activity or add more to spin!"
+              : activities.length === 2 
+                ? "Tap activity text to remove 🗑️" 
+                : activities.length > 2 
+                  ? "Tap activity name to remove 🗑️"
+                  : "Add activities to get started!"
+            }
           </ThemedText>
           {onReset && (
             <TouchableOpacity 
@@ -998,13 +1217,7 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
         </ThemedText>
       </ThemedView>
 
-      {!canSpin && (
-        <ThemedView lightColor="#f0f0f0" darkColor="#f0f0f0" style={styles.messageContainer}>
-          <ThemedText style={styles.messageText}>
-            {activities.length === 0 ? "Add at least 2 activities!" : "Add 1 more activity!"}
-          </ThemedText>
-        </ThemedView>
-      )}
+
     </ThemedView>
   );
 };
@@ -1235,6 +1448,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 0, // Remove border
     zIndex: 20,
+  },
+  textClickArea: {
+    position: 'absolute',
+    width: 80, // Larger click area for text
+    height: 40,
+    backgroundColor: 'transparent',
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 15, // Lower than delete button
+  },
+  singleActivityClickArea: {
+    position: 'absolute',
+    backgroundColor: 'transparent',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 15, // Same as text click area
   },
   invisibleText: {
     fontSize: 1,

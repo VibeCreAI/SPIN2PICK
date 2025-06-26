@@ -7,7 +7,7 @@ import { SaveLoadModal } from '@/components/SaveLoadModal';
 import { ThemedText } from '@/components/ThemedText';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useCallback, useEffect, useState } from 'react';
-import { Dimensions, KeyboardAvoidingView, LayoutChangeEvent, Modal, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Dimensions, KeyboardAvoidingView, LayoutChangeEvent, Modal, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View, ViewStyle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { initializeInterstitialAd, showInterstitialAd } from '../utils/adMobUtils';
 import { PASTEL_COLORS, reassignAllColors, type Activity } from '../utils/colorUtils';
@@ -613,22 +613,22 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f3efff',
     ...(Platform.OS === 'web' && {
-      minHeight: '100vh',
+      minHeight: '100vh' as any,
     }),
-  },
+  } as ViewStyle,
   keyboardAvoidingView: {
     flex: 1,
     ...(Platform.OS === 'web' && {
-      minHeight: '100vh',
+      minHeight: '100vh' as any,
     }),
-  },
+  } as ViewStyle,
   mainContainer: {
     flex: 1,
     backgroundColor: '#f3efff',
     ...(Platform.OS === 'web' && {
-      minHeight: '100vh',
+      minHeight: '100vh' as any,
     }),
-  },
+  } as ViewStyle,
   container: {
     width: '100%',
     alignItems: 'center',

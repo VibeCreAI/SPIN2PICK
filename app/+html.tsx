@@ -69,6 +69,22 @@ export default function Root({ children }: PropsWithChildren) {
           crossOrigin="anonymous"
         />
 
+        {/* Suppress third-party library warnings in development */}
+        <script dangerouslySetInnerHTML={{
+          __html: `
+            if (typeof console !== 'undefined' && console.warn) {
+              const originalWarn = console.warn;
+              console.warn = function(...args) {
+                // Suppress the react-native-confetti-cannon useNativeDriver warning
+                if (args[0] && args[0].includes && args[0].includes('useNativeDriver') && args[0].includes('native animated module is missing')) {
+                  return; // Suppress this specific warning
+                }
+                originalWarn.apply(console, args);
+              };
+            }
+          `
+        }} />
+
         {/* Fix white space on large screens - Enhanced for React Native Web */}
         <style dangerouslySetInnerHTML={{
           __html: `

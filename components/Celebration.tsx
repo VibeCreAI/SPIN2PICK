@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { Animated, StyleSheet } from 'react-native';
+import { Animated, Platform, StyleSheet } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 
 interface CelebrationProps {
@@ -20,7 +20,7 @@ export const Celebration: React.FC<CelebrationProps> = ({ onComplete }) => {
       Animated.timing(fadeAnim, {
         toValue: 0,
         duration: 300,
-        useNativeDriver: true,
+        useNativeDriver: Platform.OS !== 'web',
       }),
     ]).start(() => {
       onComplete();

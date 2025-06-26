@@ -5,6 +5,7 @@ import { Animated, Dimensions, Easing, Platform, StyleSheet, Text, TouchableOpac
 import Svg, { Circle, G, Path, Text as SvgText } from 'react-native-svg';
 import { playClickSound, playSpinningSound, playSuccessSound, stopSpinningSound } from '../utils/soundUtils';
 import { ThemedText } from './ThemedText';
+import { ThemedView } from './ThemedView';
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 const AnimatedSvgText = Animated.createAnimatedComponent(SvgText);
 const AnimatedPath = Animated.createAnimatedComponent(Path);
@@ -147,14 +148,14 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
         toValue: 1,
         friction: 5,
         tension: 40,
-        useNativeDriver: true,
+        useNativeDriver: Platform.OS !== 'web',
       }).start();
       
       // Fade in the persistent results box
       Animated.timing(fadeAnim, {
         toValue: 1,
         duration: 500,
-        useNativeDriver: true,
+        useNativeDriver: Platform.OS !== 'web',
       }).start();
     }
   }, [selectedActivity]);
@@ -176,19 +177,19 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
         Animated.timing(newIndicatorAnim, {
           toValue: 1,
           duration: 300,
-          useNativeDriver: true,
+          useNativeDriver: Platform.OS !== 'web',
         }),
         Animated.loop(
           Animated.sequence([
             Animated.timing(newIndicatorPulse, {
               toValue: 1.2,
               duration: 800,
-              useNativeDriver: true,
+              useNativeDriver: Platform.OS !== 'web',
             }),
             Animated.timing(newIndicatorPulse, {
               toValue: 1,
               duration: 800,
-              useNativeDriver: true,
+              useNativeDriver: Platform.OS !== 'web',
             })
           ]),
           { iterations: 3 } // Pulse 3 times
@@ -200,7 +201,7 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
         Animated.timing(newIndicatorAnim, {
           toValue: 0,
           duration: 300,
-          useNativeDriver: true,
+          useNativeDriver: Platform.OS !== 'web',
         }).start(() => {
           setShowNewIndicator(null);
           newIndicatorAnim.setValue(0);
@@ -229,13 +230,13 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
           toValue: 1.05,
           duration: 1000,
           easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true,
+          useNativeDriver: Platform.OS !== 'web',
         }),
         Animated.timing(pulseAnim, {
           toValue: 1,
           duration: 1000,
           easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true,
+          useNativeDriver: Platform.OS !== 'web',
         })
       ])
     );
@@ -250,7 +251,7 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
       toValue: 1,
       friction: 7,
       tension: 40,
-      useNativeDriver: true,
+      useNativeDriver: Platform.OS !== 'web',
     }).start();
     
     // Start the pulsing animation
@@ -309,7 +310,7 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
       toValue: spinValue.current,
       duration: spinDuration,
       easing: Easing.bezier(0.25, 0.46, 0.45, 0.94), // More realistic deceleration
-      useNativeDriver: true,
+      useNativeDriver: Platform.OS !== 'web',
     }).start(() => {
       setIsSpinning(false);
       
@@ -697,9 +698,9 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
   const canSpin = activities.length >= 2;
 
   return (
-    <View style={styles.container}>
+    <ThemedView lightColor="transparent" darkColor="transparent" style={styles.container}>
       {/* Platform-specific margin adjustment for Android */}
-      <View style={[
+      <ThemedView style={[
         styles.pointerContainer, 
         { 
           left: '50%', 
@@ -707,9 +708,9 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
           top: -7,
         }
       ]}>
-        <View style={styles.pointerBorder} />
-        <View style={styles.pointer} />
-      </View>
+        <ThemedView style={styles.pointerBorder} />
+        <ThemedView style={styles.pointer} />
+      </ThemedView>
 
       <Animated.View 
         style={{ 
@@ -816,8 +817,8 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
       </Animated.View>
 
       {/* Instruction text with reset button - positioned relative to avoid flickering */}
-      <View style={styles.instructionContainer}>
-        <View style={styles.instructionRow}>
+      <ThemedView lightColor="transparent" darkColor="transparent" style={styles.instructionContainer}>
+        <ThemedView lightColor="transparent" darkColor="transparent" style={styles.instructionRow}>
           <ThemedText style={styles.instructionText}>
             Tap activity name to remove 🗑️
           </ThemedText>
@@ -830,45 +831,49 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
               <ThemedText style={styles.resetButtonText}>🔄 Reset</ThemedText>
             </TouchableOpacity>
           )}
-        </View>
-      </View>
+        </ThemedView>
+      </ThemedView>
 
       {/* Last selected activity box - positioned relative to avoid flickering */}
-      <View style={[styles.lastActivityContainer, {
-        minWidth: containerMinWidth,
-        maxWidth: containerMaxWidth,
-        marginHorizontal: containerMarginHorizontal,
-      }]}>
-        <View style={styles.lastActivityContent}>
-          <View style={styles.labelContainer}>
+      <ThemedView 
+        lightColor="#fff" 
+        darkColor="#fff" 
+        style={[styles.lastActivityContainer, {
+          minWidth: containerMinWidth,
+          maxWidth: containerMaxWidth,
+          marginHorizontal: containerMarginHorizontal,
+        }]}
+      >
+        <ThemedView lightColor="#fff" darkColor="#fff" style={styles.lastActivityContent}>
+          <ThemedView lightColor="#fff" darkColor="#fff" style={styles.labelContainer}>
             <Text allowFontScaling={false} style={styles.lastActivityLabel}>Last selected activity:</Text>
-          </View>
-          <View style={styles.activityTextContainer}>
+          </ThemedView>
+          <ThemedView lightColor="#fff" darkColor="#fff" style={styles.activityTextContainer}>
             <Text allowFontScaling={false} style={styles.lastActivityText}>
               {previousSelectedActivity 
                 ? (previousSelectedActivity.emoji ? `${previousSelectedActivity.emoji} ${previousSelectedActivity.name}` : previousSelectedActivity.name)
                 : ""
               }
             </Text>
-          </View>
-        </View>
-      </View>
+          </ThemedView>
+        </ThemedView>
+      </ThemedView>
 
       {/* Copyright text - positioned relative to avoid flickering */}
-      <View style={styles.copyrightContainer}>
+      <ThemedView lightColor="transparent" darkColor="transparent" style={styles.copyrightContainer}>
         <ThemedText style={styles.copyrightText}>
           © {new Date().getFullYear()} VibeCreAI - All rights reserved
         </ThemedText>
-      </View>
+      </ThemedView>
 
       {!canSpin && (
-        <View style={styles.messageContainer}>
+        <ThemedView lightColor="#f0f0f0" darkColor="#f0f0f0" style={styles.messageContainer}>
           <ThemedText style={styles.messageText}>
             {activities.length === 0 ? "Add at least 2 activities!" : "Add 1 more activity!"}
           </ThemedText>
-        </View>
+        </ThemedView>
       )}
-    </View>
+    </ThemedView>
   );
 };
 

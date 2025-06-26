@@ -56,6 +56,17 @@ export const ActivityInput: React.FC<ActivityInputProps> = ({
     return () => subscription?.remove();
   }, []);
 
+  // Fix for production web: force dimension recalculation after mount
+  useEffect(() => {
+    // This addresses SSR/hydration dimension mismatch issues on Vercel
+    const timer = setTimeout(() => {
+      const currentDimensions = Dimensions.get('window');
+      setScreenDimensions(currentDimensions);
+    }, 0);
+
+    return () => clearTimeout(timer);
+  }, []);
+
   // Get screen dimensions for responsive design
   const screenData = screenDimensions;
   

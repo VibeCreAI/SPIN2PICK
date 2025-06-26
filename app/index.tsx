@@ -273,6 +273,8 @@ export default function HomeScreen() {
     }
   };
 
+
+
   const handleSuggestActivity = async () => {
     setIsSuggestingActivity(true);
     try {

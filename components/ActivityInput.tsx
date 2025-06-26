@@ -1,7 +1,7 @@
 import { FONTS } from '@/app/_layout';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
-import { ActivityIndicator, Dimensions, Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Dimensions, Modal, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 interface ActivityInputProps {
   onAddActivity: (name: string) => void;
@@ -56,9 +56,9 @@ export const ActivityInput: React.FC<ActivityInputProps> = ({
   const containerMaxWidth = isSmallScreen ? '95%' : '90%';
   const containerMarginHorizontal = isNarrowScreen ? 8 : 16;
   
-  // Adjust padding based on screen width
-  const inputPaddingRight = isNarrowScreen ? 120 : isSmallScreen ? 130 : 140;
-  const charCounterRight = isNarrowScreen ? 100 : isSmallScreen ? 110 : 120;
+  // Adjust padding for inline layout (much less padding needed now)
+  const inputPaddingRight = 8;
+  const charCounterRight = 8;
   
   // Adjust font size for extremely narrow screens
   const inputFontSize = isExtremelyNarrow ? 14 : 16;
@@ -94,29 +94,31 @@ export const ActivityInput: React.FC<ActivityInputProps> = ({
       maxWidth: containerMaxWidth,
       marginHorizontal: containerMarginHorizontal,
     }]}>
-      <View style={styles.inputContainer}>
-        <TextInput
-          style={[styles.input, { paddingRight: inputPaddingRight, fontSize: inputFontSize }]}
-          value={activityName}
-          onChangeText={handleTextChange}
-          placeholder="Type new activity"
-          placeholderTextColor="#666"
-          onSubmitEditing={handleAddActivity}
-          maxLength={MAX_ACTIVITY_LENGTH}
-          editable={!isLoading && !isSuggesting}
-          allowFontScaling={false}
-        />
-        {activityName.length > 0 && (
-          <Text allowFontScaling={false} style={[
-            styles.charCounter, 
-            { right: charCounterRight },
-            isNearLimit ? styles.charCounterNearLimit : null
-          ]}>
-            {remainingChars}
-          </Text>
-        )}
+      <View style={styles.mainRow}>
+        <View style={styles.inputContainer}>
+          <TextInput
+            style={[styles.input, { fontSize: inputFontSize }]}
+            value={activityName}
+            onChangeText={handleTextChange}
+            placeholder="Type new activity"
+            placeholderTextColor="#666"
+            onSubmitEditing={handleAddActivity}
+            maxLength={MAX_ACTIVITY_LENGTH}
+            editable={!isLoading && !isSuggesting}
+            allowFontScaling={false}
+          />
+          {activityName.length > 0 && (
+            <Text allowFontScaling={false} style={[
+              styles.charCounter, 
+              { right: charCounterRight },
+              isNearLimit ? styles.charCounterNearLimit : null
+            ]}>
+              {remainingChars}
+            </Text>
+          )}
+        </View>
         
-        {/* All buttons inside the input container for narrow screens */}
+        {/* Buttons on the right side */}
         <View style={styles.buttonsContainer}>
           <TouchableOpacity 
             style={[styles.addButton, isLoading && styles.buttonDisabled]} 
@@ -126,7 +128,7 @@ export const ActivityInput: React.FC<ActivityInputProps> = ({
             {isLoading ? (
               <ActivityIndicator size="small" color="#94c4f5" />
             ) : (
-              <Ionicons name="add-circle" size={32} color="#94c4f5" />
+              <Ionicons name="add-circle" size={28} color="#94c4f5" />
             )}
           </TouchableOpacity>
           
@@ -200,44 +202,54 @@ export const ActivityInput: React.FC<ActivityInputProps> = ({
 const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
-    padding: 16,
+    padding: 12,
     backgroundColor: '#fff',
     borderRadius: 12,
     alignSelf: 'center',
     width: 'auto',
-    marginVertical: 8,
-    marginBottom: 20,
+    marginVertical: 6,
+    marginBottom: 16,
     elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 1.41,
-    borderWidth: 2,
-    borderColor: '#E8F4FC',
+    shadowOpacity: 0.1,
+    shadowRadius: 1.5,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
   },
-  inputContainer: {
+  mainRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    position: 'relative',
     width: '100%',
   },
-  input: {
+  inputContainer: {
+    position: 'relative',
     flex: 1,
-    height: 40,
-    // fontSize will be set dynamically inline
+    marginRight: 8,
+    minWidth: 0, // Allow flex item to shrink below content size
+  },
+  input: {
+    height: 36,
     fontFamily: FONTS.jua,
     color: '#333',
-    // paddingRight will be set dynamically inline
     borderWidth: 0,
     borderColor: 'transparent',
-    outline: 'none', // For web compatibility
+    width: '100%',
+    paddingHorizontal: 8,
+    // Platform-specific outline removal for web
+    ...(Platform.OS === 'web' && {
+      outlineWidth: 0,
+    }),
   },
   charCounter: {
     position: 'absolute',
-    // right will be set dynamically inline
     fontSize: 12,
     fontFamily: FONTS.jua,
     color: '#999',
+    backgroundColor: '#fff',
+    paddingHorizontal: 4,
+    paddingVertical: 2,
+    borderRadius: 4,
   },
   charCounterNearLimit: {
     color: '#f59f9f', // Light red when getting close to limit
@@ -245,22 +257,36 @@ const styles = StyleSheet.create({
   buttonsContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    position: 'absolute',
-    right: 0,
-    gap: 4, // Space between buttons
-  },
-  suggestButton: {
-    padding: 2,
-    width: 32,
-    height: 32,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  suggestButtonText: {
-    fontSize: 16,
+    gap: 4,
   },
   addButton: {
-    padding: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+  },
+  suggestButton: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+  },
+  saveLoadButton: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+  },
+  suggestButtonText: {
+    fontSize: 18,
+    textAlign: 'center',
+  },
+  saveLoadButtonText: {
+    fontSize: 16,
+    textAlign: 'center',
   },
   buttonDisabled: {
     opacity: 0.5,
@@ -336,19 +362,5 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: FONTS.jua,
     color: '#fff',
-  },
-  saveLoadButton: {
-    padding: 2,
-    borderRadius: 6,
-    backgroundColor: 'transparent',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: 32,
-    height: 32,
-  },
-  saveLoadButtonText: {
-    fontSize: 20,
-    fontFamily: FONTS.jua,
-    color: '#94c4f5',
   },
 }); 

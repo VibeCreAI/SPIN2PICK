@@ -1,18 +1,23 @@
-import { Platform } from 'react-native';
+import Constants from 'expo-constants';
 
 /**
  * Get the appropriate API base URL based on platform
  * @returns The base URL for API calls
  */
 const getApiBaseUrl = (): string => {
-  // For web, use relative URLs (same domain)
-  if (Platform.OS === 'web') {
-    return '';
+  // 🔒 Secure API configuration - uses deployed Vercel API
+  // API keys stay secure on the server side
+  const configuredUrl = Constants.expoConfig?.extra?.apiBaseUrl;
+  
+  if (configuredUrl) {
+    console.log('📡 Using configured API URL:', configuredUrl);
+    return configuredUrl;
   }
   
-  // For mobile, use the environment variable from EAS dashboard
-  // This will be set during build time from the Expo dashboard
-  return process.env.EXPO_PUBLIC_API_BASE_URL || '';
+  // Fallback to deployed API (no API keys exposed)
+  const fallbackUrl = 'https://spin2pick-app.vercel.app';
+  console.log('📡 Using fallback API URL:', fallbackUrl);
+  return fallbackUrl;
 };
 
 /**

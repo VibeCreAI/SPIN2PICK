@@ -9,9 +9,11 @@ Transform boredom into joy with our interactive activity wheel that combines the
 ## ✨ **What Makes SPIN 2 PICK Special?**
 
 🎯 **Smart Activity Discovery** – Our AI suggests practical, recognizable activities tailored to your collection  
-🎨 **Fully Customizable** – Add unlimited activities with automatic emoji matching  
+🎨 **Theme Customization** – Choose from 6 beautiful themes to personalize your experience  
 💾 **Save & Load Sets** – Create and manage up to 5 different activity collections  
-🔄 **One-Click Reset** – Instantly generate 8 new random activities with confirmation dialog  
+📱 **Bulk Activity Management** – Add multiple activities at once or delete them easily  
+🤖 **Bulk AI Suggestions** – Generate 3-10 activities instantly with AI  
+🔄 **One-Click Reset** – Instantly generate new random activities with confirmation dialog  
 🌟 **New Activity Highlighting** – Newly added activities pulse with an elegant border  
 📱 **Cross-Platform** – Works seamlessly on web, iOS, and Android  
 🎵 **Immersive Experience** – Delightful sounds, animations, and haptic feedback  
@@ -27,33 +29,49 @@ Transform boredom into joy with our interactive activity wheel that combines the
 - **Haptic feedback** on supported devices for tactile engagement
 - **Responsive design** that adapts to any screen size
 
-### 🤖 **AI-Powered Activity Suggestions**
-- Tap the **✨ button** for intelligent activity recommendations
-- **Practical suggestions** – AI focuses on recognizable, common activities kids love
-- **Balanced creativity** – Optimized temperature for useful, not abstract suggestions
-- **Accept or decline** suggestions with a beautiful popup interface
-- **Automatic emoji matching** for every activity
+### 🎨 **Theme Customization System**
+- **6 Beautiful Themes** – Pastel Dream, Sunset Vibes, Ocean Breeze, Forest Fresh, Neon Night, Vintage Charm
+- **Visual Theme Preview** – See color palettes and backgrounds before selecting
+- **Instant Theme Switching** – Changes apply immediately across the entire app
+- **Persistent Theme Storage** – Your theme choice is saved and remembered
+- **Dynamic Color Adaptation** – Activities automatically recolor to match your chosen theme
 
-### 💾 **Advanced Save & Load System**
+### 🤖 **Advanced AI-Powered Suggestions**
+- **Single AI Suggestions** – Tap ✨ for intelligent activity recommendations
+- **Bulk AI Generation** – Generate 3, 5, 7, or 10 activities at once
+- **Smart Activity Selection** – Choose which AI suggestions to add
+- **Practical Focus** – AI suggests recognizable, common activities kids love
+- **Automatic emoji matching** for every activity
+- **Decline Tracking** – AI remembers declined suggestions to avoid repeats
+
+### 📱 **Comprehensive Activity Management**
+- **Activity List Modal** – View, manage, and organize all activities in one place
+- **Bulk Add Activities** – Add multiple activities at once via text input
+- **Smart Activity Parsing** – Supports comma-separated, line-separated, and numbered lists
+- **Easy Deletion** – Tap any activity to delete with confirmation
+- **Duplicate Prevention** – Automatically filters out existing activities
+- **Visual Activity Counter** – See exactly how many activities you have
+
+### 💾 **Enhanced Save & Load System**
 - **5 save slots** with custom naming (up to 15 characters)
 - **Persistent storage** that survives app restarts
 - **Easy management** – save, load, or delete activity sets
+- **Theme-aware colors** – Loaded activities automatically match your current theme
 - **Perfect for different occasions** – family time, classroom, travel, etc.
 
-### 🌟 **New Activity Indicator**
+### 🌟 **Smart Activity Indicators**
 - **Elegant pulsing border** highlights newly added activities
 - **Automatic highlighting** for both manual and AI-suggested activities
 - **Smart disappearing** – automatically hides when spinning starts for distraction-free experience
 - **Smooth animations** that fade in and pulse 3 times
 - **5-second auto-hide** to keep the interface clean
 
-### 🎨 **Smart Activity Management**
-- **Unlimited activities** with intelligent color distribution
-- **Tap to delete** any activity with confirmation dialogs
-- **🔄 Reset button** – Generate 8 new random activities instantly
-- **Confirmation dialogs** – Prevent accidental deletions and resets
-- **Minimum 2 activities** requirement for spinning
-- **Automatic color reassignment** for optimal visual balance
+### 🎨 **Intelligent Color Management**
+- **Unlimited activities** with optimal color distribution
+- **Theme-aware coloring** – Activities automatically adapt to your chosen theme
+- **Smart color reassignment** when activities are added or removed
+- **High contrast text** – Ensures readability across all themes
+- **Visual variety** – Each activity gets a unique, vibrant color
 
 ---
 
@@ -87,10 +105,25 @@ Transform boredom into joy with our interactive activity wheel that combines the
 ## 🚀 **How to Use**
 
 ### **Getting Started**
-1. **Add Activities** – Type in the input box and tap ➕ to add
-2. **AI Suggestions** – Tap ✨ for intelligent recommendations
-3. **Spin the Wheel** – Hit the **SPIN** button when you have 2+ activities
-4. **Enjoy!** – Watch the celebration and start your chosen activity
+1. **Choose Your Theme** – Tap 🎨 to select from 6 beautiful themes
+2. **Add Activities** – Type in the input box and tap ➕ to add
+3. **AI Suggestions** – Tap ✨ for intelligent recommendations or 🤖 for bulk generation
+4. **Manage Activities** – Tap 📃 to view, organize, add multiple, or delete activities
+5. **Spin the Wheel** – Hit the **SPIN** button when you have 2+ activities
+6. **Enjoy!** – Watch the celebration and start your chosen activity
+
+### **Theme Customization**
+1. **Open Themes** – Tap the 🎨 theme button anywhere in the app
+2. **Preview Themes** – Browse through 6 different color schemes
+3. **Select Theme** – Tap on any theme card to apply it instantly
+4. **Automatic Updates** – All colors, backgrounds, and activities update immediately
+
+### **Bulk Activity Management**
+1. **Open Activity Manager** – Tap 📃 button to open the activity management modal
+2. **View All Activities** – See your complete activity list with easy delete options
+3. **Add Multiple** – Switch to "Add Multiple" tab and enter activities separated by commas or lines
+4. **AI Bulk Generation** – Use "AI Suggestions" tab to generate 3-10 activities at once
+5. **Select & Add** – Choose which AI suggestions to add to your wheel
 
 ### **Managing Activity Sets**
 1. **Save Current Set** – Tap 💾 → Choose empty slot → Name your set
@@ -98,10 +131,33 @@ Transform boredom into joy with our interactive activity wheel that combines the
 3. **Delete Sets** – Tap 💾 → Select filled slot → Choose delete option
 
 ### **Activity Management**
-- **Remove Activities** – Tap any activity name on the wheel
-- **Reset All Activities** – Click the 🔄 Reset button next to the instruction text
+- **Quick Delete** – Tap any activity name on the wheel for instant deletion
+- **Bulk Delete** – Use the activity manager modal to delete multiple activities
+- **Reset All Activities** – Click the 🔄 Reset button for fresh random activities
 - **View Last Selected** – Check the "Last selected activity" box below the wheel
 - **Track New Additions** – Watch for the pulsing purple border on new activities
+
+---
+
+## 🎨 **Available Themes**
+
+### 🌸 **Pastel Dream**
+Soft, gentle colors perfect for a calm, dreamy experience
+
+### 🌅 **Sunset Vibes** 
+Warm oranges and corals that bring energy and warmth
+
+### 🌊 **Ocean Breeze**
+Cool blues and teals for a refreshing, peaceful feel
+
+### 🌲 **Forest Fresh**
+Natural greens that connect you with nature
+
+### 🌃 **Neon Night**
+Vibrant, electric colors for high-energy fun
+
+### 📜 **Vintage Charm**
+Muted, classic tones for a timeless aesthetic
 
 ---
 
@@ -111,6 +167,7 @@ Transform boredom into joy with our interactive activity wheel that combines the
 **Accessibility First** – Clear visual feedback and easy-to-understand icons  
 **Performance Optimized** – Smooth animations and responsive interactions  
 **Cross-Platform Consistency** – Identical experience across all devices  
+**Customizable Experience** – Multiple themes to match personal preferences
 
 ---
 
@@ -118,8 +175,10 @@ Transform boredom into joy with our interactive activity wheel that combines the
 
 - **React Native with Expo** for cross-platform development
 - **Advanced SVG animations** for smooth wheel rendering
+- **Dynamic theming system** with persistent storage
 - **AsyncStorage** for persistent data management
 - **AI integration** for intelligent activity suggestions
+- **Bulk processing capabilities** for efficient activity management
 - **Optimized state management** for flicker-free performance
 - **Custom modal system** for consistent cross-platform dialogs
 
@@ -133,14 +192,25 @@ Transform boredom into joy with our interactive activity wheel that combines the
 
 ## 🎉 **Recent Updates**
 
+### **v1.2.0 - Major Feature Expansion & Theme System**
+- 🎨 **Complete Theme System** – 6 beautiful themes with instant switching and persistent storage
+- 📱 **Bulk Activity Management** – Add multiple activities at once via intuitive modal interface
+- 🤖 **Bulk AI Suggestions** – Generate 3-10 activities instantly with selectable AI recommendations
+- 📃 **Activity Management Modal** – Comprehensive activity viewing, organization, and deletion system
+- 🎯 **Smart Activity Parsing** – Support for comma-separated, line-separated, and numbered list formats
+- 🌈 **Dynamic Color Adaptation** – Activities automatically recolor when themes change
+- 🖼️ **Theme Preview System** – Visual preview cards showing color palettes and backgrounds
+- 💾 **Enhanced Save/Load** – Theme-aware activity loading with improved user experience
+- 🎨 **UI/UX Overhaul** – Consistent theming across all modals, buttons, and interface elements
+
 ### **v1.1.2 - Improved Spinning Experience & Font Scaling Fix**
-- 🎯 **Smart Indicator Handling** – New activity indicators automatically disappear when spinning starts for distraction-free experience
-- 🔧 **Android Font Scaling Fix** – Text sizes now remain consistent regardless of system font size settings
+- 🎯 **Smart Indicator Handling** – New activity indicators automatically disappear when spinning starts
+- 🔧 **Android Font Scaling Fix** – Text sizes remain consistent regardless of system font size settings
 - 📱 **Enhanced User Experience** – Cleaner spinning animations without visual distractions
-- 🛠️ **Developer Tools** – Added comprehensive font scaling prevention system for future development
+- 🛠️ **Developer Tools** – Added comprehensive font scaling prevention system
 
 ### **v1.1.1 - Reset & AI Improvements**
-- 🔄 **Reset Button** – One-click reset with 8 new random activities and confirmation dialog
+- 🔄 **Reset Button** – One-click reset with customizable activity count and confirmation dialog
 - 🤖 **Enhanced AI Suggestions** – More practical, recognizable activities (temperature optimized)
 - 📱 **Unified Spacing** – Consistent bottom margins across web and mobile platforms
 - 🎯 **Better Prompts** – AI now suggests common activities kids actually know and love
@@ -152,8 +222,8 @@ Transform boredom into joy with our interactive activity wheel that combines the
 - 🎨 **UI/UX Improvements** – Smoother animations and better visual feedback
 - 🔧 **Performance Enhancements** – Optimized rendering and state management
 
-### **v1.0.0 - AI & Customization**
-- 🤖 **AI-Powered Suggestions** – Intelligent activity recommendations
+### **v1.0.0 - Foundation & AI Integration**
+- 🤖 **AI-Powered Suggestions** – Intelligent single activity recommendations
 - 🎨 **Automatic Emoji Matching** – Perfect emojis for every activity
 - 🎵 **Sound Effects** – Immersive audio feedback
 - 📱 **Responsive Design** – Optimized for all screen sizes
@@ -162,7 +232,9 @@ Transform boredom into joy with our interactive activity wheel that combines the
 
 ## 🌟 **Why Choose SPIN 2 PICK?**
 
-**More than just a spinner** – SPIN 2 PICK is a comprehensive activity management platform that grows with your needs. Whether you're planning a single afternoon or managing activities for an entire classroom, our intelligent features and intuitive design make every moment more engaging.
+**More than just a spinner** – SPIN 2 PICK is a comprehensive activity management platform that grows with your needs. Whether you're planning a single afternoon or managing activities for an entire classroom, our intelligent features, beautiful themes, and intuitive design make every moment more engaging.
+
+**Completely customizable** – With 6 beautiful themes, bulk activity management, and AI-powered suggestions, you can create the perfect experience for any situation.
 
 **Built for real families** – Developed with input from parents, teachers, and kids to ensure it solves real problems and creates genuine joy.
 
@@ -170,7 +242,7 @@ Transform boredom into joy with our interactive activity wheel that combines the
 
 ---
 
-**Ready to transform playtime?** 🎯 **Start spinning and discover your next adventure!**
+**Ready to transform playtime?** 🎯 **Choose your theme and start spinning to discover your next adventure!**
 
 ---
 

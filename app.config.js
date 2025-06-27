@@ -4,7 +4,7 @@ module.exports = {
   expo: {
     name: "Spin2Pick",
     slug: "spin2pick",
-    version: "1.1.4",
+    version: "1.2.0",
     orientation: "portrait",
     icon: "./assets/images/icon.png",
     scheme: "spin2pick",
@@ -15,14 +15,14 @@ module.exports = {
     ios: {
       supportsTablet: true,
       bundleIdentifier: "com.vibecreai.spin2pick",
-      buildNumber: "10",
+      buildNumber: "11",
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
         GADApplicationIdentifier: "ca-app-pub-7239598551330509~5791479155"
       }
     },
     android: {
-      versionCode: 10,
+      versionCode: 11,
       softwareKeyboardLayoutMode: "pan",
       adaptiveIcon: {
         foregroundImage: "./assets/images/adaptive-icon.png",

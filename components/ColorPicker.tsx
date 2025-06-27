@@ -2,9 +2,9 @@ import { LinearGradient } from 'expo-linear-gradient';
 import React, { useCallback, useState } from 'react';
 import {
     Dimensions,
-    PanResponder,
     StyleSheet,
     Text,
+    TouchableWithoutFeedback,
     View,
 } from 'react-native';
 import { useTheme } from '../hooks/useTheme';
@@ -31,39 +31,20 @@ export default function ColorPicker({ color, onColorChange, size = Math.min(scre
     onColorChange(hexColor);
   }, [onColorChange]);
 
-  // Saturation/Brightness area pan responder
-  const svPanResponder = PanResponder.create({
-    onStartShouldSetPanResponder: () => true,
-    onMoveShouldSetPanResponder: () => true,
-    onPanResponderGrant: (evt) => {
-      const { locationX, locationY } = evt.nativeEvent;
-      const newS = Math.max(0, Math.min(1, locationX / size));
-      const newV = Math.max(0, Math.min(1, 1 - (locationY / size)));
-      updateColor(h, newS, newV);
-    },
-    onPanResponderMove: (evt) => {
-      const { locationX, locationY } = evt.nativeEvent;
-      const newS = Math.max(0, Math.min(1, locationX / size));
-      const newV = Math.max(0, Math.min(1, 1 - (locationY / size)));
-      updateColor(h, newS, newV);
-    },
-  });
+  // Handle touch on saturation/brightness area
+  const handleSVTouch = useCallback((event: any) => {
+    const { locationX, locationY } = event.nativeEvent;
+    const newS = Math.max(0, Math.min(1, locationX / size));
+    const newV = Math.max(0, Math.min(1, 1 - (locationY / size)));
+    updateColor(h, newS, newV);
+  }, [h, size, updateColor]);
 
-  // Hue bar pan responder
-  const huePanResponder = PanResponder.create({
-    onStartShouldSetPanResponder: () => true,
-    onMoveShouldSetPanResponder: () => true,
-    onPanResponderGrant: (evt) => {
-      const { locationX } = evt.nativeEvent;
-      const newH = Math.max(0, Math.min(360, (locationX / size) * 360));
-      updateColor(newH, s, v);
-    },
-    onPanResponderMove: (evt) => {
-      const { locationX } = evt.nativeEvent;
-      const newH = Math.max(0, Math.min(360, (locationX / size) * 360));
-      updateColor(newH, s, v);
-    },
-  });
+  // Handle touch on hue bar
+  const handleHueTouch = useCallback((event: any) => {
+    const { locationX } = event.nativeEvent;
+    const newH = Math.max(0, Math.min(360, (locationX / size) * 360));
+    updateColor(newH, s, v);
+  }, [s, v, size, updateColor]);
 
   // Generate current color for the saturation/brightness area
   const [baseR, baseG, baseB] = hsvToRgb(h, 1, 1);
@@ -77,60 +58,56 @@ export default function ColorPicker({ color, onColorChange, size = Math.min(scre
   return (
     <View style={styles.container}>
       {/* Saturation/Brightness Area */}
-      <View style={[styles.svArea, { width: size, height: size }]}>
-        <LinearGradient
-          colors={['#FFFFFF', baseColor]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={StyleSheet.absoluteFill}
-        />
-        <LinearGradient
-          colors={['transparent', '#000000']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 0, y: 1 }}
-          style={StyleSheet.absoluteFill}
-        />
-        <View
-          style={StyleSheet.absoluteFill}
-          {...svPanResponder.panHandlers}
-        />
-        {/* Saturation/Brightness Cursor */}
-        <View
-          style={[
-            styles.svCursor,
-            {
-              left: svCursorX - 10,
-              top: svCursorY - 10,
-            },
-          ]}
-        />
-      </View>
+      <TouchableWithoutFeedback onPress={handleSVTouch}>
+        <View style={[styles.svArea, { width: size, height: size }]}>
+          <LinearGradient
+            colors={['#FFFFFF', baseColor]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={StyleSheet.absoluteFill}
+          />
+          <LinearGradient
+            colors={['transparent', '#000000']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0, y: 1 }}
+            style={StyleSheet.absoluteFill}
+          />
+          {/* Saturation/Brightness Cursor */}
+          <View
+            style={[
+              styles.svCursor,
+              {
+                left: svCursorX - 10,
+                top: svCursorY - 10,
+              },
+            ]}
+          />
+        </View>
+      </TouchableWithoutFeedback>
 
       {/* Hue Bar */}
-      <View style={[styles.hueBar, { width: size, marginTop: 16 }]}>
-        <LinearGradient
-          colors={[
-            '#FF0000', '#FFFF00', '#00FF00', '#00FFFF',
-            '#0000FF', '#FF00FF', '#FF0000'
-          ]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={StyleSheet.absoluteFill}
-        />
-        <View
-          style={StyleSheet.absoluteFill}
-          {...huePanResponder.panHandlers}
-        />
-        {/* Hue Cursor */}
-        <View
-          style={[
-            styles.hueCursor,
-            {
-              left: hueCursorX - 2,
-            },
-          ]}
-        />
-      </View>
+      <TouchableWithoutFeedback onPress={handleHueTouch}>
+        <View style={[styles.hueBar, { width: size, marginTop: 16 }]}>
+          <LinearGradient
+            colors={[
+              '#FF0000', '#FFFF00', '#00FF00', '#00FFFF',
+              '#0000FF', '#FF00FF', '#FF0000'
+            ]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={StyleSheet.absoluteFill}
+          />
+          {/* Hue Cursor */}
+          <View
+            style={[
+              styles.hueCursor,
+              {
+                left: hueCursorX - 2,
+              },
+            ]}
+          />
+        </View>
+      </TouchableWithoutFeedback>
 
       {/* Color Preview */}
       <View style={[styles.colorPreview, { marginTop: 16 }]}>

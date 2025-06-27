@@ -371,7 +371,52 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
     });
   }, [rotation]);
 
-  // Memoize wheel rendering to reduce computational overhead
+  // Move these functions outside useMemo so they can be reused
+  const getEmojiWheelRadius = useCallback((activityCount: number) => {
+    // As activities increase, emoji wheel moves closer to edge for more space
+    const baseRadius = 0.75; // Starting point for few activities
+    const expansionRate = 0.008; // How much to expand per activity
+    const maxRadius = 0.88; // Maximum safe distance from edge
+    
+    const dynamicRadius = baseRadius + (activityCount * expansionRate);
+    return CENTER * Math.min(dynamicRadius, maxRadius);
+  }, [CENTER]);
+
+  const getDynamicSizes = useCallback((activityCount: number) => {
+    // Base sizes for optimal readability
+    const baseTextSize = 14;
+    const baseEmojiSize = 22;
+    
+    // Scaling factors based on activity count
+    if (activityCount <= 4) return { textSize: baseTextSize, emojiSize: baseEmojiSize + 4 }; // Larger for few items
+    if (activityCount <= 6) return { textSize: baseTextSize, emojiSize: baseEmojiSize }; // Standard
+    if (activityCount <= 8) return { textSize: baseTextSize - 1, emojiSize: baseEmojiSize - 2 }; // Slightly smaller
+    if (activityCount <= 14) return { textSize: baseTextSize - 2, emojiSize: baseEmojiSize - 3 }; // Smaller
+    if (activityCount <= 26) return { textSize: baseTextSize - 3, emojiSize: baseEmojiSize - 4 }; // Much smaller
+    return { textSize: Math.max(baseTextSize - 4, 8), emojiSize: Math.max(baseEmojiSize - 8, 12) }; // Minimum readable
+  }, []);
+
+  const getTextWheelRadius = useCallback((activityCount: number, hasEmoji: boolean) => {
+    if (!hasEmoji) {
+      // If no emoji, text can expand more into the middle-outer zone
+      const baseRadius = 0.60;
+      const expansionRate = 0.006;
+      const maxRadius = 0.75;
+      
+      const dynamicRadius = baseRadius + (activityCount * expansionRate);
+      return CENTER * Math.min(dynamicRadius, maxRadius);
+    }
+    
+    // Text wheel - CLOSER to emoji wheel with smaller gap
+    const baseRadius = 0.58; // Start much closer to emoji wheel
+    const expansionRate = 0.01; // Slightly faster expansion to keep close
+    const maxRadius = 0.80; // Higher maximum for better space usage
+    
+    const dynamicRadius = baseRadius + (activityCount * expansionRate);
+    return CENTER * Math.min(dynamicRadius, maxRadius);
+  }, [CENTER]);
+
+  // Create the wheel content
   const wheelContent = useMemo(() => {
     // Handle case with no activities
     if (activities.length === 0) {
@@ -484,62 +529,16 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
         // More activities = both wheels move further from center for better space utilization
         
         // Outer wheel for emojis (dynamically expanding outward)
-        const getEmojiWheelRadius = (activityCount: number) => {
-          // As activities increase, emoji wheel moves closer to edge for more space
-          const baseRadius = 0.75; // Starting point for few activities
-          const expansionRate = 0.008; // How much to expand per activity
-          const maxRadius = 0.88; // Maximum safe distance from edge
-          
-          const dynamicRadius = baseRadius + (activityCount * expansionRate);
-          return CENTER * Math.min(dynamicRadius, maxRadius);
-        };
-
-        // Inner wheel for text (dynamically expanding but always inside emoji wheel)
-        const getTextWheelRadius = (activityCount: number, hasEmoji: boolean) => {
-          if (!hasEmoji) {
-            // If no emoji, text can expand more into the middle-outer zone
-            const baseRadius = 0.60;
-            const expansionRate = 0.006;
-            const maxRadius = 0.75;
-            
-            const dynamicRadius = baseRadius + (activityCount * expansionRate);
-            return CENTER * Math.min(dynamicRadius, maxRadius);
-          }
-          
-          // Text wheel - CLOSER to emoji wheel with smaller gap
-          const baseRadius = 0.58; // Start much closer to emoji wheel
-          const expansionRate = 0.01; // Slightly faster expansion to keep close
-          const maxRadius = 0.80; // Higher maximum for better space usage
-          
-          const dynamicRadius = baseRadius + (activityCount * expansionRate);
-          return CENTER * Math.min(dynamicRadius, maxRadius);
-        };
-
-                          const emojiRadius = getEmojiWheelRadius(activities.length);
-         const textRadius = getTextWheelRadius(activities.length, !!activity.emoji);
-         
-         // TEXT ALIGNMENT FIX - All text starts from same distance from center
-         // Instead of centering text at radius, we position it to start at the text wheel boundary
-         const textStartX = CENTER + textRadius * Math.cos(textAngleRad);
-         const textStartY = CENTER + textRadius * Math.sin(textAngleRad);
+        const emojiRadius = getEmojiWheelRadius(activities.length);
         
-        // Dynamic font sizes based on activity count
-        const getDynamicSizes = (activityCount: number) => {
-          // Base sizes for optimal readability
-          const baseTextSize = 14;
-          const baseEmojiSize = 22;
-          
-          // Scaling factors based on activity count
-          if (activityCount <= 4) return { textSize: baseTextSize, emojiSize: baseEmojiSize + 4 }; // Larger for few items
-          if (activityCount <= 6) return { textSize: baseTextSize, emojiSize: baseEmojiSize }; // Standard
-          if (activityCount <= 8) return { textSize: baseTextSize - 1, emojiSize: baseEmojiSize - 2 }; // Slightly smaller
-          if (activityCount <= 14) return { textSize: baseTextSize - 2, emojiSize: baseEmojiSize - 3 }; // Smaller
-          if (activityCount <= 26) return { textSize: baseTextSize - 3, emojiSize: baseEmojiSize - 4 }; // Much smaller
-          return { textSize: Math.max(baseTextSize - 4, 8), emojiSize: Math.max(baseEmojiSize - 8, 12) }; // Minimum readable
-        };
-
-        const { textSize: fontSize, emojiSize: emojiFontSize } = getDynamicSizes(activities.length);
-
+        // Inner wheel for text (dynamically expanding but always inside emoji wheel)
+        const textRadius = getTextWheelRadius(activities.length, !!activity.emoji);
+        
+        // TEXT ALIGNMENT FIX - All text starts from same distance from center
+        // Instead of centering text at radius, we position it to start at the text wheel boundary
+        const textStartX = CENTER + textRadius * Math.cos(textAngleRad);
+        const textStartY = CENTER + textRadius * Math.sin(textAngleRad);
+        
         // Calculate emoji position using the new function
         const emojiPositionRadius = emojiRadius;
         const emojiX = CENTER + emojiPositionRadius * Math.cos(textAngleRad);
@@ -562,7 +561,7 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
           const availableArcLength = (sliceAngleDegrees / 360) * textWheelCircumference;
           
           // Estimate character width based on font size (more conservative approximation)
-          const avgCharWidth = fontSize * 0.7; // More conservative character width
+          const avgCharWidth = getDynamicSizes(activityCount).textSize * 0.7; // More conservative character width
           const maxCharsFromSpace = Math.floor(availableArcLength / avgCharWidth);
           
           // FORCE SINGLE LINE for many activities to save vertical space
@@ -597,7 +596,7 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
           if (activity.id === activities[0]?.id) {
             const textWheelCircumference = 2 * Math.PI * textRadius;
             const availableArcLength = (sliceAngleDegrees / 360) * textWheelCircumference;
-            const avgCharWidth = fontSize * 0.7;
+            const avgCharWidth = getDynamicSizes(activities.length).textSize * 0.7;
             const maxCharsFromSpace = Math.floor(availableArcLength / avgCharWidth);
             
             
@@ -688,7 +687,7 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
                 stroke={getStrokeColorForTheme(currentTheme.name)}
                 strokeWidth={0.5}
                 strokeOpacity={0.3}
-                fontSize={fontSize}
+                fontSize={getDynamicSizes(activities.length).textSize}
                 fontFamily={FONTS.jua}
                 textAnchor="start"
                 alignmentBaseline="middle"
@@ -710,7 +709,7 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
               return fontSize * 1.05; // Tighter for many activities
             };
             
-            const lineSpacing = getLineSpacing(fontSize, activities.length);
+            const lineSpacing = getLineSpacing(getDynamicSizes(activities.length).textSize, activities.length);
             const totalHeight = textLines.length * lineSpacing;
             const verticalOffset = -(totalHeight / 2) + (lineSpacing / 2);
             
@@ -727,7 +726,7 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
                   stroke={getStrokeColorForTheme(currentTheme.name)}
                   strokeWidth={0.5}
                   strokeOpacity={0.3}
-                  fontSize={fontSize}
+                  fontSize={getDynamicSizes(activities.length).textSize}
                   fontFamily={FONTS.jua}
                   textAnchor="start"
                   alignmentBaseline="middle"
@@ -749,10 +748,10 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
             <SvgText
               x={emojiX}
               y={emojiY}
-              fill={currentTheme.uiColors.text}
-              fontSize={emojiFontSize}
+              fontSize={getDynamicSizes(activities.length).emojiSize}
               textAnchor="middle"
               alignmentBaseline="middle"
+              opacity={1}
               transform={`rotate(${textRotationAngle}, ${emojiX}, ${emojiY})`}
             >
               {activity.emoji}
@@ -789,15 +788,62 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
               />
             )}
             {renderActivityText()}
-            {renderEmoji()}
           </G>
         );
       })
     ];
-  }, [activities, CENTER, WHEEL_SIZE, highlightedSlice, isSpinning, showNewIndicator, newIndicatorAnim, newIndicatorPulse]);
+  }, [activities, CENTER, WHEEL_SIZE, highlightedSlice, isSpinning, showNewIndicator, newIndicatorAnim, newIndicatorPulse, getEmojiWheelRadius, getDynamicSizes]);
+
+  // Create emoji content separately to avoid opacity inheritance
+  const emojiContent = useMemo(() => {
+    if (activities.length === 0) return [];
+
+    const sliceAngleDegrees = 360 / activities.length;
+
+    return activities.map((activity, index) => {
+      if (!activity.emoji) return null;
+
+      const midAngleDegrees = index * sliceAngleDegrees + sliceAngleDegrees / 2;
+      const angleRad = (midAngleDegrees - 90) * (Math.PI / 180);
+
+      // Get dynamic sizes for emoji
+      const { emojiSize } = getDynamicSizes(activities.length);
+      const emojiRadius = getEmojiWheelRadius(activities.length);
+
+      // Calculate emoji position
+      const emojiX = CENTER + emojiRadius * Math.cos(angleRad);
+      const emojiY = CENTER + emojiRadius * Math.sin(angleRad);
+
+      // Calculate text rotation angle for emoji
+      let textRotationAngle = midAngleDegrees;
+      if (midAngleDegrees > 90 && midAngleDegrees < 270) {
+        textRotationAngle += 180;
+      }
+
+      return (
+        <SvgText
+          key={`emoji-${activity.id}`}
+          x={emojiX}
+          y={emojiY}
+          fontSize={emojiSize}
+          textAnchor="middle"
+          alignmentBaseline="middle"
+          opacity={1}
+          transform={`rotate(${textRotationAngle}, ${emojiX}, ${emojiY})`}
+        >
+          {activity.emoji}
+        </SvgText>
+      );
+    }).filter(Boolean);
+  }, [activities, CENTER, WHEEL_SIZE, getEmojiWheelRadius, getDynamicSizes]);
 
   const renderWheel = () => {
-    return wheelContent;
+    return (
+      <>
+        {wheelContent}
+        {emojiContent}
+      </>
+    );
   };
 
   // Handle deleting an activity when trash icon is clicked

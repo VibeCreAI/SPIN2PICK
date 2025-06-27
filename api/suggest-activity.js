@@ -84,7 +84,7 @@ Activity name only:`;
         "X-Title": "Spin2Pick App"
       },
       body: JSON.stringify({
-        model: "liquid/lfm-7b", // Cost-effective model
+        model: "meta-llama/llama-3.2-3b-instruct", // Faster and cheaper model
         messages: [
           {
             role: "system",

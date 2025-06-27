@@ -431,58 +431,128 @@ export const hexToHsv = (hex: string): [number, number, number] => {
   return [h, s, v];
 };
 
-// Generate optimal random colors using advanced color theory
+// Generate truly random vibrant colors with maximum variety
 export const generateRandomColors = (count: number = 12): string[] => {
   const colors: string[] = [];
-  const goldenRatio = 0.618033988749895;
   
-  // Start with a random but aesthetically pleasing hue
-  let baseHue = Math.random();
-  
-  // Define color harmony patterns (complementary, triadic, split-complementary, etc.)
-  const harmonyPatterns = [
-    [0, 30, 60],           // Analogous
-    [0, 120, 240],         // Triadic  
-    [0, 150, 210],         // Split-complementary
-    [0, 60, 180, 240],     // Tetradic
-    [0, 72, 144, 216, 288] // Pentadic
+  // Create pools of different color approaches for maximum variety
+  const colorStrategies = [
+    // Pure random with high saturation
+    () => {
+      const h = Math.floor(Math.random() * 360);
+      const s = 0.7 + Math.random() * 0.3; // 70-100%
+      const v = 0.8 + Math.random() * 0.2; // 80-100%
+      return { h, s, v };
+    },
+    
+    // Warm colors (reds, oranges, yellows)
+    () => {
+      const h = Math.random() < 0.5 
+        ? Math.floor(Math.random() * 60)        // 0-60 (reds to yellows)
+        : Math.floor(Math.random() * 30) + 300; // 300-330 (magentas)
+      const s = 0.6 + Math.random() * 0.4; // 60-100%
+      const v = 0.75 + Math.random() * 0.25; // 75-100%
+      return { h, s, v };
+    },
+    
+    // Cool colors (greens, blues, purples)
+    () => {
+      const h = Math.floor(Math.random() * 180) + 120; // 120-300
+      const s = 0.6 + Math.random() * 0.4; // 60-100%
+      const v = 0.75 + Math.random() * 0.25; // 75-100%
+      return { h, s, v };
+    },
+    
+    // Neon/electric colors
+    () => {
+      const neonHues = [0, 30, 60, 120, 180, 240, 270, 300, 330];
+      const h = neonHues[Math.floor(Math.random() * neonHues.length)] + 
+                (Math.random() - 0.5) * 20; // Add slight variation
+      const s = 0.9 + Math.random() * 0.1; // 90-100%
+      const v = 0.9 + Math.random() * 0.1; // 90-100%
+      return { h: ((h % 360) + 360) % 360, s, v };
+    },
+    
+    // Pastel variations
+    () => {
+      const h = Math.floor(Math.random() * 360);
+      const s = 0.4 + Math.random() * 0.4; // 40-80%
+      const v = 0.85 + Math.random() * 0.15; // 85-100%
+      return { h, s, v };
+    },
+    
+    // Deep/rich colors
+    () => {
+      const h = Math.floor(Math.random() * 360);
+      const s = 0.8 + Math.random() * 0.2; // 80-100%
+      const v = 0.6 + Math.random() * 0.3; // 60-90%
+      return { h, s, v };
+    }
   ];
   
-  // Choose a random harmony pattern
-  const pattern = harmonyPatterns[Math.floor(Math.random() * harmonyPatterns.length)];
+  // Track used colors to avoid duplicates
+  const usedColors = new Set<string>();
   
   for (let i = 0; i < count; i++) {
-    let hue: number;
+    let attempts = 0;
+    let colorHex = '';
     
-    if (i < pattern.length) {
-      // Use harmony pattern for first colors
-      hue = (baseHue + pattern[i] / 360) % 1;
-    } else {
-      // Use golden ratio distribution for remaining colors
-      baseHue = (baseHue + goldenRatio) % 1;
-      hue = baseHue;
+    // Try up to 10 times to generate a unique color
+    while (attempts < 10) {
+      // Randomly select a color strategy
+      const strategy = colorStrategies[Math.floor(Math.random() * colorStrategies.length)];
+      const { h, s, v } = strategy();
+      
+      // Convert to RGB and hex
+      const [r, g, b] = hsvToRgb(h, s, v);
+      colorHex = rgbToHex(r, g, b);
+      
+      // Check if color is too similar to existing ones
+      let tooSimilar = false;
+      for (const existingColor of usedColors) {
+        if (getColorDistance(colorHex, existingColor) < 30) {
+          tooSimilar = true;
+          break;
+        }
+      }
+      
+      if (!tooSimilar) {
+        break;
+      }
+      
+      attempts++;
     }
     
-    // Create more sophisticated saturation and brightness variations
-    const saturationVariation = Math.sin(i * 0.5) * 0.15; // Smooth wave variation
-    const brightnessVariation = Math.cos(i * 0.7) * 0.1;  // Different wave for brightness
-    
-    const h = Math.round(hue * 360);
-    const s = Math.max(0.65, Math.min(0.95, 0.8 + saturationVariation)); // 65-95% saturation
-    const v = Math.max(0.75, Math.min(0.95, 0.85 + brightnessVariation)); // 75-95% brightness
-    
-    const [r, g, b] = hsvToRgb(h, s, v);
-    colors.push(rgbToHex(r, g, b));
+    usedColors.add(colorHex);
+    colors.push(colorHex);
   }
   
-  // Shuffle the colors slightly to avoid predictable patterns while maintaining harmony
+  // Final shuffle for complete randomness
   for (let i = colors.length - 1; i > 0; i--) {
-    // Only swap with nearby colors to maintain some order
-    const j = Math.max(0, Math.min(colors.length - 1, i + Math.floor((Math.random() - 0.5) * 4)));
-    if (Math.abs(i - j) <= 2) { // Only swap with colors within 2 positions
-      [colors[i], colors[j]] = [colors[j], colors[i]];
-    }
+    const j = Math.floor(Math.random() * (i + 1));
+    [colors[i], colors[j]] = [colors[j], colors[i]];
   }
   
   return colors;
+};
+
+// Helper function to calculate color distance (perceptual difference)
+const getColorDistance = (color1: string, color2: string): number => {
+  const [r1, g1, b1] = [
+    parseInt(color1.slice(1, 3), 16),
+    parseInt(color1.slice(3, 5), 16),
+    parseInt(color1.slice(5, 7), 16)
+  ];
+  const [r2, g2, b2] = [
+    parseInt(color2.slice(1, 3), 16),
+    parseInt(color2.slice(3, 5), 16),
+    parseInt(color2.slice(5, 7), 16)
+  ];
+  
+  // Simplified color distance calculation
+  return Math.sqrt(
+    Math.pow(r1 - r2, 2) + 
+    Math.pow(g1 - g2, 2) + 
+    Math.pow(b1 - b2, 2)
+  );
 }; 

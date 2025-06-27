@@ -25,6 +25,46 @@ const PASTEL_COLORS = [
   '#c4f59f', // Light Green (Read a Book)
 ];
 
+// Theme-specific text colors for high contrast and readability
+const getTextColorForTheme = (themeName: string): string => {
+  switch (themeName) {
+    case 'pastel':
+      return '#2D2D2D'; // Dark gray for light pastel backgrounds
+    case 'sunset':
+      return '#FFFFFF'; // White for warm/dark backgrounds
+    case 'ocean':
+      return '#FFFFFF'; // White for blue backgrounds
+    case 'forest':
+      return '#FFFFFF'; // White for green backgrounds
+    case 'neon':
+      return '#000000'; // Black for bright neon backgrounds
+    case 'vintage':
+      return '#2D2D2D'; // Dark gray for muted vintage backgrounds
+    default:
+      return '#2D2D2D'; // Default to dark gray
+  }
+};
+
+// Theme-specific stroke colors for text outline
+const getStrokeColorForTheme = (themeName: string): string => {
+  switch (themeName) {
+    case 'pastel':
+      return '#FFFFFF'; // White outline for dark text
+    case 'sunset':
+      return '#2D2D2D'; // Dark outline for white text
+    case 'ocean':
+      return '#2D2D2D'; // Dark outline for white text
+    case 'forest':
+      return '#2D2D2D'; // Dark outline for white text
+    case 'neon':
+      return '#FFFFFF'; // White outline for black text
+    case 'vintage':
+      return '#FFFFFF'; // White outline for dark text
+    default:
+      return '#FFFFFF'; // Default to white outline
+  }
+};
+
 interface Activity {
   id: string;
   name: string;
@@ -652,7 +692,10 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
               <SvgText
                 x={textStartX}
                 y={textStartY}
-                fill={currentTheme.uiColors.primary}
+                fill={getTextColorForTheme(currentTheme.name)}
+                stroke={getStrokeColorForTheme(currentTheme.name)}
+                strokeWidth={0.5}
+                strokeOpacity={0.3}
                 fontSize={fontSize}
                 fontFamily={FONTS.jua}
                 textAnchor="start"
@@ -688,7 +731,10 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
                   key={`line-${index}`}
                   x={textStartX}
                   y={lineY}
-                  fill={currentTheme.uiColors.primary}
+                  fill={getTextColorForTheme(currentTheme.name)}
+                  stroke={getStrokeColorForTheme(currentTheme.name)}
+                  strokeWidth={0.5}
+                  strokeOpacity={0.3}
                   fontSize={fontSize}
                   fontFamily={FONTS.jua}
                   textAnchor="start"

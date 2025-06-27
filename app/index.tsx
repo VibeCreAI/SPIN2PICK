@@ -95,6 +95,10 @@ export default function HomeScreen() {
   // New state for theme selection
   const [showThemeModal, setShowThemeModal] = useState(false);
 
+  // New state for bulk AI functionality
+  const [isLoadingBulkAI, setIsLoadingBulkAI] = useState(false);
+  const [bulkAISuggestions, setBulkAISuggestions] = useState<string[]>([]);
+
   // Get screen dimensions for responsive design
   const screenData = Dimensions.get('window');
   const isWeb = Platform.OS === 'web';
@@ -467,6 +471,112 @@ export default function HomeScreen() {
     setActivities(recoloredActivities);
   };
 
+  // New handlers for bulk functionality
+  const handleAddActivities = async (activityNames: string[]) => {
+    console.log('📝 Adding bulk activities:', activityNames);
+    
+    for (const name of activityNames) {
+      try {
+        // Get emoji for each activity
+        const emoji = await getEmoji(name);
+        
+        // Create new activity
+        const newActivity: Activity = {
+          id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+          name,
+          color: currentTheme.wheelColors[0], // Temporary color, will be reassigned
+          emoji,
+        };
+        
+        // Add the new activity
+        setActivities(prev => [...prev, newActivity]);
+      } catch (error) {
+        console.error('Error adding activity with emoji:', error);
+        
+        // Fallback without emoji
+        const newActivity: Activity = {
+          id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+          name,
+          color: currentTheme.wheelColors[0],
+          emoji: '🎲',
+        };
+        
+        setActivities(prev => [...prev, newActivity]);
+      }
+    }
+    
+    // Reassign all colors optimally after bulk addition
+    setTimeout(() => {
+      setActivities(prev => {
+        const recoloredActivities = reassignAllColors(prev, currentTheme.wheelColors);
+        return recoloredActivities;
+      });
+    }, 100);
+  };
+
+  const handleBulkAISuggest = async (count: number, category?: string) => {
+    console.log('🤖 Generating', count, 'AI activities', category ? `for category: ${category}` : '');
+    setIsLoadingBulkAI(true);
+    
+    try {
+      const existingActivityNames = activities.map(a => a.name);
+      const declinedSuggestions = await getDeclinedSuggestions();
+      
+      // Use the existing working single AI suggestion function multiple times
+      // This avoids CORS issues and uses the proven working API endpoint
+      const suggestions: string[] = [];
+      const maxAttempts = count * 2; // Try more times to get enough unique suggestions
+      let attempts = 0;
+      
+      console.log('🔄 Using multiple single AI suggestions to generate bulk activities...');
+      
+      while (suggestions.length < count && attempts < maxAttempts) {
+        attempts++;
+        console.log(`🎯 Attempt ${attempts}: Getting suggestion ${suggestions.length + 1} of ${count}`);
+        
+        try {
+          // Use existing working function with current state
+          const allExisting = [...existingActivityNames, ...suggestions];
+          const newSuggestion = await getAISuggestedActivity(allExisting, declinedSuggestions);
+          
+          // Check if suggestion is unique
+          if (!suggestions.includes(newSuggestion) && !existingActivityNames.includes(newSuggestion)) {
+            suggestions.push(newSuggestion);
+            console.log(`✅ Added suggestion ${suggestions.length}: "${newSuggestion}"`);
+          } else {
+            console.log(`⚠️ Duplicate suggestion "${newSuggestion}", trying again...`);
+          }
+        } catch (error) {
+          console.error(`❌ Error getting suggestion ${attempts}:`, error);
+          // Continue trying other suggestions
+        }
+      }
+      
+      setBulkAISuggestions(suggestions);
+      console.log('✨ Generated', suggestions.length, 'AI suggestions:', suggestions);
+      
+      if (suggestions.length === 0) {
+        alert('Sorry, I couldn\'t generate activities right now. Please try again!');
+      }
+    } catch (error) {
+      console.error('Error generating bulk AI suggestions:', error);
+      alert('Sorry, I couldn\'t generate activities right now. Please try again!');
+    } finally {
+      setIsLoadingBulkAI(false);
+    }
+  };
+
+  const handleAcceptBulkSuggestions = async (selectedActivities: string[]) => {
+    console.log('✅ Accepting bulk AI suggestions:', selectedActivities);
+    await handleAddActivities(selectedActivities);
+    setBulkAISuggestions([]);
+  };
+
+  const handleClearBulkSuggestions = () => {
+    console.log('🧹 Clearing bulk AI suggestions');
+    setBulkAISuggestions([]);
+  };
+
   const renderContent = () => (
           <View style={[styles.container, { backgroundColor: currentTheme.backgroundColor }]} onLayout={onLayout}>
             <View style={styles.contentWrapper}>
@@ -488,9 +598,15 @@ export default function HomeScreen() {
                 onDeclineSuggestion={handleDeclineSuggestion}
                 activities={activities}
                 onDeleteActivity={handleDeleteActivityByName}
+                onAddActivities={handleAddActivities}
+                onBulkAISuggest={handleBulkAISuggest}
+                isLoadingBulkAI={isLoadingBulkAI}
+                bulkAISuggestions={bulkAISuggestions}
+                onAcceptBulkSuggestions={handleAcceptBulkSuggestions}
+                onClearBulkSuggestions={handleClearBulkSuggestions}
               />
               
-              <ThemedText style={[styles.subtitle, { color: currentTheme.uiColors.secondary }]}>Press ✨ for AI suggestions, 🗑️ to delete!</ThemedText>
+                              <ThemedText style={[styles.subtitle, { color: currentTheme.uiColors.secondary }]}>Press ✨ for AI suggestions, 📃 to manage!</ThemedText>
 
               {containerWidth > 0 ? (
                 (() => {

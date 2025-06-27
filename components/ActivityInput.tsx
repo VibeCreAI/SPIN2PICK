@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { useTheme } from '../hooks/useTheme';
 import { Activity } from '../utils/colorUtils';
-import { DeleteActivitiesModal } from './DeleteActivitiesModal';
+import { ActivityListModal } from './ActivityListModal';
 import { ThemedView } from './ThemedView';
 
 interface ActivityInputProps {
@@ -27,6 +27,12 @@ interface ActivityInputProps {
   onDeclineSuggestion: () => void;
   activities: Activity[];
   onDeleteActivity: (activityName: string) => void;
+  onAddActivities: (activities: string[]) => void;
+  onBulkAISuggest: (count: number, category?: string) => void;
+  isLoadingBulkAI?: boolean;
+  bulkAISuggestions?: string[];
+  onAcceptBulkSuggestions: (selectedActivities: string[]) => void;
+  onClearBulkSuggestions: () => void;
 }
 
 export const ActivityInput: React.FC<ActivityInputProps> = ({
@@ -41,10 +47,16 @@ export const ActivityInput: React.FC<ActivityInputProps> = ({
   onDeclineSuggestion,
   activities,
   onDeleteActivity,
+  onAddActivities,
+  onBulkAISuggest,
+  isLoadingBulkAI = false,
+  bulkAISuggestions = [],
+  onAcceptBulkSuggestions,
+  onClearBulkSuggestions,
 }) => {
   const { currentTheme } = useTheme();
   const [inputText, setInputText] = useState('');
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showListModal, setShowListModal] = useState(false);
   
   // Get correct initial dimensions - fix for SSR/web initial render
   const getInitialDimensions = () => {
@@ -196,7 +208,7 @@ export const ActivityInput: React.FC<ActivityInputProps> = ({
 
               <TouchableOpacity 
                 style={styles.iconButton}
-                onPress={() => setShowDeleteModal(true)}
+                onPress={() => setShowListModal(true)}
                 disabled={activities.length === 0}
                 activeOpacity={0.7}
               >
@@ -208,7 +220,7 @@ export const ActivityInput: React.FC<ActivityInputProps> = ({
                       : currentTheme.uiColors.primary 
                   }
                 ]}>
-                  🗑️
+                  📃
                 </Text>
               </TouchableOpacity>
             </ThemedView>
@@ -290,15 +302,21 @@ export const ActivityInput: React.FC<ActivityInputProps> = ({
         </TouchableOpacity>
       </Modal>
 
-      {/* Delete Activities Modal */}
-      <DeleteActivitiesModal
-        visible={showDeleteModal}
-        onClose={() => setShowDeleteModal(false)}
+      {/* Activity List Modal */}
+      <ActivityListModal
+        visible={showListModal}
+        onClose={() => setShowListModal(false)}
         activities={activities}
         onDeleteActivity={(activityName: string) => {
           onDeleteActivity(activityName);
           // Keep modal open to allow multiple deletions
         }}
+        onAddActivities={onAddActivities}
+        onBulkAISuggest={onBulkAISuggest}
+        isLoadingBulkAI={isLoadingBulkAI}
+        bulkAISuggestions={bulkAISuggestions}
+        onAcceptBulkSuggestions={onAcceptBulkSuggestions}
+        onClearBulkSuggestions={onClearBulkSuggestions}
       />
     </ThemedView>
   );

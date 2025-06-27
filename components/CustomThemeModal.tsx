@@ -101,7 +101,7 @@ export const CustomThemeModal: React.FC<CustomThemeModalProps> = ({
               styles.title,
               { color: currentTheme.uiColors.primary }
             ]}>
-              🎨 Create Custom Theme
+              ⭐ Create Custom Theme
             </Text>
             <Text style={[
               styles.subtitle,

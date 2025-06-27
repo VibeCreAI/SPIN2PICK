@@ -152,7 +152,7 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
                       styles.createCustomThemeIcon,
                       { color: currentTheme.uiColors.accent }
                     ]}>
-                      🎨
+                      ⭐
                     </ThemedText>
                     <ThemedText style={[
                       styles.createCustomThemeText,

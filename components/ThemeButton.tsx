@@ -28,7 +28,7 @@ export const ThemeButton: React.FC<ThemeButtonProps> = ({ onPress }) => {
           { color: currentTheme.uiColors.buttonText }
         ]}
       >
-        {currentTheme.emoji} 🎨
+        🎨 {currentTheme.emoji}
       </ThemedText>
     </TouchableOpacity>
   );

@@ -56,13 +56,6 @@ export const AURORA_COLORS = [
   '#FFB6C1', '#FFA07A', '#87CEFA', '#98FB98',
 ];
 
-// Autumn theme colors - rich fall colors with warm golds and deep reds (12 colors)
-export const AUTUMN_COLORS = [
-  '#B22222', '#CD853F', '#DAA520', '#FF8C00',
-  '#DC143C', '#A0522D', '#D2691E', '#FF7F50',
-  '#B8860B', '#8B4513', '#A52A2A', '#FF6347',
-];
-
 // Custom theme storage key
 export const CUSTOM_THEME_STORAGE_KEY = 'SPIN2PICK_CUSTOM_THEME';
 
@@ -233,24 +226,6 @@ export const COLOR_THEMES: ColorTheme[] = [
       buttonBackground: '#9370DB',
       buttonText: '#fff',
     }
-  },
-  {
-    id: 'autumn',
-    name: 'autumn',
-    displayName: 'Autumn Harvest',
-    emoji: '🍂',
-    backgroundColor: '#fff8f0',
-    wheelColors: AUTUMN_COLORS,
-    uiColors: {
-      primary: '#A0522D',
-      secondary: '#8B4513',
-      accent: '#FF8C00',
-      text: '#5D2F0A',
-      cardBackground: '#FFF8F0',
-      modalBackground: '#FFF8F0',
-      buttonBackground: '#FF8C00',
-      buttonText: '#fff',
-    }
   }
 ];
 
@@ -264,7 +239,7 @@ export const createCustomTheme = (customData: CustomThemeData): ColorTheme => ({
   id: 'custom',
   name: 'custom',
   displayName: customData.name || 'My Custom Theme',
-  emoji: '⭐',
+  emoji: '🎨',
   backgroundColor: '#ffffff',
   wheelColors: customData.colors,
   uiColors: {

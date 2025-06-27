@@ -207,16 +207,16 @@ export const SaveLoadModal: React.FC<SaveLoadModalProps> = ({
                 <Text allowFontScaling={false} style={[styles.actionButtonText, { color: currentTheme.uiColors.buttonText }]}>📂 Load</Text>
               </TouchableOpacity>
               <TouchableOpacity 
-                style={[styles.actionButton, styles.overwriteButton, { backgroundColor: '#f5c09f' }]} 
+                style={[styles.actionButton, styles.overwriteButton, { backgroundColor: '#FF9800' }]} 
                 onPress={() => handleSavePress(index, true)}
               >
-                <Text allowFontScaling={false} style={[styles.actionButtonText, { color: '#fff' }]}>✏️ Overwrite</Text>
+                <Text allowFontScaling={false} style={[styles.actionButtonText, { color: currentTheme.uiColors.buttonText }]}>✏️ Overwrite</Text>
               </TouchableOpacity>
               <TouchableOpacity 
-                style={[styles.actionButton, styles.deleteButton, { backgroundColor: '#f59f9f' }]} 
+                style={[styles.actionButton, styles.deleteButton, { backgroundColor: '#F44336' }]} 
                 onPress={() => handleDeletePress(index)}
               >
-                <Text allowFontScaling={false} style={[styles.actionButtonText, { color: '#fff' }]}>🗑️ Delete</Text>
+                <Text allowFontScaling={false} style={[styles.actionButtonText, { color: currentTheme.uiColors.buttonText }]}>🗑️ Delete</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -233,16 +233,16 @@ export const SaveLoadModal: React.FC<SaveLoadModalProps> = ({
           <Text allowFontScaling={false} style={[styles.confirmationMessage, { color: currentTheme.uiColors.secondary }]}>{confirmationModal.message}</Text>
           <View style={styles.confirmationActions}>
             <TouchableOpacity 
-              style={[styles.confirmationButton, styles.confirmationCancelButton]} 
+              style={[styles.confirmationButton, { backgroundColor: currentTheme.uiColors.secondary }]} 
               onPress={() => setConfirmationModal({ ...confirmationModal, visible: false })}
             >
-              <Text allowFontScaling={false} style={styles.confirmationButtonText}>Cancel</Text>
+              <Text allowFontScaling={false} style={[styles.confirmationButtonText, { color: currentTheme.uiColors.buttonText }]}>Cancel</Text>
             </TouchableOpacity>
             <TouchableOpacity 
-              style={[styles.confirmationButton, styles.confirmationConfirmButton]} 
+              style={[styles.confirmationButton, { backgroundColor: '#F44336' }]} 
               onPress={confirmationModal.onConfirm}
             >
-              <Text allowFontScaling={false} style={styles.confirmationButtonText}>Confirm</Text>
+              <Text allowFontScaling={false} style={[styles.confirmationButtonText, { color: '#FFFFFF' }]}>Confirm</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -272,17 +272,17 @@ export const SaveLoadModal: React.FC<SaveLoadModalProps> = ({
           <Text allowFontScaling={false} style={[{ fontSize: 12, color: currentTheme.uiColors.secondary, textAlign: 'center', marginBottom: 10 }]}>{MAX_SAVE_NAME_LENGTH - saveName.length} characters remaining</Text>
           <View style={styles.saveInputActions}>
             <TouchableOpacity 
-              style={[styles.saveInputButton, styles.cancelButton]} 
+              style={[styles.saveInputButton, { backgroundColor: currentTheme.uiColors.secondary }]} 
               onPress={() => setSaveModal({ visible: false, slotIndex: null, isOverwrite: false })}
             >
-              <Text allowFontScaling={false} style={styles.saveInputButtonText}>Cancel</Text>
+              <Text allowFontScaling={false} style={[styles.saveInputButtonText, { color: currentTheme.uiColors.buttonText }]}>Cancel</Text>
             </TouchableOpacity>
             <TouchableOpacity 
-              style={[styles.saveInputButton, styles.confirmButton]} 
+              style={[styles.saveInputButton, { backgroundColor: currentTheme.uiColors.accent }]} 
               onPress={handleSaveToSlot} 
               disabled={isLoading || !saveName.trim()}
             >
-              {isLoading ? <ActivityIndicator color="white" /> : <Text allowFontScaling={false} style={styles.saveInputButtonText}>Save</Text>}
+              {isLoading ? <ActivityIndicator color={currentTheme.uiColors.buttonText} /> : <Text allowFontScaling={false} style={[styles.saveInputButtonText, { color: currentTheme.uiColors.buttonText }]}>Save</Text>}
             </TouchableOpacity>
           </View>
         </View>
@@ -294,13 +294,13 @@ export const SaveLoadModal: React.FC<SaveLoadModalProps> = ({
     <Modal visible={successModal.visible} transparent animationType="fade" onRequestClose={() => setSuccessModal({ visible: false, message: '' })}>
       <View style={styles.successOverlay}>
         <View style={[styles.successContainer, { backgroundColor: currentTheme.uiColors.modalBackground }]}>
-          <Text allowFontScaling={false} style={styles.successTitle}>Success!</Text>
+          <Text allowFontScaling={false} style={[styles.successTitle, { color: currentTheme.uiColors.accent }]}>Success!</Text>
           <Text allowFontScaling={false} style={[styles.successMessage, { color: currentTheme.uiColors.text }]}>{successModal.message}</Text>
           <TouchableOpacity 
-            style={styles.successButton} 
+            style={[styles.successButton, { backgroundColor: currentTheme.uiColors.accent }]} 
             onPress={() => setSuccessModal({ visible: false, message: '' })}
           >
-            <Text allowFontScaling={false} style={styles.successButtonText}>OK</Text>
+            <Text allowFontScaling={false} style={[styles.successButtonText, { color: currentTheme.uiColors.buttonText }]}>OK</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -360,10 +360,10 @@ export const SaveLoadModal: React.FC<SaveLoadModalProps> = ({
                   <View style={[styles.instructionsContainer, { backgroundColor: currentTheme.uiColors.cardBackground, borderColor: currentTheme.uiColors.secondary }]}>
                     <Text allowFontScaling={false} style={[styles.instructionsTitle, { color: currentTheme.uiColors.text }]}>Instructions:</Text>
                     <Text allowFontScaling={false} style={[styles.instructionsText, { color: currentTheme.uiColors.secondary }]}>
-                      • Tap "Save" to save your current activities to an empty slot{'\n'}
-                      • Tap "Load" to replace your current activities with saved ones{'\n'}
-                      • Tap "Overwrite" to replace an existing save{'\n'}
-                      • Tap "Delete" to remove a saved activity list
+                      • Tap &quot;Save&quot; to save your current activities to an empty slot{'\n'}
+                      • Tap &quot;Load&quot; to replace your current activities with saved ones{'\n'}
+                      • Tap &quot;Overwrite&quot; to replace an existing save{'\n'}
+                      • Tap &quot;Delete&quot; to remove a saved activity list
                     </Text>
                   </View>
                 </>
@@ -552,16 +552,16 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   loadButton: {
-    backgroundColor: '#4CAF50',
+    // Themed color applied dynamically
   },
   overwriteButton: {
-    backgroundColor: '#FF9800',
+    // Themed color applied dynamically  
   },
   deleteButton: {
-    backgroundColor: '#F44336',
+    // Themed color applied dynamically
   },
   actionButtonText: {
-    color: 'white',
+    // Color applied dynamically based on theme
     fontSize: 12,
     fontWeight: 'bold',
     fontFamily: FONTS.nunito,
@@ -630,14 +630,8 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: 'center',
   },
-  cancelButton: {
-    backgroundColor: '#666',
-  },
-  confirmButton: {
-    backgroundColor: '#4CAF50',
-  },
   saveInputButtonText: {
-    color: 'white',
+    // Color applied dynamically based on theme
     fontSize: 16,
     fontWeight: 'bold',
     fontFamily: FONTS.nunito,
@@ -688,14 +682,8 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: 'center',
   },
-  confirmationCancelButton: {
-    backgroundColor: '#666',
-  },
-  confirmationConfirmButton: {
-    backgroundColor: '#F44336',
-  },
   confirmationButtonText: {
-    color: 'white',
+    // Color applied dynamically based on theme
     fontSize: 16,
     fontWeight: 'bold',
     fontFamily: FONTS.nunito,
@@ -726,7 +714,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 10,
     textAlign: 'center',
-    color: '#4CAF50',
+    // Color applied dynamically based on theme
     fontFamily: FONTS.nunito,
   },
   successMessage: {
@@ -737,13 +725,13 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.nunito,
   },
   successButton: {
-    backgroundColor: '#4CAF50',
+    // Background color applied dynamically based on theme
     paddingVertical: 12,
     borderRadius: 8,
     alignItems: 'center',
   },
   successButtonText: {
-    color: 'white',
+    // Color applied dynamically based on theme
     fontSize: 16,
     fontWeight: 'bold',
     fontFamily: FONTS.nunito,

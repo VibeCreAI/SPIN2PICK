@@ -209,16 +209,11 @@ export const ActivityInput: React.FC<ActivityInputProps> = ({
               <TouchableOpacity 
                 style={styles.iconButton}
                 onPress={() => setShowListModal(true)}
-                disabled={activities.length === 0}
                 activeOpacity={0.7}
               >
                 <Text allowFontScaling={false} style={[
                   styles.iconButtonText,
-                  { 
-                    color: activities.length === 0 
-                      ? currentTheme.uiColors.secondary 
-                      : currentTheme.uiColors.primary 
-                  }
+                  { color: currentTheme.uiColors.primary }
                 ]}>
                   📃
                 </Text>

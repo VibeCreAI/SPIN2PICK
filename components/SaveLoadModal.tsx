@@ -33,14 +33,7 @@ export const SaveLoadModal: React.FC<SaveLoadModalProps> = ({
   const [saveSlots, setSaveSlots] = useState<(SaveSlot | null)[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Debug logging
-  useEffect(() => {
-    if (visible) {
-      console.log('💾 SaveLoadModal opened');
-      console.log('💾 Current activities count:', currentActivities.length);
-      console.log('💾 Save slots:', saveSlots.length);
-    }
-  }, [visible, currentActivities, saveSlots]);
+
 
   // State for the save input modal
   const [saveModal, setSaveModal] = useState<{ visible: boolean; slotIndex: number | null; isOverwrite: boolean }>({ visible: false, slotIndex: null, isOverwrite: false });
@@ -69,12 +62,10 @@ export const SaveLoadModal: React.FC<SaveLoadModalProps> = ({
   }, [visible]);
 
   const loadSaveSlots = async () => {
-    console.log('💾 Loading save slots...');
     setIsLoading(true);
     try {
       const savedSlotsJSON = await AsyncStorage.getItem(SAVE_SLOTS_KEY);
       const savedSlots = savedSlotsJSON ? JSON.parse(savedSlotsJSON) : [];
-      console.log('💾 Loaded slots from storage:', savedSlots.length);
       const slotsWithDates = savedSlots.map((slot: SaveSlot) => ({
         ...slot,
         createdAt: new Date(slot.createdAt),
@@ -87,7 +78,6 @@ export const SaveLoadModal: React.FC<SaveLoadModalProps> = ({
         }
       });
       setSaveSlots(fullSlots);
-      console.log('💾 Save slots loaded successfully');
     } catch (error) {
       console.error('❌ Error loading save slots:', error);
       setSaveSlots(new Array(MAX_SLOTS).fill(null));

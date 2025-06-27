@@ -68,14 +68,7 @@ export const ActivityListModal: React.FC<ActivityListModalProps> = ({
   const MODAL_MAX_WIDTH = 500;
   const containerWidth = screenWidth < MODAL_MAX_WIDTH ? '95%' : MODAL_MAX_WIDTH;
 
-  // Debug logging
-  useEffect(() => {
-    if (visible) {
-      console.log('📃 ActivityListModal opened');
-      console.log('📃 Activities count:', activities.length);
-      console.log('📃 Activities:', activities.map(a => ({ id: a.id, name: a.name })));
-    }
-  }, [visible, activities]);
+
 
   // Reset states when modal opens
   useEffect(() => {
@@ -127,7 +120,6 @@ export const ActivityListModal: React.FC<ActivityListModalProps> = ({
   };
 
   const handleDeletePress = (activity: Activity) => {
-    console.log('🗑️ Delete button pressed for:', activity.name);
     setConfirmationModal({
       visible: true,
       activityName: activity.name,
@@ -137,20 +129,17 @@ export const ActivityListModal: React.FC<ActivityListModalProps> = ({
 
   const handleConfirmDelete = () => {
     if (confirmationModal.activityName) {
-      console.log('🗑️ Confirming delete for:', confirmationModal.activityName);
       onDeleteActivity(confirmationModal.activityName);
       setConfirmationModal({ visible: false, activityName: '', activityEmoji: '' });
     }
   };
 
   const handleCancelDelete = () => {
-    console.log('🗑️ Canceling delete');
     setConfirmationModal({ visible: false, activityName: '', activityEmoji: '' });
   };
 
   const handleAddBulkActivities = () => {
     if (parsedActivities.length > 0) {
-      console.log('📝 Adding bulk activities:', parsedActivities);
       onAddActivities(parsedActivities);
       setBulkInputText('');
       setParsedActivities([]);
@@ -159,7 +148,6 @@ export const ActivityListModal: React.FC<ActivityListModalProps> = ({
   };
 
   const handleGenerateAIActivities = () => {
-    console.log('🤖 Generating', aiActivityCount, 'AI activities');
     onBulkAISuggest(aiActivityCount);
   };
 
@@ -173,7 +161,6 @@ export const ActivityListModal: React.FC<ActivityListModalProps> = ({
 
   const handleAcceptSelectedSuggestions = () => {
     if (selectedSuggestions.length > 0) {
-      console.log('✅ Accepting selected AI suggestions:', selectedSuggestions);
       onAcceptBulkSuggestions(selectedSuggestions);
       setSelectedSuggestions([]);
       setActiveTab('view'); // Switch back to view tab to see results

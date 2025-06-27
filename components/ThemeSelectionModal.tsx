@@ -26,20 +26,10 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
   const screenWidth = Dimensions.get('window').width;
   const modalWidth = screenWidth < 500 ? '95%' : 500;
 
-  // Debug logging
-  React.useEffect(() => {
-    if (visible) {
-      console.log('🎨 ThemeSelectionModal opened');
-      console.log('🎨 Available themes:', availableThemes.length);
-      console.log('🎨 Current theme:', currentTheme.displayName);
-      console.log('🎨 Is loading:', isLoading);
-      console.log('🎨 Theme IDs:', availableThemes.map(t => t.id));
-    }
-  }, [visible, availableThemes, currentTheme, isLoading]);
+
 
   const handleThemeSelect = async (themeId: string) => {
     try {
-      console.log('🎨 Selecting theme:', themeId);
       await setTheme(themeId);
       // Small delay to show the selection before closing
       setTimeout(() => {

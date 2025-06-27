@@ -10,14 +10,11 @@ const getApiBaseUrl = (): string => {
   const configuredUrl = Constants.expoConfig?.extra?.apiBaseUrl;
   
   if (configuredUrl) {
-    console.log('📡 Using configured API URL:', configuredUrl);
     return configuredUrl;
   }
   
   // Fallback to deployed API (no API keys exposed)
-  const fallbackUrl = 'https://spin2pick-app.vercel.app';
-  console.log('📡 Using fallback API URL:', fallbackUrl);
-  return fallbackUrl;
+  return 'https://spin2pick-app.vercel.app';
 };
 
 /**
@@ -131,18 +128,10 @@ export const getEmoji = async (activityName: string): Promise<string> => {
  * @returns A promise that resolves to a suggested activity name
  */
 export const getAISuggestedActivity = async (existingActivities: string[], declinedSuggestions: string[] = []): Promise<string> => {
-  console.log('🚀 Starting AI suggestion request...');
-  console.log('📝 Existing activities:', existingActivities);
-  console.log('🚫 Declined suggestions:', declinedSuggestions);
-  
   try {
     const baseUrl = getApiBaseUrl();
-    console.log('🌐 API Base URL:', baseUrl);
-    
     const requestBody = { existingActivities, declinedSuggestions };
-    console.log('📦 Request body:', JSON.stringify(requestBody, null, 2));
     
-    console.log('📡 Making fetch request...');
     const response = await fetch(`${baseUrl}/api/suggest-activity`, {
       method: 'POST',
       headers: {
@@ -151,42 +140,27 @@ export const getAISuggestedActivity = async (existingActivities: string[], decli
       body: JSON.stringify(requestBody)
     });
 
-    console.log('📈 Response status:', response.status);
-    console.log('📈 Response headers:', Object.fromEntries(response.headers.entries()));
-
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('❌ API Response Error:');
-      console.error('   Status:', response.status, response.statusText);
-      console.error('   Error body:', errorText);
-      console.log('🔄 Falling back to random activity');
+      console.error('❌ AI API Error:', response.status, response.statusText, errorText);
       return getRandomFallbackActivity([...existingActivities, ...declinedSuggestions]);
     }
 
-    console.log('✅ Response OK, parsing JSON...');
     const data = await response.json();
-    console.log('📋 Full API Response Structure:');
-    console.log(JSON.stringify(data, null, 2));
     
     // Check if response has expected structure
     if (!data.choices || !Array.isArray(data.choices) || data.choices.length === 0) {
-      console.error('❌ Invalid response structure - no choices array');
-      console.log('🔄 Falling back to random activity');
+      console.error('❌ Invalid AI response structure - no choices array');
       return getRandomFallbackActivity([...existingActivities, ...declinedSuggestions]);
     }
     
     const choice = data.choices[0];
-    console.log('🎯 First choice object:', JSON.stringify(choice, null, 2));
-    
     if (!choice.message || !choice.message.content) {
-      console.error('❌ Invalid choice structure - no message.content');
-      console.log('🔄 Falling back to random activity');
+      console.error('❌ Invalid AI choice structure - no message.content');
       return getRandomFallbackActivity([...existingActivities, ...declinedSuggestions]);
     }
     
     let rawResponse = choice.message.content;
-    console.log('🤖 Raw AI response (type: ' + typeof rawResponse + '):', JSON.stringify(rawResponse));
-    console.log('🤖 Raw AI response (length: ' + rawResponse.length + '):', rawResponse);
     
     // More comprehensive cleaning
     let suggestedActivity = rawResponse
@@ -200,60 +174,25 @@ export const getAISuggestedActivity = async (existingActivities: string[], decli
       .split(',')[0] // Take only first part before comma
       .trim();
 
-    console.log('🧹 After cleaning steps:');
-    console.log('   - Remove quotes/backticks');
-    console.log('   - Remove periods');
-    console.log('   - Remove dashes');
-    console.log('   - Remove numbered format');
-    console.log('   - Split by newline (first part)');
-    console.log('   - Split by period (first sentence)');
-    console.log('   - Split by comma (first part)');
-    console.log('   - Final trim');
-    console.log('🧹 Cleaned response:', JSON.stringify(suggestedActivity));
-    console.log('🧹 Cleaned length:', suggestedActivity.length);
-
     // Very permissive validation - only reject truly invalid responses
     if (/^[\s]*$/.test(suggestedActivity) || /[^\w\s&'.,!-]/.test(suggestedActivity)) {
-      console.log('❌ VALIDATION FAILED: Contains invalid characters or is empty');
-      console.log('   String breakdown:');
-      for (let i = 0; i < suggestedActivity.length; i++) {
-        const char = suggestedActivity[i];
-        const code = char.charCodeAt(0);
-        console.log(`   [${i}]: "${char}" (code: ${code})`);
-      }
-      console.log('🔄 Falling back to random activity');
+      console.error('❌ AI suggestion validation failed: invalid characters or empty');
       return getRandomFallbackActivity([...existingActivities, ...declinedSuggestions]);
     }
-    console.log('✅ Basic validation passed');
 
     if (existingActivities.includes(suggestedActivity)) {
-      console.log('❌ VALIDATION FAILED: Duplicate activity suggested');
-      console.log('   Suggested:', JSON.stringify(suggestedActivity));
-      console.log('   Existing:', existingActivities);
-      console.log('🔄 Falling back to random activity');
+      console.error('❌ AI suggested duplicate activity:', suggestedActivity);
       return getRandomFallbackActivity([...existingActivities, ...declinedSuggestions]);
     }
-    console.log('✅ Not a duplicate from existing activities');
 
     if (declinedSuggestions.includes(suggestedActivity)) {
-      console.log('❌ VALIDATION FAILED: Previously declined activity suggested');
-      console.log('   Suggested:', JSON.stringify(suggestedActivity));
-      console.log('   Declined:', declinedSuggestions);
-      console.log('🔄 Falling back to random activity');
+      console.error('❌ AI suggested previously declined activity:', suggestedActivity);
       return getRandomFallbackActivity([...existingActivities, ...declinedSuggestions]);
     }
-    console.log('✅ Not a previously declined suggestion');
-
-    console.log('🎉 ALL VALIDATIONS PASSED!');
-    console.log('✅ Accepting AI suggestion:', JSON.stringify(suggestedActivity));
     return suggestedActivity;
     
   } catch (error: unknown) {
-    console.error('💥 Exception in getAISuggestedActivity:');
-    console.error('   Error type:', error?.constructor?.name || 'Unknown');
-    console.error('   Error message:', error instanceof Error ? error.message : String(error));
-    console.error('   Full error:', error);
-    console.log('🔄 Falling back to random activity');
+    console.error('❌ AI suggestion failed:', error instanceof Error ? error.message : String(error));
     return getRandomFallbackActivity([...existingActivities, ...declinedSuggestions]);
   }
 };

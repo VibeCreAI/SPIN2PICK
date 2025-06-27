@@ -178,7 +178,6 @@ export default function HomeScreen() {
     const saveActivities = async () => {
       try {
         if (!isLoading) {
-          console.log('💾 Saving activities to storage:', activities.map(a => ({ name: a.name, color: a.color })));
           await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(activities));
         }
       } catch (error) {
@@ -227,8 +226,6 @@ export default function HomeScreen() {
         const limited = updated.slice(-20);
         
         await AsyncStorage.setItem(DECLINED_SUGGESTIONS_KEY, JSON.stringify(limited));
-        console.log('💾 Stored declined suggestion:', suggestion);
-        console.log('📝 Total declined suggestions:', limited.length);
       }
     } catch (error) {
       console.error('Error storing declined suggestion:', error);
@@ -238,7 +235,6 @@ export default function HomeScreen() {
   const clearDeclinedSuggestions = async (): Promise<void> => {
     try {
       await AsyncStorage.removeItem(DECLINED_SUGGESTIONS_KEY);
-      console.log('🧹 Cleared all declined suggestions');
     } catch (error) {
       console.error('Error clearing declined suggestions:', error);
     }
@@ -247,7 +243,6 @@ export default function HomeScreen() {
   const onLayout = (event: LayoutChangeEvent) => {
     const { width } = event.nativeEvent.layout;
     setContainerWidth(width);
-    console.log('[HomeScreen] onLayout - Container Width:', width);
   };
 
   const handleAddActivity = async (name: string) => {
@@ -270,7 +265,6 @@ export default function HomeScreen() {
       setActivities(recoloredActivities);
       
       // Set the newly added activity for highlighting
-      console.log('🎯 Setting newly added activity ID:', newActivity.id, 'for activity:', newActivity.name);
       setNewlyAddedActivityId(newActivity.id);
     } catch (error) {
       console.error('Error adding activity with emoji:', error);
@@ -308,8 +302,6 @@ export default function HomeScreen() {
       // Show popup with suggestion instead of directly adding
       setPendingSuggestion(suggestedActivityName);
       setShowSuggestionPopup(true);
-      
-      console.log('✨ AI suggested activity:', suggestedActivityName);
     } catch (error) {
       console.error('Error suggesting activity:', error);
       alert('Sorry, I couldn&apos;t suggest an activity right now. Please try again!');
@@ -341,8 +333,6 @@ export default function HomeScreen() {
       
       // Set the newly added activity for highlighting
       setNewlyAddedActivityId(newActivity.id);
-      
-      console.log('✅ Accepted AI suggestion:', pendingSuggestion);
     } catch (error) {
       console.error('Error adding suggested activity:', error);
       alert('Sorry, there was an error adding the activity. Please try again!');
@@ -359,7 +349,6 @@ export default function HomeScreen() {
     // Store the declined suggestion
     await storeDeclinedSuggestion(pendingSuggestion);
     
-    console.log('❌ Declined AI suggestion:', pendingSuggestion);
     setPendingSuggestion(null);
     setShowSuggestionPopup(false);
   };
@@ -473,7 +462,6 @@ export default function HomeScreen() {
 
   // New handlers for bulk functionality
   const handleAddActivities = async (activityNames: string[]) => {
-    console.log('📝 Adding bulk activities:', activityNames);
     
     for (const name of activityNames) {
       try {
@@ -515,7 +503,6 @@ export default function HomeScreen() {
   };
 
   const handleBulkAISuggest = async (count: number, category?: string) => {
-    console.log('🤖 Generating', count, 'AI activities', category ? `for category: ${category}` : '');
     setIsLoadingBulkAI(true);
     
     try {
@@ -528,11 +515,8 @@ export default function HomeScreen() {
       const maxAttempts = count * 2; // Try more times to get enough unique suggestions
       let attempts = 0;
       
-      console.log('🔄 Using multiple single AI suggestions to generate bulk activities...');
-      
       while (suggestions.length < count && attempts < maxAttempts) {
         attempts++;
-        console.log(`🎯 Attempt ${attempts}: Getting suggestion ${suggestions.length + 1} of ${count}`);
         
         try {
           // Use existing working function with current state
@@ -542,9 +526,6 @@ export default function HomeScreen() {
           // Check if suggestion is unique
           if (!suggestions.includes(newSuggestion) && !existingActivityNames.includes(newSuggestion)) {
             suggestions.push(newSuggestion);
-            console.log(`✅ Added suggestion ${suggestions.length}: "${newSuggestion}"`);
-          } else {
-            console.log(`⚠️ Duplicate suggestion "${newSuggestion}", trying again...`);
           }
         } catch (error) {
           console.error(`❌ Error getting suggestion ${attempts}:`, error);
@@ -553,7 +534,6 @@ export default function HomeScreen() {
       }
       
       setBulkAISuggestions(suggestions);
-      console.log('✨ Generated', suggestions.length, 'AI suggestions:', suggestions);
       
       if (suggestions.length === 0) {
         alert('Sorry, I couldn\'t generate activities right now. Please try again!');
@@ -567,13 +547,11 @@ export default function HomeScreen() {
   };
 
   const handleAcceptBulkSuggestions = async (selectedActivities: string[]) => {
-    console.log('✅ Accepting bulk AI suggestions:', selectedActivities);
     await handleAddActivities(selectedActivities);
     setBulkAISuggestions([]);
   };
 
   const handleClearBulkSuggestions = () => {
-    console.log('🧹 Clearing bulk AI suggestions');
     setBulkAISuggestions([]);
   };
 
@@ -609,26 +587,21 @@ export default function HomeScreen() {
                               <ThemedText style={[styles.subtitle, { color: currentTheme.uiColors.secondary }]}>Press ✨ for AI suggestions, 📃 to manage!</ThemedText>
 
               {containerWidth > 0 ? (
-                (() => {
-                  console.log('🎯 Rendering RouletteWheel with activities:', activities.map(a => ({ name: a.name, color: a.color })));
-                  return (
-                    <ErrorBoundary>
-                      <RouletteWheel
-                        activities={activities}
-                        onActivitySelect={handleActivitySelect}
-                        onActivityDelete={handleDeleteActivity}
-                        parentWidth={containerWidth}
-                        selectedActivity={selectedActivity}
-                        onPreviousActivityChange={handlePreviousActivityChange}
-                        newlyAddedActivityId={newlyAddedActivityId}
-                        onNewActivityIndicatorComplete={handleNewActivityIndicatorComplete}
-                        onReset={handleReset}
-                        onOpenTheme={handleOpenTheme}
-                        onSaveLoad={handleSaveLoad}
-                      />
-                    </ErrorBoundary>
-                  );
-                })()
+                <ErrorBoundary>
+                  <RouletteWheel
+                    activities={activities}
+                    onActivitySelect={handleActivitySelect}
+                    onActivityDelete={handleDeleteActivity}
+                    parentWidth={containerWidth}
+                    selectedActivity={selectedActivity}
+                    onPreviousActivityChange={handlePreviousActivityChange}
+                    newlyAddedActivityId={newlyAddedActivityId}
+                    onNewActivityIndicatorComplete={handleNewActivityIndicatorComplete}
+                    onReset={handleReset}
+                    onOpenTheme={handleOpenTheme}
+                    onSaveLoad={handleSaveLoad}
+                  />
+                </ErrorBoundary>
               ) : (
                 <ThemedText style={{textAlign: 'center', marginVertical: 20, color: currentTheme.uiColors.text}}>Loading wheel...</ThemedText>
               )}

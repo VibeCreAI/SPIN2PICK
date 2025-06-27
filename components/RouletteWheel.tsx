@@ -201,9 +201,7 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
 
   // Handle new activity indicator
   useEffect(() => {
-    console.log('🆕 New activity indicator effect triggered:', newlyAddedActivityId);
     if (newlyAddedActivityId) {
-      console.log('🎯 Setting new indicator for activity:', newlyAddedActivityId);
       setShowNewIndicator(newlyAddedActivityId);
       
       // Start the indicator animation
@@ -602,13 +600,7 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
             const avgCharWidth = fontSize * 0.7;
             const maxCharsFromSpace = Math.floor(availableArcLength / avgCharWidth);
             
-            console.log(`🎯 Dynamic Concentric Wheels for ${activities.length} activities:`);
-            console.log(`   📏 Text wheel: ${(textRadius/CENTER*100).toFixed(1)}% | Emoji wheel: ${(emojiRadius/CENTER*100).toFixed(1)}%`);
-            console.log(`   🔤 Font sizes: text=${fontSize}px, emoji=${emojiFontSize}px`);
-            console.log(`   📐 Arc calc: ${availableArcLength.toFixed(1)}px ÷ ${avgCharWidth.toFixed(1)}px = ${maxCharsFromSpace} chars`);
-            console.log(`   📝 Final limit: ${maxChars} chars (after activity-based cap)`);
-            console.log(`   🎨 Slice angle: ${sliceAngleDegrees.toFixed(1)}°`);
-            console.log(`   ✨ Text alignment: START from wheel boundary (not centered)`);
+            
           }
           
           // FORCE SINGLE LINE for many activities by truncating if necessary
@@ -770,9 +762,6 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
 
         // Check if this is the newly added activity
         const isNewActivity = showNewIndicator === activity.id;
-        if (isNewActivity) {
-          console.log('✨ Rendering NEW indicator for activity:', activity.name, activity.id);
-        }
 
         return (
           <G key={`segment-${activity.id}`}>
@@ -813,18 +802,13 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
 
   // Handle deleting an activity when trash icon is clicked
   const handleDeleteActivity = (activityId: string, fromTextClick = false) => {
-    console.log('🔥 handleDeleteActivity called:', { activityId, fromTextClick, activitiesLength: activities.length, isSpinning });
-    
     // Only block during spinning
     if (isSpinning) {
-      console.log('❌ Blocked: Currently spinning');
       return;
     }
 
     // For 1 activity, allow deletion when clicking the wheel (let parent handle confirmation)
     if (activities.length === 1 && fromTextClick) {
-      console.log('✅ Single activity deletion - delegating to parent');
-      
       // Play click sound for feedback
       playClickSound();
       
@@ -832,19 +816,16 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
       try {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       } catch (error) {
-        console.log('🔧 Haptics not available:', error);
+        // Ignore if haptics not available
       }
       
       // Delete the activity (parent will handle confirmation via custom modal)
-      console.log('🗑️ Calling onActivityDelete with ID:', activityId);
       onActivityDelete(activityId);
       return;
     }
 
     // For 2 activities, allow deletion when clicking text (let parent handle confirmation)
     if (activities.length === 2 && fromTextClick) {
-      console.log('✅ Text click deletion for 2 activities - delegating to parent');
-      
       // Play click sound for feedback
       playClickSound();
       
@@ -852,19 +833,16 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
       try {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       } catch (error) {
-        console.log('🔧 Haptics not available:', error);
+        // Ignore if haptics not available
       }
       
       // Delete the activity (parent will handle confirmation via custom modal)
-      console.log('🗑️ Calling onActivityDelete with ID:', activityId);
       onActivityDelete(activityId);
       return;
     }
 
     // For 3+ activities, delete normally (through trash button)
     if (activities.length > 2 && !fromTextClick) {
-      console.log('✅ Normal deletion for 3+ activities');
-      
       // Play click sound for feedback
       playClickSound();
       
@@ -877,13 +855,6 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
       
       // Delete the activity
       onActivityDelete(activityId);
-    } else {
-      console.log('❌ No action taken - conditions not met:', {
-        activitiesLength: activities.length,
-        fromTextClick,
-        condition1: activities.length === 2 && fromTextClick,
-        condition2: activities.length > 2 && !fromTextClick
-      });
     }
   };
 
@@ -976,12 +947,7 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
         angle: midAngleDegrees
       };
       
-      // DEBUG: Log click area positions
-      console.log(`🎯 Text click area for "${activity.name}":`, {
-        textRadius: textRadius.toFixed(1),
-        angle: midAngleDegrees.toFixed(1),
-        position: `(${position.x.toFixed(1)}, ${position.y.toFixed(1)})`
-      });
+
       
       return position;
     });
@@ -1131,7 +1097,6 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
                 }
               ]}
               onPress={() => {
-                console.log('🔴 Text click detected for activity:', textArea.id);
                 handleDeleteActivity(textArea.id, true);
               }}
               activeOpacity={0.5}
@@ -1152,7 +1117,6 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
               }
             ]}
             onPress={() => {
-              console.log('🔴 Single activity click detected for:', activities[0].id);
               handleDeleteActivity(activities[0].id, true);
             }}
             activeOpacity={0.7}

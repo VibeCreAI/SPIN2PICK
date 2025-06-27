@@ -1,5 +1,5 @@
 import { FONTS } from '@/app/_layout';
-import React, { useCallback, useEffect, useLayoutEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   Dimensions,
   Modal,
@@ -86,10 +86,7 @@ export const ActivityInput: React.FC<ActivityInputProps> = ({
     return () => subscription?.remove();
   }, []);
 
-  // Optional: Log initial dimensions for debugging
-  useLayoutEffect(() => {
-    console.log('🎯 ActivityInput: Initial dimensions set to:', screenDimensions.width);
-  }, []); // Run once to log initial state
+
 
   // Get screen dimensions for responsive design (simplified)
   const screenData = screenDimensions;

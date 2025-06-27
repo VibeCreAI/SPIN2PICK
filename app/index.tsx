@@ -132,7 +132,7 @@ export default function HomeScreen() {
       setActivities(rethemedActivities);
       console.log('🎨 Updated activity colors for theme:', currentTheme.displayName);
     }
-  }, [currentTheme.id]); // Only run when theme ID changes
+  }, [currentTheme.id, currentTheme.wheelColors]); // Run when theme ID or wheel colors change
 
   // Load saved activities and initialize sounds when app starts
   useEffect(() => {

@@ -259,25 +259,46 @@ export const getThemeById = (themeId: string): ColorTheme => {
   return COLOR_THEMES.find(theme => theme.id === themeId) || COLOR_THEMES[0];
 };
 
+// Helper function to create a very light tint from a color for backgrounds
+const createLightTint = (hexColor: string): string => {
+  // Convert hex to RGB
+  const r = parseInt(hexColor.slice(1, 3), 16);
+  const g = parseInt(hexColor.slice(3, 5), 16);
+  const b = parseInt(hexColor.slice(5, 7), 16);
+  
+  // Create a very light tint by blending with white (95% white, 5% color)
+  const tintedR = Math.round(r * 0.05 + 255 * 0.95);
+  const tintedG = Math.round(g * 0.05 + 255 * 0.95);
+  const tintedB = Math.round(b * 0.05 + 255 * 0.95);
+  
+  // Convert back to hex
+  return '#' + ((1 << 24) + (tintedR << 16) + (tintedG << 8) + tintedB).toString(16).slice(1).toUpperCase();
+};
+
 // Create custom theme object
-export const createCustomTheme = (customData: CustomThemeData): ColorTheme => ({
-  id: 'custom',
-  name: 'custom',
-  displayName: customData.name || 'My Custom Theme',
-  emoji: '⭐',
-  backgroundColor: '#ffffff',
-  wheelColors: customData.colors,
-  uiColors: {
-    primary: customData.colors[0],
-    secondary: customData.colors[1],
-    accent: customData.colors[2],
-    text: '#333333',
-    cardBackground: '#ffffff',
-    modalBackground: '#ffffff',
-    buttonBackground: customData.colors[2],
-    buttonText: '#ffffff',
-  }
-});
+export const createCustomTheme = (customData: CustomThemeData): ColorTheme => {
+  // Use the first color to create a subtle background tint
+  const backgroundTint = createLightTint(customData.colors[0]);
+  
+  return {
+    id: 'custom',
+    name: 'custom',
+    displayName: customData.name || 'My Custom Theme',
+    emoji: '⭐',
+    backgroundColor: backgroundTint,
+    wheelColors: customData.colors,
+    uiColors: {
+      primary: customData.colors[0],
+      secondary: customData.colors[1],
+      accent: customData.colors[2],
+      text: '#333333',
+      cardBackground: '#ffffff',
+      modalBackground: '#ffffff',
+      buttonBackground: customData.colors[2],
+      buttonText: '#ffffff',
+    }
+  };
+};
 
 // Save custom theme
 export const saveCustomTheme = async (customData: CustomThemeData): Promise<void> => {

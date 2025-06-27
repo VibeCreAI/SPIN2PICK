@@ -341,4 +341,108 @@ export const reassignAllColors = (activities: Activity[], colorPalette: string[]
 };
 
 // Default storage key for theme persistence
-export const THEME_STORAGE_KEY = 'SPIN2PICK_THEME'; 
+export const THEME_STORAGE_KEY = 'SPIN2PICK_THEME';
+
+// HSV to RGB conversion
+export const hsvToRgb = (h: number, s: number, v: number): [number, number, number] => {
+  const c = v * s;
+  const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+  const m = v - c;
+  
+  let r = 0, g = 0, b = 0;
+  
+  if (h >= 0 && h < 60) {
+    r = c; g = x; b = 0;
+  } else if (h >= 60 && h < 120) {
+    r = x; g = c; b = 0;
+  } else if (h >= 120 && h < 180) {
+    r = 0; g = c; b = x;
+  } else if (h >= 180 && h < 240) {
+    r = 0; g = x; b = c;
+  } else if (h >= 240 && h < 300) {
+    r = x; g = 0; b = c;
+  } else if (h >= 300 && h < 360) {
+    r = c; g = 0; b = x;
+  }
+  
+  return [
+    Math.round((r + m) * 255),
+    Math.round((g + m) * 255),
+    Math.round((b + m) * 255)
+  ];
+};
+
+// RGB to Hex conversion
+export const rgbToHex = (r: number, g: number, b: number): string => {
+  return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1).toUpperCase();
+};
+
+// Hex to HSV conversion
+export const hexToHsv = (hex: string): [number, number, number] => {
+  const r = parseInt(hex.slice(1, 3), 16) / 255;
+  const g = parseInt(hex.slice(3, 5), 16) / 255;
+  const b = parseInt(hex.slice(5, 7), 16) / 255;
+  
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const diff = max - min;
+  
+  let h = 0;
+  if (diff !== 0) {
+    if (max === r) {
+      h = ((g - b) / diff) % 6;
+    } else if (max === g) {
+      h = (b - r) / diff + 2;
+    } else {
+      h = (r - g) / diff + 4;
+    }
+  }
+  h = Math.round(h * 60);
+  if (h < 0) h += 360;
+  
+  const s = max === 0 ? 0 : diff / max;
+  const v = max;
+  
+  return [h, s, v];
+};
+
+// Generate random vibrant colors
+export const generateRandomColors = (count: number = 12): string[] => {
+  const colors: string[] = [];
+  const goldenRatio = 0.618033988749895;
+  let hue = Math.random();
+  
+  for (let i = 0; i < count; i++) {
+    // Use golden ratio to distribute hues evenly
+    hue = (hue + goldenRatio) % 1;
+    
+    // Generate vibrant colors with good saturation and brightness
+    const h = Math.round(hue * 360);
+    const s = 0.7 + Math.random() * 0.3; // 70-100% saturation
+    const v = 0.8 + Math.random() * 0.2; // 80-100% brightness
+    
+    const [r, g, b] = hsvToRgb(h, s, v);
+    colors.push(rgbToHex(r, g, b));
+  }
+  
+  return colors;
+};
+
+// Generate harmonious color palette
+export const generateHarmoniousColors = (baseColor: string, count: number = 12): string[] => {
+  const [baseH, baseS, baseV] = hexToHsv(baseColor);
+  const colors: string[] = [];
+  
+  for (let i = 0; i < count; i++) {
+    // Create variations based on the base color
+    const hueShift = (i * 30) % 360; // Shift hue by 30 degrees
+    const h = (baseH + hueShift) % 360;
+    const s = Math.max(0.5, baseS + (Math.random() - 0.5) * 0.3);
+    const v = Math.max(0.6, baseV + (Math.random() - 0.5) * 0.3);
+    
+    const [r, g, b] = hsvToRgb(h, s, v);
+    colors.push(rgbToHex(r, g, b));
+  }
+  
+  return colors;
+}; 

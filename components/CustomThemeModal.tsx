@@ -12,7 +12,8 @@ import {
     View
 } from 'react-native';
 import { useTheme } from '../hooks/useTheme';
-import { CustomThemeData, DEFAULT_CUSTOM_COLORS } from '../utils/colorUtils';
+import { CustomThemeData, DEFAULT_CUSTOM_COLORS, generateHarmoniousColors, generateRandomColors } from '../utils/colorUtils';
+import ColorPicker from './ColorPicker';
 
 interface CustomThemeModalProps {
   visible: boolean;
@@ -28,6 +29,7 @@ export const CustomThemeModal: React.FC<CustomThemeModalProps> = ({
   const [colors, setColors] = useState<string[]>([...DEFAULT_CUSTOM_COLORS]);
   const [selectedColorIndex, setSelectedColorIndex] = useState(0);
   const [colorInput, setColorInput] = useState('#FF6B6B');
+  const [useVisualPicker, setUseVisualPicker] = useState(false);
 
   const screenWidth = Dimensions.get('window').width;
   const modalWidth = screenWidth < 500 ? '95%' : 500;
@@ -58,6 +60,19 @@ export const CustomThemeModal: React.FC<CustomThemeModalProps> = ({
     } catch (error) {
       Alert.alert('Error', 'Failed to save custom theme. Please try again.');
     }
+  };
+
+  const handleRandomColors = () => {
+    const randomColors = generateRandomColors(12);
+    setColors(randomColors);
+    setColorInput(randomColors[selectedColorIndex]);
+  };
+
+  const handleHarmoniousColors = () => {
+    const baseColor = colors[selectedColorIndex];
+    const harmoniousColors = generateHarmoniousColors(baseColor, 12);
+    setColors(harmoniousColors);
+    setColorInput(harmoniousColors[selectedColorIndex]);
   };
 
   const isValidHexColor = (color: string): boolean => {
@@ -157,48 +172,114 @@ export const CustomThemeModal: React.FC<CustomThemeModalProps> = ({
 
             {/* Color Input */}
             <View style={styles.section}>
-              <Text style={[
-                styles.sectionTitle,
-                { color: currentTheme.uiColors.text }
-              ]}>
-                Edit Color #{selectedColorIndex + 1}
-              </Text>
-              <View style={styles.colorInputContainer}>
-                <TextInput
-                  style={[
-                    styles.colorInput,
-                    {
-                      borderColor: currentTheme.uiColors.secondary,
-                      color: currentTheme.uiColors.text,
-                      backgroundColor: currentTheme.uiColors.cardBackground,
-                    }
-                  ]}
-                  value={colorInput}
-                  onChangeText={setColorInput}
-                  placeholder="#FFFFFF"
-                  placeholderTextColor={currentTheme.uiColors.secondary}
-                  maxLength={7}
-                  autoCapitalize="characters"
-                  allowFontScaling={false}
-                />
+              <View style={styles.sectionHeader}>
+                <Text style={[
+                  styles.sectionTitle,
+                  { color: currentTheme.uiColors.text }
+                ]}>
+                  Edit Color #{selectedColorIndex + 1}
+                </Text>
                 <TouchableOpacity
                   style={[
-                    styles.applyColorButton,
-                    { backgroundColor: currentTheme.uiColors.accent }
-                  ]}
-                  onPress={() => {
-                    if (isValidHexColor(colorInput)) {
-                      handleColorChange(selectedColorIndex, colorInput);
-                    } else {
-                      Alert.alert('Invalid Color', 'Please enter a valid hex color (e.g., #FF6B6B)');
+                    styles.toggleButton,
+                    { 
+                      backgroundColor: useVisualPicker 
+                        ? currentTheme.uiColors.accent 
+                        : currentTheme.uiColors.secondary 
                     }
-                  }}
+                  ]}
+                  onPress={() => setUseVisualPicker(!useVisualPicker)}
                 >
                   <Text allowFontScaling={false} style={[
-                    styles.applyColorButtonText,
+                    styles.toggleButtonText,
                     { color: currentTheme.uiColors.buttonText }
                   ]}>
-                    Apply
+                    {useVisualPicker ? '🎨 Visual' : '# Hex'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              {useVisualPicker ? (
+                <View style={styles.visualPickerContainer}>
+                  <ColorPicker
+                    color={colors[selectedColorIndex]}
+                    onColorChange={(newColor) => {
+                      handleColorChange(selectedColorIndex, newColor);
+                      setColorInput(newColor);
+                    }}
+                    size={Math.min(screenWidth - 120, 240)}
+                  />
+                </View>
+              ) : (
+                <View style={styles.colorInputContainer}>
+                  <TextInput
+                    style={[
+                      styles.colorInput,
+                      {
+                        borderColor: currentTheme.uiColors.secondary,
+                        color: currentTheme.uiColors.text,
+                        backgroundColor: currentTheme.uiColors.cardBackground,
+                      }
+                    ]}
+                    value={colorInput}
+                    onChangeText={setColorInput}
+                    placeholder="#FFFFFF"
+                    placeholderTextColor={currentTheme.uiColors.secondary}
+                    maxLength={7}
+                    autoCapitalize="characters"
+                    allowFontScaling={false}
+                  />
+                  <TouchableOpacity
+                    style={[
+                      styles.applyColorButton,
+                      { backgroundColor: currentTheme.uiColors.accent }
+                    ]}
+                    onPress={() => {
+                      if (isValidHexColor(colorInput)) {
+                        handleColorChange(selectedColorIndex, colorInput);
+                      } else {
+                        Alert.alert('Invalid Color', 'Please enter a valid hex color (e.g., #FF6B6B)');
+                      }
+                    }}
+                  >
+                    <Text allowFontScaling={false} style={[
+                      styles.applyColorButtonText,
+                      { color: currentTheme.uiColors.buttonText }
+                    ]}>
+                      Apply
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+
+              {/* Randomizer Buttons */}
+              <View style={styles.randomizerContainer}>
+                <TouchableOpacity
+                  style={[
+                    styles.randomizerButton,
+                    { backgroundColor: currentTheme.uiColors.primary }
+                  ]}
+                  onPress={handleRandomColors}
+                >
+                  <Text allowFontScaling={false} style={[
+                    styles.randomizerButtonText,
+                    { color: currentTheme.uiColors.buttonText }
+                  ]}>
+                    🎲 Random Colors
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.randomizerButton,
+                    { backgroundColor: currentTheme.uiColors.accent }
+                  ]}
+                  onPress={handleHarmoniousColors}
+                >
+                  <Text allowFontScaling={false} style={[
+                    styles.randomizerButtonText,
+                    { color: currentTheme.uiColors.buttonText }
+                  ]}>
+                    🎨 Harmonious
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -388,6 +469,43 @@ const styles = StyleSheet.create({
   },
   footerButtonText: {
     fontSize: 16,
+    fontWeight: 'bold',
+    fontFamily: FONTS.nunito,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  toggleButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  toggleButtonText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    fontFamily: FONTS.nunito,
+  },
+  visualPickerContainer: {
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  randomizerContainer: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 16,
+  },
+  randomizerButton: {
+    flex: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  randomizerButtonText: {
+    fontSize: 14,
     fontWeight: 'bold',
     fontFamily: FONTS.nunito,
   },

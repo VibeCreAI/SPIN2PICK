@@ -49,6 +49,31 @@ export const VINTAGE_COLORS = [
   '#EEE8AA', '#F0E68C', '#BDB76B', '#9ACD32',
 ];
 
+// Aurora theme colors - mystical northern lights inspired (12 colors)
+export const AURORA_COLORS = [
+  '#B8E6B8', '#A8E6CF', '#77DD77', '#87CEEB',
+  '#98D8E8', '#B19CD9', '#DDA0DD', '#F0B27A',
+  '#FFB6C1', '#FFA07A', '#87CEFA', '#98FB98',
+];
+
+// Custom theme storage key
+export const CUSTOM_THEME_STORAGE_KEY = 'SPIN2PICK_CUSTOM_THEME';
+
+// Default custom theme template
+export const DEFAULT_CUSTOM_COLORS = [
+  '#FF6B6B', '#4ECDC4', '#FFD93D', '#6BCF7F',
+  '#4D96FF', '#9013FE', '#FF6EC7', '#FF9500',
+  '#795548', '#607D8B', '#E91E63', '#00BCD4',
+];
+
+// Interface for custom theme data
+export interface CustomThemeData {
+  colors: string[];
+  name: string;
+  createdAt: Date;
+  isActive: boolean;
+}
+
 export interface Activity {
   id: string;
   name: string;
@@ -183,12 +208,81 @@ export const COLOR_THEMES: ColorTheme[] = [
       buttonBackground: '#D2691E',
       buttonText: '#fff',
     }
+  },
+  {
+    id: 'aurora',
+    name: 'aurora',
+    displayName: 'Aurora Magic',
+    emoji: '🌌',
+    backgroundColor: '#f0f8ff',
+    wheelColors: AURORA_COLORS,
+    uiColors: {
+      primary: '#4B0082',
+      secondary: '#6A5ACD',
+      accent: '#9370DB',
+      text: '#2F1B69',
+      cardBackground: '#F8F8FF',
+      modalBackground: '#F8F8FF',
+      buttonBackground: '#9370DB',
+      buttonText: '#fff',
+    }
   }
 ];
 
 // Get theme by ID
 export const getThemeById = (themeId: string): ColorTheme => {
   return COLOR_THEMES.find(theme => theme.id === themeId) || COLOR_THEMES[0];
+};
+
+// Create custom theme object
+export const createCustomTheme = (customData: CustomThemeData): ColorTheme => ({
+  id: 'custom',
+  name: 'custom',
+  displayName: customData.name || 'My Custom Theme',
+  emoji: '🎨',
+  backgroundColor: '#ffffff',
+  wheelColors: customData.colors,
+  uiColors: {
+    primary: customData.colors[0],
+    secondary: customData.colors[1],
+    accent: customData.colors[2],
+    text: '#333333',
+    cardBackground: '#ffffff',
+    modalBackground: '#ffffff',
+    buttonBackground: customData.colors[2],
+    buttonText: '#ffffff',
+  }
+});
+
+// Save custom theme
+export const saveCustomTheme = async (customData: CustomThemeData): Promise<void> => {
+  try {
+    const AsyncStorage = await import('@react-native-async-storage/async-storage').then(m => m.default);
+    await AsyncStorage.setItem(CUSTOM_THEME_STORAGE_KEY, JSON.stringify(customData));
+    console.log('🎨 Custom theme saved successfully');
+  } catch (error) {
+    console.error('❌ Error saving custom theme:', error);
+    throw error;
+  }
+};
+
+// Load custom theme
+export const loadCustomTheme = async (): Promise<CustomThemeData | null> => {
+  try {
+    const AsyncStorage = await import('@react-native-async-storage/async-storage').then(m => m.default);
+    const savedData = await AsyncStorage.getItem(CUSTOM_THEME_STORAGE_KEY);
+    if (savedData) {
+      const customData = JSON.parse(savedData);
+      return {
+        ...customData,
+        createdAt: new Date(customData.createdAt)
+      };
+    }
+    return null;
+  } catch (error) {
+    console.error('❌ Error loading custom theme:', error);
+    return null;
+  }
 };
 
 // Reassign colors optimally to all activities with custom color palette

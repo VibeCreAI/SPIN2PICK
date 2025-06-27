@@ -655,12 +655,15 @@ export const ActivityListModal: React.FC<ActivityListModalProps> = ({
             {activeTab === 'add' && renderAddMultipleTab()}
             {activeTab === 'ai' && renderAISuggestionsTab()}
 
-            {/* Close Button */}
-            <View style={styles.closeButtonContainer}>
+            {/* Footer */}
+            <View style={styles.footer}>
               <TouchableOpacity 
                 style={[
                   styles.closeButton,
-                  { backgroundColor: currentTheme.uiColors.secondary }
+                  { 
+                    backgroundColor: currentTheme.uiColors.accent,
+                    borderColor: currentTheme.uiColors.primary,
+                  }
                 ]}
                 onPress={onClose}
               >
@@ -668,7 +671,7 @@ export const ActivityListModal: React.FC<ActivityListModalProps> = ({
                   styles.closeButtonText,
                   { color: currentTheme.uiColors.buttonText }
                 ]}>
-                  ✕ Close
+                  Done ✨
                 </Text>
               </TouchableOpacity>
             </View>
@@ -1008,23 +1011,29 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
 
-  // Close Button Styles
-  closeButtonContainer: {
+  // Footer Styles (matching ThemeSelectionModal)
+  footer: {
     padding: 16,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(0, 0, 0, 0.1)',
     alignItems: 'center',
+    borderTopWidth: 1,
+    borderTopColor: '#00000010',
   },
   closeButton: {
-    paddingVertical: 12,
     paddingHorizontal: 24,
-    borderRadius: 8,
+    paddingVertical: 12,
+    borderRadius: 25,
+    borderWidth: 2,
+    minWidth: 120,
     alignItems: 'center',
-    minWidth: 100,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
   },
   closeButtonText: {
     fontSize: 16,
-    fontFamily: FONTS.jua,
     fontWeight: 'bold',
+    fontFamily: FONTS.jua,
   },
 }); 

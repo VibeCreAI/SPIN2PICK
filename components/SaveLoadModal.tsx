@@ -329,9 +329,6 @@ export const SaveLoadModal: React.FC<SaveLoadModalProps> = ({
           {/* Header */}
           <View style={[styles.header, { borderBottomColor: currentTheme.uiColors.secondary }]}>
             <Text allowFontScaling={false} style={[styles.title, { color: currentTheme.uiColors.text }]}>Save & Load</Text>
-            <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-              <Text allowFontScaling={false} style={[styles.closeText, { color: currentTheme.uiColors.accent }]}>✕</Text>
-            </TouchableOpacity>
           </View>
 
           {/* Content Container with proper scroll handling */}
@@ -383,6 +380,27 @@ export const SaveLoadModal: React.FC<SaveLoadModalProps> = ({
               )}
             </ScrollView>
           </View>
+
+          {/* Footer */}
+          <View style={styles.footer}>
+            <TouchableOpacity 
+              style={[
+                styles.doneButton,
+                { 
+                  backgroundColor: currentTheme.uiColors.accent,
+                  borderColor: currentTheme.uiColors.primary,
+                }
+              ]}
+              onPress={onClose}
+            >
+              <Text allowFontScaling={false} style={[
+                styles.doneButtonText,
+                { color: currentTheme.uiColors.buttonText }
+              ]}>
+                Done ✨
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
 
@@ -418,10 +436,9 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
     padding: 20,
+    paddingBottom: 16,
+    alignItems: 'center',
     borderBottomWidth: 1,
   },
   title: {
@@ -429,12 +446,29 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontFamily: FONTS.nunito,
   },
-  closeButton: {
-    padding: 5,
+  footer: {
+    padding: 16,
+    alignItems: 'center',
+    borderTopWidth: 1,
+    borderTopColor: '#00000010',
   },
-  closeText: {
-    fontSize: 18,
+  doneButton: {
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 25,
+    borderWidth: 2,
+    minWidth: 120,
+    alignItems: 'center',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+  },
+  doneButtonText: {
+    fontSize: 16,
     fontWeight: 'bold',
+    fontFamily: FONTS.nunito,
   },
   contentWrapper: {
     flex: 1,

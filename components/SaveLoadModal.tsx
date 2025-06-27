@@ -1,7 +1,7 @@
 import { FONTS } from '@/app/_layout';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Dimensions, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Dimensions, Keyboard, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useTheme } from '../hooks/useTheme';
 import { Activity } from '../utils/colorUtils';
 
@@ -33,6 +33,15 @@ export const SaveLoadModal: React.FC<SaveLoadModalProps> = ({
   const [saveSlots, setSaveSlots] = useState<(SaveSlot | null)[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
+  // Debug logging
+  useEffect(() => {
+    if (visible) {
+      console.log('💾 SaveLoadModal opened');
+      console.log('💾 Current activities count:', currentActivities.length);
+      console.log('💾 Save slots:', saveSlots.length);
+    }
+  }, [visible, currentActivities, saveSlots]);
+
   // State for the save input modal
   const [saveModal, setSaveModal] = useState<{ visible: boolean; slotIndex: number | null; isOverwrite: boolean }>({ visible: false, slotIndex: null, isOverwrite: false });
   const [saveName, setSaveName] = useState('');
@@ -60,10 +69,12 @@ export const SaveLoadModal: React.FC<SaveLoadModalProps> = ({
   }, [visible]);
 
   const loadSaveSlots = async () => {
+    console.log('💾 Loading save slots...');
     setIsLoading(true);
     try {
       const savedSlotsJSON = await AsyncStorage.getItem(SAVE_SLOTS_KEY);
       const savedSlots = savedSlotsJSON ? JSON.parse(savedSlotsJSON) : [];
+      console.log('💾 Loaded slots from storage:', savedSlots.length);
       const slotsWithDates = savedSlots.map((slot: SaveSlot) => ({
         ...slot,
         createdAt: new Date(slot.createdAt),
@@ -76,8 +87,9 @@ export const SaveLoadModal: React.FC<SaveLoadModalProps> = ({
         }
       });
       setSaveSlots(fullSlots);
+      console.log('💾 Save slots loaded successfully');
     } catch (error) {
-      console.error('Error loading save slots:', error);
+      console.error('❌ Error loading save slots:', error);
       setSaveSlots(new Array(MAX_SLOTS).fill(null));
     } finally {
       setIsLoading(false);
@@ -190,8 +202,8 @@ export const SaveLoadModal: React.FC<SaveLoadModalProps> = ({
             </TouchableOpacity>
           </View>
         ) : (
-          <View style={styles.slotContent}>
-            <View style={styles.slotInfo}>
+          <View style={styles.slotContentVertical}>
+            <View style={styles.slotInfoVertical}>
               <Text allowFontScaling={false} style={[styles.slotName, { color: currentTheme.uiColors.primary }]}>{slot.name}</Text>
               <Text allowFontScaling={false} style={[styles.slotDetails, { color: currentTheme.uiColors.secondary }]}>
                 {slot.activities.length} activities • {new Date(slot.createdAt).toLocaleDateString()}
@@ -225,54 +237,37 @@ export const SaveLoadModal: React.FC<SaveLoadModalProps> = ({
 
   const renderConfirmationModal = () => (
     <Modal visible={confirmationModal.visible} transparent animationType="fade" onRequestClose={() => setConfirmationModal({ ...confirmationModal, visible: false })}>
-      <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setConfirmationModal({ ...confirmationModal, visible: false })}>
-        <TouchableOpacity 
-          style={[styles.popupContainer, { 
-            width: containerWidth,
-            backgroundColor: currentTheme.uiColors.modalBackground,
-            borderColor: currentTheme.uiColors.primary,
-            borderWidth: 2,
-          }]} 
-          activeOpacity={1}
-        >
-          <Text allowFontScaling={false} style={[styles.popupTitle, { color: currentTheme.uiColors.primary }]}>{confirmationModal.title}</Text>
-          <Text allowFontScaling={false} style={[styles.popupMessage, { color: currentTheme.uiColors.secondary }]}>{confirmationModal.message}</Text>
-          <View style={styles.popupButtons}>
+      <View style={styles.confirmationOverlay}>
+        <View style={[styles.confirmationContainer, { backgroundColor: currentTheme.uiColors.modalBackground }]}>
+          <Text allowFontScaling={false} style={[styles.confirmationTitle, { color: currentTheme.uiColors.text }]}>{confirmationModal.title}</Text>
+          <Text allowFontScaling={false} style={[styles.confirmationMessage, { color: currentTheme.uiColors.secondary }]}>{confirmationModal.message}</Text>
+          <View style={styles.confirmationActions}>
             <TouchableOpacity 
-              style={[styles.popupButton, styles.cancelButton, { backgroundColor: '#f59f9f' }]} 
+              style={[styles.confirmationButton, styles.confirmationCancelButton]} 
               onPress={() => setConfirmationModal({ ...confirmationModal, visible: false })}
             >
-              <Text allowFontScaling={false} style={[styles.popupButtonText, { color: '#fff' }]}>Cancel</Text>
+              <Text allowFontScaling={false} style={styles.confirmationButtonText}>Cancel</Text>
             </TouchableOpacity>
             <TouchableOpacity 
-              style={[styles.popupButton, styles.confirmButton, { backgroundColor: currentTheme.uiColors.accent }]} 
+              style={[styles.confirmationButton, styles.confirmationConfirmButton]} 
               onPress={confirmationModal.onConfirm}
             >
-              <Text allowFontScaling={false} style={[styles.popupButtonText, { color: currentTheme.uiColors.buttonText }]}>Confirm</Text>
+              <Text allowFontScaling={false} style={styles.confirmationButtonText}>Confirm</Text>
             </TouchableOpacity>
           </View>
-        </TouchableOpacity>
-      </TouchableOpacity>
+        </View>
+      </View>
     </Modal>
   );
 
   const renderSaveInputModal = () => (
     <Modal visible={saveModal.visible} transparent animationType="fade" onRequestClose={() => setSaveModal({ ...saveModal, visible: false })}>
-      <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setSaveModal({ ...saveModal, visible: false })}>
-        <TouchableOpacity 
-          style={[styles.popupContainer, { 
-            width: containerWidth,
-            backgroundColor: currentTheme.uiColors.modalBackground,
-            borderColor: currentTheme.uiColors.primary,
-            borderWidth: 2,
-          }]} 
-          activeOpacity={1}
-        >
-          <Text allowFontScaling={false} style={[styles.popupTitle, { color: currentTheme.uiColors.primary }]}>{saveModal.isOverwrite ? '✏️ Overwrite Save' : '💾 Save Activities'}</Text>
-          <Text allowFontScaling={false} style={[styles.popupMessage, { color: currentTheme.uiColors.secondary }]}>Enter a name for this save:</Text>
+      <View style={styles.saveInputOverlay}>
+        <View style={[styles.saveInputContainer, { backgroundColor: currentTheme.uiColors.modalBackground }]}>
+          <Text allowFontScaling={false} style={[styles.saveInputTitle, { color: currentTheme.uiColors.text }]}>{saveModal.isOverwrite ? 'Overwrite Save' : 'Save Activities'}</Text>
           <TextInput
-            style={[styles.saveNameInput, { 
-              borderColor: currentTheme.uiColors.primary,
+            style={[styles.textInput, { 
+              borderColor: currentTheme.uiColors.secondary,
               color: currentTheme.uiColors.text,
               backgroundColor: currentTheme.uiColors.cardBackground,
             }]}
@@ -284,238 +279,449 @@ export const SaveLoadModal: React.FC<SaveLoadModalProps> = ({
             autoFocus
             allowFontScaling={false}
           />
-          <Text allowFontScaling={false} style={[styles.charCounter, { color: currentTheme.uiColors.secondary }]}>{MAX_SAVE_NAME_LENGTH - saveName.length} characters remaining</Text>
-          <View style={styles.popupButtons}>
+          <Text allowFontScaling={false} style={[{ fontSize: 12, color: currentTheme.uiColors.secondary, textAlign: 'center', marginBottom: 10 }]}>{MAX_SAVE_NAME_LENGTH - saveName.length} characters remaining</Text>
+          <View style={styles.saveInputActions}>
             <TouchableOpacity 
-              style={[styles.popupButton, styles.cancelButton, { backgroundColor: '#f59f9f' }]} 
+              style={[styles.saveInputButton, styles.cancelButton]} 
               onPress={() => setSaveModal({ visible: false, slotIndex: null, isOverwrite: false })}
             >
-              <Text allowFontScaling={false} style={[styles.popupButtonText, { color: '#fff' }]}>Cancel</Text>
+              <Text allowFontScaling={false} style={styles.saveInputButtonText}>Cancel</Text>
             </TouchableOpacity>
             <TouchableOpacity 
-              style={[styles.popupButton, styles.confirmButton, { backgroundColor: currentTheme.uiColors.accent }]} 
+              style={[styles.saveInputButton, styles.confirmButton]} 
               onPress={handleSaveToSlot} 
               disabled={isLoading || !saveName.trim()}
             >
-              {isLoading ? <ActivityIndicator color={currentTheme.uiColors.buttonText} /> : <Text allowFontScaling={false} style={[styles.popupButtonText, { color: currentTheme.uiColors.buttonText }]}>Save</Text>}
+              {isLoading ? <ActivityIndicator color="white" /> : <Text allowFontScaling={false} style={styles.saveInputButtonText}>Save</Text>}
             </TouchableOpacity>
           </View>
-        </TouchableOpacity>
-      </TouchableOpacity>
+        </View>
+      </View>
     </Modal>
   );
 
   const renderSuccessModal = () => (
     <Modal visible={successModal.visible} transparent animationType="fade" onRequestClose={() => setSuccessModal({ visible: false, message: '' })}>
-      <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setSuccessModal({ visible: false, message: '' })}>
-        <TouchableOpacity 
-          style={[styles.popupContainer, { 
-            width: containerWidth,
-            backgroundColor: currentTheme.uiColors.modalBackground,
-            borderColor: currentTheme.uiColors.primary,
-            borderWidth: 2,
-          }]} 
-          activeOpacity={1}
-        >
-          <Text allowFontScaling={false} style={[styles.popupTitle, { color: currentTheme.uiColors.primary }]}>✅ Success!</Text>
-          <Text allowFontScaling={false} style={[styles.popupMessage, { color: currentTheme.uiColors.secondary }]}>{successModal.message}</Text>
+      <View style={styles.successOverlay}>
+        <View style={[styles.successContainer, { backgroundColor: currentTheme.uiColors.modalBackground }]}>
+          <Text allowFontScaling={false} style={styles.successTitle}>Success!</Text>
+          <Text allowFontScaling={false} style={[styles.successMessage, { color: currentTheme.uiColors.text }]}>{successModal.message}</Text>
           <TouchableOpacity 
-            style={[styles.popupButton, styles.confirmButton, { flex: 0, width: '100%', backgroundColor: currentTheme.uiColors.accent }]} 
+            style={styles.successButton} 
             onPress={() => setSuccessModal({ visible: false, message: '' })}
           >
-            <Text allowFontScaling={false} style={[styles.popupButtonText, { color: currentTheme.uiColors.buttonText }]}>OK</Text>
+            <Text allowFontScaling={false} style={styles.successButtonText}>OK</Text>
           </TouchableOpacity>
-        </TouchableOpacity>
-      </TouchableOpacity>
+        </View>
+      </View>
     </Modal>
   );
 
   return (
-    <>
-      <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-        <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={onClose}>
-          <TouchableOpacity 
-            style={[styles.modalContainer, { 
-              width: containerWidth,
-              backgroundColor: currentTheme.backgroundColor,
-              borderColor: currentTheme.uiColors.primary,
-              borderWidth: 2,
-            }]} 
-            activeOpacity={1}
-          >
-            <Text allowFontScaling={false} style={[styles.modalTitle, { color: currentTheme.uiColors.primary }]}>💾 Save & Load</Text>
-            <Text allowFontScaling={false} style={[styles.modalSubtitle, { color: currentTheme.uiColors.secondary }]}>Manage your activity sets</Text>
-            {isLoading ? (
-              <ActivityIndicator size="large" color={currentTheme.uiColors.primary} />
-            ) : (
-              <ScrollView style={styles.slotsScroll} contentContainerStyle={styles.slotsContainer}>
-                {saveSlots.map(renderSlot)}
-              </ScrollView>
-            )}
-            <TouchableOpacity 
-              style={[styles.closeButton, { backgroundColor: currentTheme.uiColors.primary }]} 
-              onPress={onClose}
-            >
-              <Text allowFontScaling={false} style={[styles.closeButtonText, { color: currentTheme.uiColors.buttonText }]}>Close</Text>
+    <Modal
+      animationType="slide"
+      transparent={true}
+      visible={visible}
+      onRequestClose={onClose}
+    >
+      <View style={styles.overlay}>
+        <View style={[styles.modalContainer, { backgroundColor: currentTheme.uiColors.modalBackground, width: containerWidth }]}>
+          {/* Header */}
+          <View style={[styles.header, { borderBottomColor: currentTheme.uiColors.secondary }]}>
+            <Text allowFontScaling={false} style={[styles.title, { color: currentTheme.uiColors.text }]}>Save & Load</Text>
+            <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+              <Text allowFontScaling={false} style={[styles.closeText, { color: currentTheme.uiColors.accent }]}>✕</Text>
             </TouchableOpacity>
-          </TouchableOpacity>
-        </TouchableOpacity>
-      </Modal>
-      {renderConfirmationModal()}
+          </View>
+
+          {/* Content Container with proper scroll handling */}
+          <View style={styles.contentWrapper}>
+            <ScrollView
+              style={styles.content}
+              contentContainerStyle={styles.scrollContent}
+              showsVerticalScrollIndicator={true}
+              scrollEnabled={true}
+              nestedScrollEnabled={true}
+              bounces={Platform.OS === 'ios'}
+              alwaysBounceVertical={false}
+              keyboardShouldPersistTaps="handled"
+              keyboardDismissMode="on-drag"
+              automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
+              contentInsetAdjustmentBehavior={Platform.OS === 'ios' ? 'automatic' : undefined}
+              onScrollBeginDrag={() => Keyboard.dismiss()}
+            >
+              {isLoading ? (
+                <View style={styles.loadingContainer}>
+                  <ActivityIndicator 
+                    size="large" 
+                    color={currentTheme.uiColors.accent} 
+                  />
+                  <Text allowFontScaling={false} style={[styles.loadingText, { color: currentTheme.uiColors.text }]}>
+                    Loading saves...
+                  </Text>
+                </View>
+              ) : (
+                <>
+                  <Text allowFontScaling={false} style={[styles.subtitle, { color: currentTheme.uiColors.text }]}>
+                    Save and load your activity lists. You can have up to {MAX_SLOTS} saves.
+                  </Text>
+                  
+                  {/* Render save slots */}
+                  {saveSlots.map((slot, index) => renderSlot(slot, index))}
+                  
+                  {/* Instructions */}
+                  <View style={[styles.instructionsContainer, { backgroundColor: currentTheme.uiColors.cardBackground, borderColor: currentTheme.uiColors.secondary }]}>
+                    <Text allowFontScaling={false} style={[styles.instructionsTitle, { color: currentTheme.uiColors.text }]}>Instructions:</Text>
+                    <Text allowFontScaling={false} style={[styles.instructionsText, { color: currentTheme.uiColors.secondary }]}>
+                      • Tap "Save" to save your current activities to an empty slot{'\n'}
+                      • Tap "Load" to replace your current activities with saved ones{'\n'}
+                      • Tap "Overwrite" to replace an existing save{'\n'}
+                      • Tap "Delete" to remove a saved activity list
+                    </Text>
+                  </View>
+                </>
+              )}
+            </ScrollView>
+          </View>
+        </View>
+      </View>
+
+      {/* Render modals */}
       {renderSaveInputModal()}
+      {renderConfirmationModal()}
       {renderSuccessModal()}
-    </>
+    </Modal>
   );
 };
 
 const styles = StyleSheet.create({
-  modalOverlay: {
+  overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 16,
+    padding: 20,
   },
   modalContainer: {
-    borderRadius: 16,
-    padding: 20,
-    width: '100%',
+    width: '90%',
+    maxWidth: 500,
     maxHeight: '90%',
-    alignItems: 'center',
+    minHeight: 600,
+    borderRadius: 20,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
-    elevation: 10,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
-  modalTitle: {
-    fontSize: 24,
-    fontFamily: FONTS.jua,
-    marginBottom: 4,
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
   },
-  modalSubtitle: {
+  title: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    fontFamily: FONTS.nunito,
+  },
+  closeButton: {
+    padding: 5,
+  },
+  closeText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  contentWrapper: {
+    flex: 1,
+    minHeight: 400,
+  },
+  content: {
+    flex: 1,
+  },
+  scrollContent: {
+    padding: 20,
+    paddingTop: 15,
+    minHeight: 400,
+    flexGrow: 1,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    minHeight: 400,
+    paddingVertical: 50,
+  },
+  loadingText: {
+    marginTop: 15,
+    fontSize: 16,
+    fontFamily: FONTS.nunito,
+  },
+  subtitle: {
     fontSize: 14,
-    fontFamily: FONTS.jua,
-    marginBottom: 16,
-  },
-  slotsScroll: {
-    width: '100%',
-  },
-  slotsContainer: {
-    gap: 12,
-    paddingBottom: 12,
+    marginBottom: 20,
+    lineHeight: 20,
+    textAlign: 'center',
+    fontFamily: FONTS.nunito,
   },
   slotContainer: {
+    marginBottom: 15,
     borderRadius: 12,
-    padding: 12,
     borderWidth: 2,
+    padding: 15,
   },
   emptySlot: {
     borderStyle: 'dashed',
-    alignItems: 'center',
   },
   filledSlot: {
+    borderStyle: 'solid',
   },
   slotContent: {
-    gap: 8,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  slotContentVertical: {
+    flexDirection: 'column',
+    gap: 12,
   },
   slotInfo: {
-    alignItems: 'flex-start',
+    flex: 1,
+    marginRight: 10,
+  },
+  slotInfoVertical: {
+    marginBottom: 0,
   },
   slotName: {
-    fontSize: 18,
-    fontFamily: FONTS.jua,
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 4,
+    fontFamily: FONTS.nunito,
   },
   slotDetails: {
     fontSize: 12,
-    fontFamily: FONTS.jua,
+    fontFamily: FONTS.nunito,
   },
   slotSubtext: {
-    fontSize: 14,
-    fontFamily: FONTS.jua,
-    marginBottom: 4,
+    fontSize: 12,
+    fontFamily: FONTS.nunito,
   },
   slotActions: {
     flexDirection: 'row',
     gap: 8,
-    marginTop: 4,
-  },
-  actionButton: {
-    flex: 1,
-    paddingVertical: 8,
-    borderRadius: 8,
-    alignItems: 'center',
     justifyContent: 'center',
   },
-  actionButtonText: {
-    fontSize: 14,
-    fontFamily: FONTS.jua,
+  actionButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+    minWidth: 60,
+    alignItems: 'center',
   },
   saveButton: {
-    paddingHorizontal: 24,
+    alignSelf: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 8,
   },
   loadButton: {
+    backgroundColor: '#4CAF50',
   },
   overwriteButton: {
+    backgroundColor: '#FF9800',
   },
   deleteButton: {
+    backgroundColor: '#F44336',
   },
-  closeButton: {
-    paddingVertical: 12,
-    paddingHorizontal: 32,
-    borderRadius: 20,
-    marginTop: 16,
+  actionButtonText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: 'bold',
+    fontFamily: FONTS.nunito,
   },
-  closeButtonText: {
-    fontSize: 16,
-    fontFamily: FONTS.jua,
+  instructionsContainer: {
+    marginTop: 20,
+    padding: 15,
+    borderRadius: 10,
+    borderWidth: 1,
   },
-  popupContainer: {
-    borderRadius: 16,
-    padding: 20,
-    width: '100%',
-    alignItems: 'center',
-    gap: 12,
+  instructionsTitle: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginBottom: 8,
+    fontFamily: FONTS.nunito,
   },
-  popupTitle: {
-    fontSize: 20,
-    fontFamily: FONTS.jua,
+  instructionsText: {
+    fontSize: 12,
+    lineHeight: 18,
+    fontFamily: FONTS.nunito,
   },
-  popupMessage: {
-    fontSize: 16,
-    fontFamily: FONTS.jua,
-    textAlign: 'center',
-  },
-  popupButtons: {
-    flexDirection: 'row',
-    gap: 12,
-    width: '100%',
-  },
-  popupButton: {
+  saveInputOverlay: {
     flex: 1,
-    paddingVertical: 12,
-    borderRadius: 8,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
     alignItems: 'center',
+    padding: 20,
   },
-  popupButtonText: {
-    fontSize: 16,
-    fontFamily: FONTS.jua,
+  saveInputContainer: {
+    width: '80%',
+    maxWidth: 300,
+    borderRadius: 15,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
-  cancelButton: {
+  saveInputTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 15,
+    textAlign: 'center',
+    fontFamily: FONTS.nunito,
   },
-  confirmButton: {
-  },
-  saveNameInput: {
-    borderWidth: 2,
+  textInput: {
+    borderWidth: 1,
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
-    fontFamily: FONTS.jua,
-    textAlign: 'center',
-    width: '100%',
+    marginBottom: 20,
+    fontFamily: FONTS.nunito,
   },
-  charCounter: {
-    fontSize: 12,
-    fontFamily: FONTS.jua,
+  saveInputActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 10,
+  },
+  saveInputButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  cancelButton: {
+    backgroundColor: '#666',
+  },
+  confirmButton: {
+    backgroundColor: '#4CAF50',
+  },
+  saveInputButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+    fontFamily: FONTS.nunito,
+  },
+  confirmationOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  confirmationContainer: {
+    width: '80%',
+    maxWidth: 300,
+    borderRadius: 15,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  confirmationTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    textAlign: 'center',
+    fontFamily: FONTS.nunito,
+  },
+  confirmationMessage: {
+    fontSize: 14,
+    marginBottom: 20,
+    textAlign: 'center',
+    lineHeight: 20,
+    fontFamily: FONTS.nunito,
+  },
+  confirmationActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 10,
+  },
+  confirmationButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  confirmationCancelButton: {
+    backgroundColor: '#666',
+  },
+  confirmationConfirmButton: {
+    backgroundColor: '#F44336',
+  },
+  confirmationButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+    fontFamily: FONTS.nunito,
+  },
+  successOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  successContainer: {
+    width: '80%',
+    maxWidth: 300,
+    borderRadius: 15,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  successTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    textAlign: 'center',
+    color: '#4CAF50',
+    fontFamily: FONTS.nunito,
+  },
+  successMessage: {
+    fontSize: 14,
+    marginBottom: 20,
+    textAlign: 'center',
+    lineHeight: 20,
+    fontFamily: FONTS.nunito,
+  },
+  successButton: {
+    backgroundColor: '#4CAF50',
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  successButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+    fontFamily: FONTS.nunito,
   },
 });

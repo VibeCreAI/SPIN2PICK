@@ -1,8 +1,9 @@
 import { FONTS } from '@/app/_layout';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     Dimensions,
     Modal,
+    Platform,
     ScrollView,
     StyleSheet,
     Text,
@@ -27,6 +28,15 @@ export const DeleteActivitiesModal: React.FC<DeleteActivitiesModalProps> = ({
 }) => {
   const { currentTheme } = useTheme();
   
+  // Debug logging
+  useEffect(() => {
+    if (visible) {
+      console.log('🗑️ DeleteActivitiesModal opened');
+      console.log('🗑️ Activities count:', activities.length);
+      console.log('🗑️ Activities:', activities.map(a => ({ id: a.id, name: a.name })));
+    }
+  }, [visible, activities]);
+  
   // State for the confirmation modal
   const [confirmationModal, setConfirmationModal] = useState<{
     visible: boolean;
@@ -44,6 +54,7 @@ export const DeleteActivitiesModal: React.FC<DeleteActivitiesModalProps> = ({
   const containerWidth = screenWidth < MODAL_MAX_WIDTH ? '95%' : MODAL_MAX_WIDTH;
 
   const handleDeletePress = (activity: Activity) => {
+    console.log('🗑️ Delete button pressed for:', activity.name);
     setConfirmationModal({
       visible: true,
       activityName: activity.name,
@@ -53,12 +64,14 @@ export const DeleteActivitiesModal: React.FC<DeleteActivitiesModalProps> = ({
 
   const handleConfirmDelete = () => {
     if (confirmationModal.activityName) {
+      console.log('🗑️ Confirming delete for:', confirmationModal.activityName);
       onDeleteActivity(confirmationModal.activityName);
       setConfirmationModal({ visible: false, activityName: '', activityEmoji: '' });
     }
   };
 
   const handleCancelDelete = () => {
+    console.log('🗑️ Canceling delete');
     setConfirmationModal({ visible: false, activityName: '', activityEmoji: '' });
   };
 
@@ -188,6 +201,8 @@ export const DeleteActivitiesModal: React.FC<DeleteActivitiesModalProps> = ({
     </Modal>
   );
 
+  if (!visible) return null;
+
   return (
     <>
       <Modal 
@@ -198,62 +213,76 @@ export const DeleteActivitiesModal: React.FC<DeleteActivitiesModalProps> = ({
       >
         <TouchableOpacity 
           style={styles.modalOverlay} 
-          activeOpacity={1} 
+          activeOpacity={1}
           onPress={onClose}
         >
-          <TouchableOpacity 
+          <View 
             style={[
               styles.modalContainer, 
               { 
                 width: containerWidth,
-                backgroundColor: currentTheme.backgroundColor,
+                backgroundColor: currentTheme.uiColors.modalBackground,
                 borderColor: currentTheme.uiColors.primary,
               }
-            ]} 
-            activeOpacity={1}
-            onPress={() => {}} // Prevent closing when tapping inside
+            ]}
+            onStartShouldSetResponder={() => true}
+            onResponderGrant={() => {}}
           >
-            <Text allowFontScaling={false} style={[
-              styles.modalTitle, 
-              { color: currentTheme.uiColors.primary }
-            ]}>
-              🗑️ Delete Activities
-            </Text>
-            
-            <Text allowFontScaling={false} style={[
-              styles.modalSubtitle, 
-              { color: currentTheme.uiColors.secondary }
-            ]}>
-              Tap any activity to remove it
-            </Text>
-            
+            {/* Header */}
+            <View style={styles.header}>
+              <Text allowFontScaling={false} style={[
+                styles.title,
+                { color: currentTheme.uiColors.primary }
+              ]}>
+                🗑️ Delete Activities
+              </Text>
+              <Text allowFontScaling={false} style={[
+                styles.subtitle,
+                { color: currentTheme.uiColors.secondary }
+              ]}>
+                Tap an activity to delete it
+              </Text>
+            </View>
+
+            {/* Activities List */}
             {activities.length === 0 ? (
               renderEmptyState()
             ) : (
               <ScrollView 
-                style={styles.activitiesScroll} 
-                contentContainerStyle={styles.activitiesContainer}
+                style={styles.scrollView}
+                contentContainerStyle={styles.scrollContent}
                 showsVerticalScrollIndicator={true}
+                nestedScrollEnabled={true}
+                scrollEnabled={true}
+                bounces={true}
+                alwaysBounceVertical={false}
+                keyboardShouldPersistTaps="handled"
               >
                 {activities.map(renderActivity)}
               </ScrollView>
             )}
-            
-            <TouchableOpacity 
-              style={[
-                styles.closeButton, 
-                { backgroundColor: currentTheme.uiColors.primary }
-              ]} 
-              onPress={onClose}
-            >
-              <Text allowFontScaling={false} style={[
-                styles.closeButtonText, 
-                { color: currentTheme.uiColors.buttonText }
-              ]}>
-                Close
-              </Text>
-            </TouchableOpacity>
-          </TouchableOpacity>
+
+            {/* Footer */}
+            <View style={styles.footer}>
+              <TouchableOpacity 
+                style={[
+                  styles.closeButton,
+                  { 
+                    backgroundColor: currentTheme.uiColors.accent,
+                    borderColor: currentTheme.uiColors.primary,
+                  }
+                ]}
+                onPress={onClose}
+              >
+                <Text allowFontScaling={false} style={[
+                  styles.closeButtonText,
+                  { color: currentTheme.uiColors.buttonText }
+                ]}>
+                  Done ✨
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
         </TouchableOpacity>
       </Modal>
       
@@ -272,46 +301,58 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     borderRadius: 16,
-    padding: 20,
-    width: '100%',
-    maxHeight: '90%',
-    alignItems: 'center',
+    borderWidth: 2,
+    maxHeight: Platform.OS === 'web' ? '85%' : '90%',
+    minHeight: Platform.OS === 'web' ? 500 : 600,
+    elevation: 10,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 5,
-    elevation: 10,
-    borderWidth: 2,
   },
-  modalTitle: {
+  header: {
+    padding: 20,
+    paddingBottom: 16,
+    alignItems: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: '#00000010',
+  },
+  title: {
     fontSize: 24,
     fontFamily: FONTS.jua,
     marginBottom: 4,
-  },
-  modalSubtitle: {
-    fontSize: 14,
-    fontFamily: FONTS.jua,
-    marginBottom: 16,
     textAlign: 'center',
   },
-  activitiesScroll: {
-    width: '100%',
-    flex: 1,
+  subtitle: {
+    fontSize: 14,
+    fontFamily: FONTS.jua,
+    textAlign: 'center',
   },
-  activitiesContainer: {
-    gap: 8,
-    paddingBottom: 12,
+  scrollView: {
+    flex: 1,
+    paddingHorizontal: 20,
+    minHeight: Platform.OS === 'web' ? 300 : 400,
+  },
+  scrollContent: {
+    paddingVertical: 16,
+    flexGrow: 1,
   },
   activityItem: {
     borderRadius: 12,
-    padding: 16,
     borderWidth: 2,
-    width: '100%',
+    marginBottom: 8,
+    padding: 12,
+    backgroundColor: '#fff',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
   },
   activityContent: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    justifyContent: 'space-between',
   },
   activityText: {
     fontSize: 16,
@@ -320,68 +361,81 @@ const styles = StyleSheet.create({
   },
   deleteIcon: {
     fontSize: 16,
-    fontFamily: FONTS.jua,
-    color: '#ff6b6b',
-    marginLeft: 8,
+    marginLeft: 10,
   },
   emptyState: {
-    alignItems: 'center',
+    flex: 1,
     justifyContent: 'center',
-    paddingVertical: 40,
-    paddingHorizontal: 20,
+    alignItems: 'center',
+    padding: 40,
+    minHeight: Platform.OS === 'web' ? 300 : 400,
   },
   emptyText: {
     fontSize: 18,
     fontFamily: FONTS.jua,
-    marginBottom: 8,
     textAlign: 'center',
+    marginBottom: 8,
   },
   emptySubtext: {
     fontSize: 14,
     fontFamily: FONTS.jua,
     textAlign: 'center',
   },
+  footer: {
+    padding: 16,
+    alignItems: 'center',
+    borderTopWidth: 1,
+    borderTopColor: '#00000010',
+  },
   closeButton: {
+    paddingHorizontal: 24,
     paddingVertical: 12,
-    paddingHorizontal: 32,
-    borderRadius: 20,
-    marginTop: 16,
+    borderRadius: 25,
+    borderWidth: 2,
+    minWidth: 120,
+    alignItems: 'center',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
   },
   closeButtonText: {
     fontSize: 16,
     fontFamily: FONTS.jua,
+    fontWeight: 'bold',
   },
+  
   // Confirmation modal styles
   confirmationOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 16,
   },
   confirmationContainer: {
     borderRadius: 16,
+    borderWidth: 2,
     padding: 20,
-    width: '90%',
+    marginHorizontal: 20,
     maxWidth: 400,
-    alignItems: 'center',
+    width: '90%',
+    elevation: 15,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 5,
-    elevation: 10,
-    borderWidth: 2,
   },
   confirmationTitle: {
     fontSize: 20,
     fontFamily: FONTS.jua,
-    marginBottom: 12,
+    marginBottom: 10,
     textAlign: 'center',
   },
   confirmationMessage: {
     fontSize: 16,
     fontFamily: FONTS.jua,
-    marginBottom: 12,
+    marginBottom: 10,
     textAlign: 'center',
   },
   activityToDelete: {
@@ -391,32 +445,40 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     padding: 12,
     borderRadius: 8,
-    width: '100%',
+    borderWidth: 1,
+    borderColor: '#00000010',
   },
   confirmationButtons: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     gap: 12,
-    width: '100%',
   },
   confirmationButton: {
     flex: 1,
-    paddingVertical: 12,
+    padding: 12,
     borderRadius: 8,
     alignItems: 'center',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
   },
   cancelButton: {
-    // backgroundColor handled by theme
-  },
-  deleteButton: {
-    // backgroundColor: '#ff6b6b' - handled inline
+    // backgroundColor set inline
   },
   cancelButtonText: {
     fontSize: 16,
     fontFamily: FONTS.jua,
+    fontWeight: 'bold',
+  },
+  deleteButton: {
+    // backgroundColor set inline
   },
   deleteButtonText: {
     fontSize: 16,
     fontFamily: FONTS.jua,
+    fontWeight: 'bold',
     color: '#fff',
   },
 }); 

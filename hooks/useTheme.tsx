@@ -28,18 +28,23 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   useEffect(() => {
     const loadSavedTheme = async () => {
       try {
+        console.log('🎨 Loading saved theme...');
         const savedThemeId = await AsyncStorage.getItem(THEME_STORAGE_KEY);
         if (savedThemeId) {
           const theme = getThemeById(savedThemeId);
           setCurrentTheme(theme);
           console.log('🎨 Loaded saved theme:', theme.displayName);
         } else {
-          console.log('🎨 Using default theme:', COLOR_THEMES[0].displayName);
+          console.log('🎨 No saved theme found, using default:', COLOR_THEMES[0].displayName);
+          setCurrentTheme(COLOR_THEMES[0]);
         }
       } catch (error) {
-        console.error('Error loading saved theme:', error);
+        console.error('❌ Error loading saved theme:', error);
+        // Fallback to default theme on error
+        setCurrentTheme(COLOR_THEMES[0]);
       } finally {
         setIsLoading(false);
+        console.log('🎨 Theme loading complete');
       }
     };
 
@@ -48,12 +53,13 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
 
   const setTheme = async (themeId: string): Promise<void> => {
     try {
+      console.log('🎨 Changing theme to:', themeId);
       const newTheme = getThemeById(themeId);
       setCurrentTheme(newTheme);
       await AsyncStorage.setItem(THEME_STORAGE_KEY, themeId);
-      console.log('🎨 Theme changed to:', newTheme.displayName);
+      console.log('🎨 Theme changed and saved:', newTheme.displayName);
     } catch (error) {
-      console.error('Error saving theme:', error);
+      console.error('❌ Error saving theme:', error);
       throw error;
     }
   };

@@ -22,21 +22,35 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
   visible, 
   onClose 
 }) => {
-  const { currentTheme, setTheme, availableThemes } = useTheme();
+  const { currentTheme, setTheme, availableThemes, isLoading } = useTheme();
   const screenWidth = Dimensions.get('window').width;
   const modalWidth = screenWidth < 500 ? '95%' : 500;
 
+  // Debug logging
+  React.useEffect(() => {
+    if (visible) {
+      console.log('🎨 ThemeSelectionModal opened');
+      console.log('🎨 Available themes:', availableThemes.length);
+      console.log('🎨 Current theme:', currentTheme.displayName);
+      console.log('🎨 Is loading:', isLoading);
+      console.log('🎨 Theme IDs:', availableThemes.map(t => t.id));
+    }
+  }, [visible, availableThemes, currentTheme, isLoading]);
+
   const handleThemeSelect = async (themeId: string) => {
     try {
+      console.log('🎨 Selecting theme:', themeId);
       await setTheme(themeId);
       // Small delay to show the selection before closing
       setTimeout(() => {
         onClose();
       }, 300);
     } catch (error) {
-      console.error('Error selecting theme:', error);
+      console.error('❌ Error selecting theme:', error);
     }
   };
+
+  if (!visible) return null;
 
   return (
     <Modal
@@ -50,7 +64,7 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
         activeOpacity={1}
         onPress={onClose}
       >
-        <TouchableOpacity 
+        <View 
           style={[
             styles.modalContainer, 
             { 
@@ -59,8 +73,8 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
               borderColor: currentTheme.uiColors.primary,
             }
           ]}
-          activeOpacity={1}
-          onPress={() => {}} // Prevent closing when tapping inside modal
+          onStartShouldSetResponder={() => true}
+          onResponderGrant={() => {}}
         >
           {/* Header */}
           <View style={styles.header}>
@@ -83,22 +97,41 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
           </View>
 
           {/* Theme Grid */}
-          <ScrollView 
-            style={styles.scrollView}
-            contentContainerStyle={styles.scrollContent}
-            showsVerticalScrollIndicator={true}
-          >
-            <View style={styles.themeGrid}>
-              {availableThemes.map((theme: ColorTheme) => (
-                <ThemePreviewCard
-                  key={theme.id}
-                  theme={theme}
-                  isSelected={theme.id === currentTheme.id}
-                  onSelect={() => handleThemeSelect(theme.id)}
-                />
-              ))}
+          {isLoading ? (
+            <View style={styles.loadingContainer}>
+              <ThemedText style={[styles.loadingText, { color: currentTheme.uiColors.secondary }]}>
+                Loading themes...
+              </ThemedText>
             </View>
-          </ScrollView>
+          ) : availableThemes.length === 0 ? (
+            <View style={styles.emptyContainer}>
+              <ThemedText style={[styles.emptyText, { color: currentTheme.uiColors.secondary }]}>
+                No themes available
+              </ThemedText>
+            </View>
+          ) : (
+            <ScrollView 
+              style={styles.scrollView}
+              contentContainerStyle={styles.scrollContent}
+              showsVerticalScrollIndicator={true}
+              nestedScrollEnabled={true}
+              scrollEnabled={true}
+              bounces={true}
+              alwaysBounceVertical={false}
+              keyboardShouldPersistTaps="handled"
+            >
+              <View style={styles.themeGrid}>
+                {availableThemes.map((theme: ColorTheme) => (
+                  <ThemePreviewCard
+                    key={theme.id}
+                    theme={theme}
+                    isSelected={theme.id === currentTheme.id}
+                    onSelect={() => handleThemeSelect(theme.id)}
+                  />
+                ))}
+              </View>
+            </ScrollView>
+          )}
 
           {/* Footer */}
           <View style={styles.footer}>
@@ -122,7 +155,7 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
               </ThemedText>
             </TouchableOpacity>
           </View>
-        </TouchableOpacity>
+        </View>
       </TouchableOpacity>
     </Modal>
   );
@@ -139,7 +172,8 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     borderWidth: 2,
     marginHorizontal: 16,
-    maxHeight: '80%',
+    maxHeight: Platform.OS === 'web' ? '85%' : '90%',
+    minHeight: Platform.OS === 'web' ? 500 : 600,
     elevation: 10,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
@@ -172,15 +206,18 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
+    minHeight: Platform.OS === 'web' ? 300 : 400,
   },
   scrollContent: {
     padding: 16,
+    flexGrow: 1,
   },
   themeGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'center',
     alignItems: 'flex-start',
+    minHeight: Platform.OS === 'web' ? 300 : 400,
   },
   footer: {
     padding: 16,
@@ -202,6 +239,26 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
   },
   closeButtonText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    minHeight: Platform.OS === 'web' ? 300 : 400,
+  },
+  loadingText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    minHeight: Platform.OS === 'web' ? 300 : 400,
+  },
+  emptyText: {
     fontSize: 16,
     fontWeight: 'bold',
   },

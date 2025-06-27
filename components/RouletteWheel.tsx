@@ -64,26 +64,8 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
   // Get screen dimensions for web platform
   const screenData = Dimensions.get('window');
   
-  // Responsive width settings (matching ActivityInput)
+  // Simplified responsive settings (matching updated ActivityInput)
   const screenWidth = screenData.width;
-  const isNarrowScreen = screenWidth < 360; // Very narrow screens
-  const isSmallScreen = screenWidth < 400; // Small screens
-  const isMediumScreen = screenWidth < 500; // Medium screens
-  
-  // Dynamic minWidth based on screen size for better text centering (matching RouletteWheel)
-  const getResponsiveMinWidth = () => {
-    // Smaller minWidth on narrow screens allows text to center better
-    // when content is shorter than the container width
-    if (screenWidth < 320) return 260; // Very narrow - smaller minWidth for better centering
-    if (screenWidth < 360) return 280; // Narrow
-    if (screenWidth < 400) return 300; // Small  
-    if (screenWidth < 500) return 330; // Medium
-    return 340; // Wide screens - original value
-  };
-  
-  const containerMinWidth = getResponsiveMinWidth();
-  const containerMaxWidth = isSmallScreen ? '95%' : '90%';
-  const containerMarginHorizontal = isNarrowScreen ? 8 : 16;
   
   // Calculate wheel size with platform-specific limits
   const WHEEL_SIZE = useMemo(() => {
@@ -1255,9 +1237,6 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
         style={[
           styles.lastActivityContainer, 
           {
-            minWidth: containerMinWidth,
-            maxWidth: containerMaxWidth,
-            marginHorizontal: containerMarginHorizontal,
             backgroundColor: currentTheme.uiColors.cardBackground,
             borderColor: currentTheme.uiColors.primary,
           }
@@ -1455,8 +1434,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   lastActivityContainer: {
-    alignSelf: 'center', // Center the container
-    width: 'auto', // Let content determine width
+    width: '100%', // Match ActivityInput width within contentWrapper
     marginVertical: 8, // Added to match ActivityInput
     marginTop: 5,
     marginBottom: 7, // Added to match ActivityInput
@@ -1470,7 +1448,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.2,
     shadowRadius: 1.41,
-    // Add explicit centering
+    // Simplified centering - matching updated ActivityInput
     alignItems: 'center',
     justifyContent: 'center',
   },

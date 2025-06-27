@@ -469,54 +469,56 @@ export default function HomeScreen() {
 
   const renderContent = () => (
           <View style={[styles.container, { backgroundColor: currentTheme.backgroundColor }]} onLayout={onLayout}>
-            <View style={styles.headerContainer}>
-              <View style={styles.titleContainer}>
-                <ThemedText type="title" style={[styles.title, { color: currentTheme.uiColors.primary }]}>SPIN 2 PICK</ThemedText>
+            <View style={styles.contentWrapper}>
+              <View style={styles.headerContainer}>
+                <View style={styles.titleContainer}>
+                  <ThemedText type="title" style={[styles.title, { color: currentTheme.uiColors.primary }]}>SPIN 2 PICK</ThemedText>
+                </View>
               </View>
+              
+              <ActivityInput
+                onAddActivity={handleAddActivity}
+                onSuggestActivity={handleSuggestActivity}
+                existingActivities={activities.map(a => a.name)}
+                isLoading={isAddingActivity}
+                isSuggesting={isSuggestingActivity}
+                pendingSuggestion={pendingSuggestion}
+                showSuggestionPopup={showSuggestionPopup}
+                onAcceptSuggestion={handleAcceptSuggestion}
+                onDeclineSuggestion={handleDeclineSuggestion}
+                activities={activities}
+                onDeleteActivity={handleDeleteActivityByName}
+              />
+              
+              <ThemedText style={[styles.subtitle, { color: currentTheme.uiColors.secondary }]}>Press ✨ for AI suggestions, 🗑️ to delete!</ThemedText>
+
+              {containerWidth > 0 ? (
+                (() => {
+                  console.log('🎯 Rendering RouletteWheel with activities:', activities.map(a => ({ name: a.name, color: a.color })));
+                  return (
+                    <ErrorBoundary>
+                      <RouletteWheel
+                        activities={activities}
+                        onActivitySelect={handleActivitySelect}
+                        onActivityDelete={handleDeleteActivity}
+                        parentWidth={containerWidth}
+                        selectedActivity={selectedActivity}
+                        onPreviousActivityChange={handlePreviousActivityChange}
+                        newlyAddedActivityId={newlyAddedActivityId}
+                        onNewActivityIndicatorComplete={handleNewActivityIndicatorComplete}
+                        onReset={handleReset}
+                        onOpenTheme={handleOpenTheme}
+                        onSaveLoad={handleSaveLoad}
+                      />
+                    </ErrorBoundary>
+                  );
+                })()
+              ) : (
+                <ThemedText style={{textAlign: 'center', marginVertical: 20, color: currentTheme.uiColors.text}}>Loading wheel...</ThemedText>
+              )}
+
+              {showCelebration && <Celebration onComplete={handleCelebrationComplete} />}
             </View>
-            
-            <ActivityInput
-              onAddActivity={handleAddActivity}
-              onSuggestActivity={handleSuggestActivity}
-              existingActivities={activities.map(a => a.name)}
-              isLoading={isAddingActivity}
-              isSuggesting={isSuggestingActivity}
-              pendingSuggestion={pendingSuggestion}
-              showSuggestionPopup={showSuggestionPopup}
-              onAcceptSuggestion={handleAcceptSuggestion}
-              onDeclineSuggestion={handleDeclineSuggestion}
-              activities={activities}
-              onDeleteActivity={handleDeleteActivityByName}
-            />
-            
-            <ThemedText style={[styles.subtitle, { color: currentTheme.uiColors.secondary }]}>Press ✨ for AI suggestions, 🗑️ to delete!</ThemedText>
-
-            {containerWidth > 0 ? (
-              (() => {
-                console.log('🎯 Rendering RouletteWheel with activities:', activities.map(a => ({ name: a.name, color: a.color })));
-                return (
-                  <ErrorBoundary>
-                    <RouletteWheel
-                      activities={activities}
-                      onActivitySelect={handleActivitySelect}
-                      onActivityDelete={handleDeleteActivity}
-                      parentWidth={containerWidth}
-                      selectedActivity={selectedActivity}
-                      onPreviousActivityChange={handlePreviousActivityChange}
-                      newlyAddedActivityId={newlyAddedActivityId}
-                      onNewActivityIndicatorComplete={handleNewActivityIndicatorComplete}
-                      onReset={handleReset}
-                      onOpenTheme={handleOpenTheme}
-                      onSaveLoad={handleSaveLoad}
-                    />
-                  </ErrorBoundary>
-                );
-              })()
-            ) : (
-              <ThemedText style={{textAlign: 'center', marginVertical: 20, color: currentTheme.uiColors.text}}>Loading wheel...</ThemedText>
-            )}
-
-            {showCelebration && <Celebration onComplete={handleCelebrationComplete} />}
           </View>
   );
 
@@ -706,11 +708,17 @@ const styles = StyleSheet.create({
   } as ViewStyle,
   container: {
     width: '100%',
-    alignItems: 'center',
-    padding: 16,
+    alignItems: 'center', // Center the content wrapper
+    padding: 0,
     paddingTop: 0,
     paddingBottom: 10,
   },
+  contentWrapper: {
+    width: '100%',
+    maxWidth: 350, // Limit max width like other RN Web apps
+    alignItems: 'stretch', // Don't constrain child widths
+  },
+
   scrollContainer: {
     flex: 1,
   },

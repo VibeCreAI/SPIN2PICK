@@ -79,50 +79,10 @@ export const ActivityInput: React.FC<ActivityInputProps> = ({
     console.log('🎯 ActivityInput: Initial dimensions set to:', screenDimensions.width);
   }, []); // Run once to log initial state
 
-  // Get screen dimensions for responsive design
+  // Get screen dimensions for responsive design (simplified)
   const screenData = screenDimensions;
-  
-  // Responsive width settings (matching RouletteWheel)
   const screenWidth = screenData.width;
-  const isNarrowScreen = screenWidth < 360; // Very narrow screens
-  const isSmallScreen = screenWidth < 400; // Small screens
-  const isMediumScreen = screenWidth < 500; // Medium screens
-  
-  console.log('📐 ActivityInput: Current screenWidth:', screenWidth, 'isNarrowScreen:', isNarrowScreen);
-  
-  // Dynamic minWidth based on screen size for better text centering (matching RouletteWheel)
-  const getResponsiveMinWidth = () => {
-    // Smaller minWidth on narrow screens allows text to center better
-    // when content is shorter than the container width
-    if (screenWidth < 320) return 240; // Very narrow - smaller minWidth for better centering
-    if (screenWidth < 360) return 260; // Narrow
-    if (screenWidth < 400) return 280; // Small  
-    if (screenWidth < 500) return 300; // Medium
-    return 340; // Wide screens - original value
-  };
-  
-  const containerMinWidth = getResponsiveMinWidth();
-  
-  // Use pixel-based maxWidth with smaller percentages to fix SSR without being too wide
-  const containerMaxWidth = isSmallScreen 
-    ? Math.floor(screenWidth * 0.85) // 85% instead of 95%
-    : Math.floor(screenWidth * 0.80); // 80% instead of 90%
-    
-  const containerMarginHorizontal = isNarrowScreen ? 8 : 16;
-
-  console.log('📏 ActivityInput: Calculated dimensions:', {
-    containerMinWidth,
-    containerMaxWidth,
-    containerMarginHorizontal,
-    screenWidth
-  });
-
-  console.log('🔧 ActivityInput: MaxWidth calculation:', {
-    screenWidth,
-    percentage: isSmallScreen ? '85%' : '80%',
-    pixelValue: containerMaxWidth,
-    isSmallScreen
-  });
+  const isNarrowScreen = screenWidth < 360; // For button spacing adjustments only
 
   const handleSubmit = useCallback(() => {
     const trimmedText = inputText.trim();
@@ -154,10 +114,9 @@ export const ActivityInput: React.FC<ActivityInputProps> = ({
 
   return (
     <ThemedView 
-      key={`${screenWidth}-${isNarrowScreen}-${isSmallScreen}-${isMediumScreen}`}
       lightColor="transparent" 
       darkColor="transparent" 
-      style={[styles.container, { width: screenWidth }]}
+      style={styles.container}
     >
       {/* Main Input Card - matching lastActivityContainer styling */}
       <ThemedView 
@@ -166,9 +125,6 @@ export const ActivityInput: React.FC<ActivityInputProps> = ({
         style={[
           styles.inputCard, 
           {
-            minWidth: containerMinWidth,
-            maxWidth: containerMaxWidth,
-            marginHorizontal: containerMarginHorizontal,
             backgroundColor: currentTheme.uiColors.cardBackground,
             borderColor: currentTheme.uiColors.primary,
           }
@@ -350,18 +306,14 @@ export const ActivityInput: React.FC<ActivityInputProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    alignItems: 'center',
-    marginVertical: 8, // Matching RouletteWheel spacing
-    marginBottom: 7, // Matching RouletteWheel spacing
     width: '100%',
   },
-  // Main card container - matching lastActivityContainer styling exactly
+  // Main card container - simplified for content wrapper pattern
   inputCard: {
-    alignSelf: 'center', // Center the container (matching lastActivityContainer)
     marginVertical: 8, // Matching lastActivityContainer
     marginTop: 5, // Matching lastActivityContainer
     marginBottom: 7, // Matching lastActivityContainer
-    padding: 12, // Matching lastActivityContainer (changed from 15)
+    padding: 14, // Matching lastActivityContainer (changed from 15)
     borderRadius: 12, // Matching lastActivityContainer
     borderWidth: 2, // Matching lastActivityContainer
     elevation: 2, // Matching lastActivityContainer
@@ -369,7 +321,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 1 }, // Matching lastActivityContainer
     shadowOpacity: 0.2, // Matching lastActivityContainer
     shadowRadius: 1.41, // Matching lastActivityContainer
-    alignItems: 'center', // Matching lastActivityContainer
+    alignItems: 'stretch', // Remove width constraints (research-backed fix)
     justifyContent: 'center', // Matching lastActivityContainer
   },
   // Content container - matching lastActivityContent

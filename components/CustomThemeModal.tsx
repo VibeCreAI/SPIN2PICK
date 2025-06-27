@@ -68,6 +68,13 @@ export const CustomThemeModal: React.FC<CustomThemeModalProps> = ({
     setColorInput(randomColors[selectedColorIndex]);
   };
 
+  const handleAIColors = async () => {
+    // TODO: Implement AI color generation
+    console.log('AI Colors button pressed - will implement in next phase');
+    // For now, show an alert
+    Alert.alert('Coming Soon', 'AI color generation will be implemented next!');
+  };
+
   const isValidHexColor = (color: string): boolean => {
     return /^#[0-9A-F]{6}$/i.test(color);
   };
@@ -258,21 +265,38 @@ export const CustomThemeModal: React.FC<CustomThemeModalProps> = ({
                 </View>
               )}
 
-              {/* Random Colors Button */}
-              <TouchableOpacity
-                style={[
-                  styles.singleRandomButton,
-                  { backgroundColor: currentTheme.uiColors.accent }
-                ]}
-                onPress={handleRandomColors}
-              >
-                <Text allowFontScaling={false} style={[
-                  styles.randomizerButtonText,
-                  { color: currentTheme.uiColors.buttonText }
-                ]}>
-                  🎲 Generate Colors
-                </Text>
-              </TouchableOpacity>
+              {/* Color Generation Buttons */}
+              <View style={styles.buttonRow}>
+                <TouchableOpacity
+                  style={[
+                    styles.halfButton,
+                    { backgroundColor: currentTheme.uiColors.accent }
+                  ]}
+                  onPress={handleRandomColors}
+                >
+                  <Text allowFontScaling={false} style={[
+                    styles.buttonText,
+                    { color: currentTheme.uiColors.buttonText }
+                  ]}>
+                    🎲 Random Colors
+                  </Text>
+                </TouchableOpacity>
+                
+                <TouchableOpacity
+                  style={[
+                    styles.halfButton,
+                    { backgroundColor: currentTheme.uiColors.primary }
+                  ]}
+                  onPress={handleAIColors}
+                >
+                  <Text allowFontScaling={false} style={[
+                    styles.buttonText,
+                    { color: currentTheme.uiColors.buttonText }
+                  ]}>
+                    🤖 AI Colors
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </View>
 
             {/* Preview */}
@@ -513,6 +537,23 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   randomizerButtonText: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    fontFamily: FONTS.nunito,
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 16,
+  },
+  halfButton: {
+    flex: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  buttonText: {
     fontSize: 14,
     fontWeight: 'bold',
     fontFamily: FONTS.nunito,

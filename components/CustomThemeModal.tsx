@@ -1,6 +1,8 @@
 import { FONTS } from '@/app/_layout';
+import Constants from 'expo-constants';
 import React, { useState } from 'react';
 import {
+    ActivityIndicator,
     Alert,
     Dimensions,
     Modal,
@@ -15,6 +17,23 @@ import {
 import { useTheme } from '../hooks/useTheme';
 import { CustomThemeData, DEFAULT_CUSTOM_COLORS, generateRandomColors } from '../utils/colorUtils';
 import ColorPicker from './ColorPicker';
+
+/**
+ * Get the appropriate API base URL based on platform
+ * @returns The base URL for API calls
+ */
+const getApiBaseUrl = (): string => {
+  // 🔒 Secure API configuration - uses deployed Vercel API
+  // API keys stay secure on the server side
+  const configuredUrl = Constants.expoConfig?.extra?.apiBaseUrl;
+  
+  if (configuredUrl) {
+    return configuredUrl;
+  }
+  
+  // Fallback to deployed API (no API keys exposed)
+  return 'https://spin2pick-app.vercel.app';
+};
 
 interface CustomThemeModalProps {
   visible: boolean;
@@ -68,11 +87,74 @@ export const CustomThemeModal: React.FC<CustomThemeModalProps> = ({
     setColorInput(randomColors[selectedColorIndex]);
   };
 
+  const [isAIGenerating, setIsAIGenerating] = useState(false);
+  const [aiError, setAIError] = useState<string | null>(null);
+  const [aiUsageCount, setAiUsageCount] = useState(0);
+
   const handleAIColors = async () => {
-    // TODO: Implement AI color generation
-    console.log('AI Colors button pressed - will implement in next phase');
-    // For now, show an alert
-    Alert.alert('Coming Soon', 'AI color generation will be implemented next!');
+    setIsAIGenerating(true);
+    setAIError(null);
+    
+    try {
+      const baseUrl = getApiBaseUrl();
+      const response = await fetch(`${baseUrl}/api/generate-colors`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          count: 12,
+          style: 'modern and vibrant',
+          context: 'game interface',
+          existingColors: colors // Pass current colors to avoid duplicates
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      // Extract colors from the API response
+      let aiColors = data.extractedColors;
+      
+      // Fallback if API didn't return valid colors
+      if (!Array.isArray(aiColors) || aiColors.length === 0) {
+        console.warn('AI API returned invalid colors, using fallback');
+        aiColors = [
+          '#E74C3C', '#3498DB', '#2ECC71', '#F39C12', '#9B59B6', '#1ABC9C',
+          '#E67E22', '#34495E', '#F1C40F', '#E91E63', '#FF9800', '#607D8B'
+        ];
+      }
+      
+      // Update colors and current color input
+      setColors(aiColors);
+      setColorInput(aiColors[selectedColorIndex]);
+      
+      // Track successful AI usage
+      setAiUsageCount(prev => prev + 1);
+      
+      console.log('🤖 AI generated colors:', aiColors);
+      console.log('📊 AI usage count:', aiUsageCount + 1);
+      
+    } catch (error) {
+      console.error('Error generating AI colors:', error);
+      setAIError('Failed to generate AI colors. Please try again.');
+      
+      // Fallback to random colors on error
+      const fallbackColors = generateRandomColors(12);
+      setColors(fallbackColors);
+      setColorInput(fallbackColors[selectedColorIndex]);
+      
+      Alert.alert(
+        'AI Generation Failed', 
+        'Could not connect to AI service. Generated random colors instead.',
+        [{ text: 'OK' }]
+      );
+    } finally {
+      setIsAIGenerating(false);
+    }
   };
 
   const isValidHexColor = (color: string): boolean => {
@@ -285,18 +367,51 @@ export const CustomThemeModal: React.FC<CustomThemeModalProps> = ({
                 <TouchableOpacity
                   style={[
                     styles.halfButton,
-                    { backgroundColor: currentTheme.uiColors.primary }
+                    { 
+                      backgroundColor: isAIGenerating 
+                        ? currentTheme.uiColors.secondary 
+                        : currentTheme.uiColors.primary,
+                      opacity: isAIGenerating ? 0.7 : 1
+                    }
                   ]}
                   onPress={handleAIColors}
+                  disabled={isAIGenerating}
                 >
-                  <Text allowFontScaling={false} style={[
-                    styles.buttonText,
-                    { color: currentTheme.uiColors.buttonText }
-                  ]}>
-                    🤖 AI Colors
-                  </Text>
+                  {isAIGenerating ? (
+                    <View style={styles.loadingContainer}>
+                      <ActivityIndicator 
+                        size="small" 
+                        color={currentTheme.uiColors.buttonText} 
+                      />
+                      <Text allowFontScaling={false} style={[
+                        styles.buttonText,
+                        { color: currentTheme.uiColors.buttonText, marginLeft: 8 }
+                      ]}>
+                        Generating...
+                      </Text>
+                    </View>
+                  ) : (
+                    <Text allowFontScaling={false} style={[
+                      styles.buttonText,
+                      { color: currentTheme.uiColors.buttonText }
+                    ]}>
+                      🤖 AI Colors
+                    </Text>
+                  )}
                 </TouchableOpacity>
               </View>
+
+              {/* Error Message */}
+              {aiError && (
+                <View style={styles.errorContainer}>
+                  <Text allowFontScaling={false} style={[
+                    styles.errorText,
+                    { color: '#E74C3C' }
+                  ]}>
+                    ⚠️ {aiError}
+                  </Text>
+                </View>
+              )}
             </View>
 
             {/* Preview */}
@@ -557,5 +672,23 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
     fontFamily: FONTS.nunito,
+  },
+  loadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  errorContainer: {
+    marginTop: 12,
+    padding: 12,
+    backgroundColor: '#FFF5F5',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#FED7D7',
+  },
+  errorText: {
+    fontSize: 14,
+    fontFamily: FONTS.nunito,
+    textAlign: 'center',
   },
 }); 

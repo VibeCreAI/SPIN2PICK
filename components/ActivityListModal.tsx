@@ -647,7 +647,7 @@ export const ActivityListModal: React.FC<ActivityListModalProps> = ({
             <View style={styles.tabButtonsContainer}>
               {renderTabButton('view', 'View', '👁️')}
               {renderTabButton('add', 'Add Multiple', '📝')}
-              {renderTabButton('ai', 'AI Suggest', '🤖')}
+              {renderTabButton('ai', 'AI Suggest', '✨')}
             </View>
 
             {/* Tab Content */}

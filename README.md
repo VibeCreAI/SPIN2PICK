@@ -246,4 +246,4 @@ Muted, classic tones for a timeless aesthetic
 
 ---
 
-*© 2024 VibeCreAI - All rights reserved*
+*© 2025 VibeCreAI - All rights reserved*

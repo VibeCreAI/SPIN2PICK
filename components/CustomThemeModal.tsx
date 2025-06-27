@@ -4,6 +4,7 @@ import {
     Alert,
     Dimensions,
     Modal,
+    Platform,
     ScrollView,
     StyleSheet,
     Text,
@@ -12,7 +13,7 @@ import {
     View
 } from 'react-native';
 import { useTheme } from '../hooks/useTheme';
-import { CustomThemeData, DEFAULT_CUSTOM_COLORS, generateHarmoniousColors, generateRandomColors } from '../utils/colorUtils';
+import { CustomThemeData, DEFAULT_CUSTOM_COLORS, generateRandomColors } from '../utils/colorUtils';
 import ColorPicker from './ColorPicker';
 
 interface CustomThemeModalProps {
@@ -55,7 +56,6 @@ export const CustomThemeModal: React.FC<CustomThemeModalProps> = ({
       };
 
       await setCustomTheme(customData);
-      Alert.alert('Success', 'Your custom theme has been saved and applied!');
       onClose();
     } catch (error) {
       Alert.alert('Error', 'Failed to save custom theme. Please try again.');
@@ -66,13 +66,6 @@ export const CustomThemeModal: React.FC<CustomThemeModalProps> = ({
     const randomColors = generateRandomColors(12);
     setColors(randomColors);
     setColorInput(randomColors[selectedColorIndex]);
-  };
-
-  const handleHarmoniousColors = () => {
-    const baseColor = colors[selectedColorIndex];
-    const harmoniousColors = generateHarmoniousColors(baseColor, 12);
-    setColors(harmoniousColors);
-    setColorInput(harmoniousColors[selectedColorIndex]);
   };
 
   const isValidHexColor = (color: string): boolean => {
@@ -96,7 +89,7 @@ export const CustomThemeModal: React.FC<CustomThemeModalProps> = ({
           }
         ]}>
           {/* Header */}
-          <View style={styles.header}>
+          <View style={[styles.header, { borderBottomColor: currentTheme.uiColors.secondary }]}>
             <Text style={[
               styles.title,
               { color: currentTheme.uiColors.primary }
@@ -111,8 +104,21 @@ export const CustomThemeModal: React.FC<CustomThemeModalProps> = ({
             </Text>
           </View>
 
-          {/* Content */}
-          <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+          {/* Content Container with proper scroll handling */}
+          <View style={styles.contentWrapper}>
+            <ScrollView
+              style={styles.content}
+              contentContainerStyle={styles.scrollContent}
+              showsVerticalScrollIndicator={true}
+              scrollEnabled={true}
+              nestedScrollEnabled={true}
+              bounces={Platform.OS === 'ios'}
+              alwaysBounceVertical={false}
+              keyboardShouldPersistTaps="handled"
+              keyboardDismissMode="on-drag"
+              automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
+              contentInsetAdjustmentBehavior={Platform.OS === 'ios' ? 'automatic' : undefined}
+            >
             {/* Theme Name Input */}
             <View style={styles.section}>
               <Text style={[
@@ -252,37 +258,21 @@ export const CustomThemeModal: React.FC<CustomThemeModalProps> = ({
                 </View>
               )}
 
-              {/* Randomizer Buttons */}
-              <View style={styles.randomizerContainer}>
-                <TouchableOpacity
-                  style={[
-                    styles.randomizerButton,
-                    { backgroundColor: currentTheme.uiColors.primary }
-                  ]}
-                  onPress={handleRandomColors}
-                >
-                  <Text allowFontScaling={false} style={[
-                    styles.randomizerButtonText,
-                    { color: currentTheme.uiColors.buttonText }
-                  ]}>
-                    🎲 Random Colors
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[
-                    styles.randomizerButton,
-                    { backgroundColor: currentTheme.uiColors.accent }
-                  ]}
-                  onPress={handleHarmoniousColors}
-                >
-                  <Text allowFontScaling={false} style={[
-                    styles.randomizerButtonText,
-                    { color: currentTheme.uiColors.buttonText }
-                  ]}>
-                    🎨 Harmonious
-                  </Text>
-                </TouchableOpacity>
-              </View>
+              {/* Random Colors Button */}
+              <TouchableOpacity
+                style={[
+                  styles.singleRandomButton,
+                  { backgroundColor: currentTheme.uiColors.accent }
+                ]}
+                onPress={handleRandomColors}
+              >
+                <Text allowFontScaling={false} style={[
+                  styles.randomizerButtonText,
+                  { color: currentTheme.uiColors.buttonText }
+                ]}>
+                  🎲 Generate Colors
+                </Text>
+              </TouchableOpacity>
             </View>
 
             {/* Preview */}
@@ -305,7 +295,8 @@ export const CustomThemeModal: React.FC<CustomThemeModalProps> = ({
                 ))}
               </View>
             </View>
-          </ScrollView>
+            </ScrollView>
+          </View>
 
           {/* Footer */}
           <View style={styles.footer}>
@@ -356,6 +347,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     borderWidth: 2,
     maxHeight: '90%',
+    minHeight: 600,
     elevation: 10,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
@@ -379,9 +371,18 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: FONTS.nunito,
   },
+  contentWrapper: {
+    flex: 1,
+    minHeight: 400,
+  },
   content: {
     flex: 1,
+  },
+  scrollContent: {
     padding: 20,
+    paddingTop: 15,
+    minHeight: 400,
+    flexGrow: 1,
   },
   section: {
     marginBottom: 24,
@@ -503,6 +504,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     borderRadius: 8,
     alignItems: 'center',
+  },
+  singleRandomButton: {
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 16,
   },
   randomizerButtonText: {
     fontSize: 14,

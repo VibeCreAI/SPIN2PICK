@@ -431,42 +431,57 @@ export const hexToHsv = (hex: string): [number, number, number] => {
   return [h, s, v];
 };
 
-// Generate random vibrant colors
+// Generate optimal random colors using advanced color theory
 export const generateRandomColors = (count: number = 12): string[] => {
   const colors: string[] = [];
   const goldenRatio = 0.618033988749895;
-  let hue = Math.random();
+  
+  // Start with a random but aesthetically pleasing hue
+  let baseHue = Math.random();
+  
+  // Define color harmony patterns (complementary, triadic, split-complementary, etc.)
+  const harmonyPatterns = [
+    [0, 30, 60],           // Analogous
+    [0, 120, 240],         // Triadic  
+    [0, 150, 210],         // Split-complementary
+    [0, 60, 180, 240],     // Tetradic
+    [0, 72, 144, 216, 288] // Pentadic
+  ];
+  
+  // Choose a random harmony pattern
+  const pattern = harmonyPatterns[Math.floor(Math.random() * harmonyPatterns.length)];
   
   for (let i = 0; i < count; i++) {
-    // Use golden ratio to distribute hues evenly
-    hue = (hue + goldenRatio) % 1;
+    let hue: number;
     
-    // Generate vibrant colors with good saturation and brightness
+    if (i < pattern.length) {
+      // Use harmony pattern for first colors
+      hue = (baseHue + pattern[i] / 360) % 1;
+    } else {
+      // Use golden ratio distribution for remaining colors
+      baseHue = (baseHue + goldenRatio) % 1;
+      hue = baseHue;
+    }
+    
+    // Create more sophisticated saturation and brightness variations
+    const saturationVariation = Math.sin(i * 0.5) * 0.15; // Smooth wave variation
+    const brightnessVariation = Math.cos(i * 0.7) * 0.1;  // Different wave for brightness
+    
     const h = Math.round(hue * 360);
-    const s = 0.7 + Math.random() * 0.3; // 70-100% saturation
-    const v = 0.8 + Math.random() * 0.2; // 80-100% brightness
+    const s = Math.max(0.65, Math.min(0.95, 0.8 + saturationVariation)); // 65-95% saturation
+    const v = Math.max(0.75, Math.min(0.95, 0.85 + brightnessVariation)); // 75-95% brightness
     
     const [r, g, b] = hsvToRgb(h, s, v);
     colors.push(rgbToHex(r, g, b));
   }
   
-  return colors;
-};
-
-// Generate harmonious color palette
-export const generateHarmoniousColors = (baseColor: string, count: number = 12): string[] => {
-  const [baseH, baseS, baseV] = hexToHsv(baseColor);
-  const colors: string[] = [];
-  
-  for (let i = 0; i < count; i++) {
-    // Create variations based on the base color
-    const hueShift = (i * 30) % 360; // Shift hue by 30 degrees
-    const h = (baseH + hueShift) % 360;
-    const s = Math.max(0.5, baseS + (Math.random() - 0.5) * 0.3);
-    const v = Math.max(0.6, baseV + (Math.random() - 0.5) * 0.3);
-    
-    const [r, g, b] = hsvToRgb(h, s, v);
-    colors.push(rgbToHex(r, g, b));
+  // Shuffle the colors slightly to avoid predictable patterns while maintaining harmony
+  for (let i = colors.length - 1; i > 0; i--) {
+    // Only swap with nearby colors to maintain some order
+    const j = Math.max(0, Math.min(colors.length - 1, i + Math.floor((Math.random() - 0.5) * 4)));
+    if (Math.abs(i - j) <= 2) { // Only swap with colors within 2 positions
+      [colors[i], colors[j]] = [colors[j], colors[i]];
+    }
   }
   
   return colors;

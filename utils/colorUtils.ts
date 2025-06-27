@@ -275,10 +275,57 @@ const createLightTint = (hexColor: string): string => {
   return '#' + ((1 << 24) + (tintedR << 16) + (tintedG << 8) + tintedB).toString(16).slice(1).toUpperCase();
 };
 
+// Helper function to calculate luminance of a color (for text contrast)
+const getLuminance = (hexColor: string): number => {
+  const r = parseInt(hexColor.slice(1, 3), 16) / 255;
+  const g = parseInt(hexColor.slice(3, 5), 16) / 255;
+  const b = parseInt(hexColor.slice(5, 7), 16) / 255;
+  
+  // Apply gamma correction
+  const toLinear = (c: number) => c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+  
+  const rLinear = toLinear(r);
+  const gLinear = toLinear(g);
+  const bLinear = toLinear(b);
+  
+  // Calculate relative luminance
+  return 0.2126 * rLinear + 0.7152 * gLinear + 0.0722 * bLinear;
+};
+
+// Helper function to get optimal text color based on background
+const getOptimalTextColor = (backgroundColor: string): string => {
+  const luminance = getLuminance(backgroundColor);
+  
+  // If background is dark (low luminance), use light text
+  // If background is light (high luminance), use dark text
+  // Threshold of 0.5 works well for most cases
+  return luminance > 0.5 ? '#333333' : '#FFFFFF';
+};
+
+// Helper function to create a darker variant of a color for text
+const createDarkVariant = (hexColor: string): string => {
+  const r = parseInt(hexColor.slice(1, 3), 16);
+  const g = parseInt(hexColor.slice(3, 5), 16);
+  const b = parseInt(hexColor.slice(5, 7), 16);
+  
+  // Create a darker variant (60% of original brightness)
+  const darkR = Math.round(r * 0.6);
+  const darkG = Math.round(g * 0.6);
+  const darkB = Math.round(b * 0.6);
+  
+  return '#' + ((1 << 24) + (darkR << 16) + (darkG << 8) + darkB).toString(16).slice(1).toUpperCase();
+};
+
 // Create custom theme object
 export const createCustomTheme = (customData: CustomThemeData): ColorTheme => {
   // Use the first color to create a subtle background tint
   const backgroundTint = createLightTint(customData.colors[0]);
+  
+  // Get optimal text color based on background luminance
+  const textColor = getOptimalTextColor(backgroundTint);
+  
+  // Create a darker variant of the primary color for better text contrast
+  const primaryDark = createDarkVariant(customData.colors[0]);
   
   return {
     id: 'custom',
@@ -291,7 +338,7 @@ export const createCustomTheme = (customData: CustomThemeData): ColorTheme => {
       primary: customData.colors[0],
       secondary: customData.colors[1],
       accent: customData.colors[2],
-      text: '#333333',
+      text: textColor, // Dynamic text color based on background luminance
       cardBackground: '#ffffff',
       modalBackground: '#ffffff',
       buttonBackground: customData.colors[2],

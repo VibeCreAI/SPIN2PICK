@@ -325,6 +325,14 @@ export const createCustomTheme = (customData: CustomThemeData): ColorTheme => {
   // Get optimal text color based on background luminance
   const textColor = getOptimalTextColor(backgroundTint);
   
+  // Check if we have a dark background
+  const luminance = getLuminance(backgroundTint);
+  const isDarkBackground = luminance <= 0.5;
+  
+  // Set modal/card backgrounds based on main background
+  const modalBackground = isDarkBackground ? '#1e1e1e' : '#ffffff';
+  const cardBackground = isDarkBackground ? '#2a2a2a' : '#ffffff';
+  
   // Create a darker variant of the primary color for better text contrast
   const primaryDark = createDarkVariant(customData.colors[0]);
   
@@ -340,8 +348,8 @@ export const createCustomTheme = (customData: CustomThemeData): ColorTheme => {
       secondary: customData.colors[1],
       accent: customData.colors[2],
       text: textColor, // Dynamic text color based on background luminance
-      cardBackground: '#ffffff',
-      modalBackground: '#ffffff',
+      cardBackground: cardBackground, // Dynamic based on background
+      modalBackground: modalBackground, // Dynamic based on background
       buttonBackground: customData.colors[2],
       buttonText: '#ffffff',
     }

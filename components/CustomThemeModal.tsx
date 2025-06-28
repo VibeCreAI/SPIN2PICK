@@ -16,7 +16,7 @@ import {
 } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useTheme } from '../hooks/useTheme';
-import { createCustomTheme, CustomThemeData, DEFAULT_CUSTOM_COLORS, generateRandomColors } from '../utils/colorUtils';
+import { CustomThemeData, DEFAULT_CUSTOM_COLORS, generateRandomColors } from '../utils/colorUtils';
 import ColorPicker from './ColorPicker';
 
 /**
@@ -129,37 +129,25 @@ export const CustomThemeModal: React.FC<CustomThemeModalProps> = ({
     }
 
     try {
+      // 🎨 Get the background color if AI was used
+      const backgroundColor = aiColorsUsed ? aiStyleBackgrounds[selectedAIStyle] : undefined;
+      
       const customData: CustomThemeData = {
         colors,
+        backgroundColor, // Include AI background if used
         name: themeName.trim(),
         createdAt: new Date(),
         isActive: true,
       };
 
-      // 🎨 Apply hard-coded background if AI colors were used
-      if (aiColorsUsed) {
-        const selectedBackground = aiStyleBackgrounds[selectedAIStyle] || '#f8f9fa';
-        console.log('🎨 Applying AI style background:', selectedBackground, 'for style:', selectedAIStyle);
-        
-        // Update the theme with the background color
-        const customTheme = createCustomTheme(customData);
-        customTheme.backgroundColor = selectedBackground;
-        
-        // Adjust text colors based on background
-        if (selectedBackground === '#0d1117' || selectedBackground === '#1a1a2e') {
-          // Dark backgrounds need light text
-          customTheme.uiColors.text = '#ffffff';
-          customTheme.uiColors.modalBackground = selectedBackground;
-          customTheme.uiColors.cardBackground = selectedBackground;
-        }
-        
-        await setCustomTheme(customData);
-        console.log('🎨 Custom theme saved with AI background');
-      } else {
-        await setCustomTheme(customData);
-        console.log('🎨 Custom theme saved with default background');
-      }
+      console.log('🎨 Saving theme:', {
+        name: customData.name,
+        aiUsed: aiColorsUsed,
+        style: selectedAIStyle,
+        backgroundColor: backgroundColor
+      });
 
+      await setCustomTheme(customData);
       onClose();
     } catch (error) {
       Alert.alert('Error', 'Failed to save custom theme. Please try again.');
@@ -228,54 +216,28 @@ export const CustomThemeModal: React.FC<CustomThemeModalProps> = ({
 
       const data = await response.json();
       
-      // Extract colors and background from the API response
+      // Extract colors from the API response
       let aiColors = data.extractedColors;
-      let aiBackgroundColor = data.backgroundColor;
       
       // Fallback if API didn't return valid colors
       if (!Array.isArray(aiColors) || aiColors.length === 0) {
         console.warn('AI API returned invalid colors, using fallback');
         
-        // Style-specific fallback colors with backgrounds
-        const styleDefaults: Record<string, { colors: string[], background: string }> = {
-          neon_futuristic: {
-            colors: ['#FF0080', '#00FFFF', '#FF1493', '#00FF00', '#FF4500', '#9400D3'],
-            background: '#1a1a2e'
-          },
-          pastel_harmony: {
-            colors: ['#FFACAB', '#FFCEA2', '#FFF29C', '#E4FEBD', '#C2FFE1', '#ABFCFE'],
-            background: '#faf8ff'
-          },
-          sunset_gradient: {
-            colors: ['#FF6B35', '#F7931E', '#FF8E53', '#FFD93D', '#FFC72C', '#FF9F1C'],
-            background: '#fff5e6'
-          },
-          ocean_depths: {
-            colors: ['#0077BE', '#00A8CC', '#7DD3C0', '#86C5D8', '#4CB5F5', '#2E8BC0'],
-            background: '#f0f9ff'
-          },
-          retro_synthwave: {
-            colors: ['#FF00FF', '#00FFFF', '#FF1493', '#FFFF00', '#FF0080', '#00FF00'],
-            background: '#0d1117'
-          },
-          forest_earth: {
-            colors: ['#228B22', '#32CD32', '#90EE90', '#9ACD32', '#8FBC8F', '#66CDAA'],
-            background: '#f8fff8'
-          },
-          minimal_elegant: {
-            colors: ['#E8E8E8', '#D1D1D1', '#B8B8B8', '#A0A0A0', '#909090', '#808080'],
-            background: '#fafafa'
-          }
+        // Style-specific fallback colors
+        const styleDefaults: Record<string, string[]> = {
+          neon_futuristic: ['#FF0080', '#00FFFF', '#FF1493', '#00FF00', '#FF4500', '#9400D3'],
+          pastel_harmony: ['#FFACAB', '#FFCEA2', '#FFF29C', '#E4FEBD', '#C2FFE1', '#ABFCFE'],
+          sunset_gradient: ['#FF6B35', '#F7931E', '#FF8E53', '#FFD93D', '#FFC72C', '#FF9F1C'],
+          ocean_depths: ['#0077BE', '#00A8CC', '#7DD3C0', '#86C5D8', '#4CB5F5', '#2E8BC0'],
+          retro_synthwave: ['#FF00FF', '#00FFFF', '#FF1493', '#FFFF00', '#FF0080', '#00FF00'],
+          forest_earth: ['#228B22', '#32CD32', '#90EE90', '#9ACD32', '#8FBC8F', '#66CDAA'],
+          minimal_elegant: ['#E8E8E8', '#D1D1D1', '#B8B8B8', '#A0A0A0', '#909090', '#808080']
         };
         
-        const fallbackData = styleDefaults[selectedAIStyle] || {
-          colors: ['#E74C3C', '#3498DB', '#2ECC71', '#F39C12', '#9B59B6', '#1ABC9C',
-                  '#E67E22', '#34495E', '#F1C40F', '#E91E63', '#FF9800', '#607D8B'],
-          background: '#f8f9fa'
-        };
-        
-        aiColors = fallbackData.colors;
-        aiBackgroundColor = fallbackData.background;
+        aiColors = styleDefaults[selectedAIStyle] || [
+          '#E74C3C', '#3498DB', '#2ECC71', '#F39C12', '#9B59B6', '#1ABC9C',
+          '#E67E22', '#34495E', '#F1C40F', '#E91E63', '#FF9800', '#607D8B'
+        ];
         
         // Extend to 12 colors if needed
         while (aiColors.length < 12) {
@@ -288,21 +250,8 @@ export const CustomThemeModal: React.FC<CustomThemeModalProps> = ({
       setColors(aiColors);
       setColorInput(aiColors[selectedColorIndex]);
       
-      // If we have an AI background color, create and save the complete theme immediately
-      if (aiBackgroundColor) {
-        const customData: CustomThemeData = {
-          colors: aiColors,
-          backgroundColor: aiBackgroundColor,
-          name: themeName || `${selectedAIStyle.replace('_', ' ')} Theme`,
-          createdAt: new Date(),
-          isActive: true
-        };
-        
-        // Apply the theme immediately to show the background effect
-        await setCustomTheme(customData);
-        
-        console.log(`🎨 AI theme created with background: ${aiBackgroundColor}`);
-      }
+      // Set AI flag when AI colors are used
+      setAiColorsUsed(true);
       
       // Track successful AI usage
       setAiUsageCount(prev => prev + 1);
@@ -310,9 +259,6 @@ export const CustomThemeModal: React.FC<CustomThemeModalProps> = ({
       console.log('🤖 AI generated colors:', aiColors);
       console.log('🎨 Style used:', data.styleName || selectedAIStyle);
       console.log('📊 AI usage count:', aiUsageCount + 1);
-      
-      // Set AI flag when AI colors are used
-      setAiColorsUsed(true);
       
     } catch (error) {
       console.error('Error generating AI colors:', error);
@@ -322,6 +268,7 @@ export const CustomThemeModal: React.FC<CustomThemeModalProps> = ({
       const fallbackColors = generateRandomColors(12);
       setColors(fallbackColors);
       setColorInput(fallbackColors[selectedColorIndex]);
+      setAiColorsUsed(false); // Reset AI flag for fallback
       
       Alert.alert(
         'AI Generation Failed', 

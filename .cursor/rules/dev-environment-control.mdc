@@ -1,0 +1,120 @@
+---
+description: Git and Dev-environment guide
+globs: 
+alwaysApply: false
+---
+# Development Environment Control
+
+## Core Principle
+The user maintains control over git operations and development server management. The agent should NOT automatically execute these commands.
+
+## Prohibited Actions
+
+### Git Operations
+- **DO NOT** run any git commands automatically:
+  - `git add`
+  - `git commit` 
+  - `git push`
+  - `git pull`
+  - `git status`
+  - `git branch`
+  - `git checkout`
+  - Any other git operations
+
+### Server Management  
+- **DO NOT** start development servers automatically:
+  - `npm start`
+  - `yarn start`
+  - `expo start`
+  - `npm run dev`
+  - `yarn dev`
+  - `ng serve`
+  - `python manage.py runserver`
+  - Any framework-specific dev server commands
+
+### Build Operations
+- **DO NOT** run build commands automatically:
+  - `npm run build`
+  - `yarn build`
+  - `expo build`
+  - Framework-specific build processes
+
+## Allowed Behavior
+
+### Information Gathering
+- ✅ **CAN** read git status when provided in context
+- ✅ **CAN** read package.json scripts
+- ✅ **CAN** analyze project configuration files
+- ✅ **CAN** check file contents and structure
+
+### Suggestions
+- ✅ **CAN** suggest git commands the user might want to run
+- ✅ **CAN** recommend server startup commands
+- ✅ **CAN** explain what commands would be needed
+
+### Code Changes
+- ✅ **CAN** create, modify, and delete code files
+- ✅ **CAN** update configuration files
+- ✅ **CAN** suggest file structure changes
+
+## Communication Guidelines
+
+### When suggesting commands:
+```
+# Instead of running automatically, suggest:
+"You may want to run: `git add . && git commit -m 'feat: new feature'`"
+"To start the development server, run: `npm start`"
+"Consider running: `git push origin main`"
+```
+
+### When completing tasks:
+```
+# End responses with:
+"Files have been updated. You can now run your preferred git and server commands."
+"Changes are ready. Start your development server when you're ready to test."
+```
+
+## Examples
+
+### ❌ Wrong Approach
+```
+I'll commit these changes for you:
+```bash
+git add .
+git commit -m "Update components"
+git push
+```
+
+Now starting the development server:
+```bash
+npm start
+```
+```
+
+### ✅ Correct Approach  
+```
+I've updated the component files as requested. 
+
+The changes include:
+- Modified RouletteWheel.tsx with new animation logic
+- Updated package.json dependencies
+
+You can now review the changes and run your preferred git commands to commit them.
+For testing, start your development server when ready.
+```
+
+## Rationale
+This approach respects the user's workflow preferences and maintains their control over:
+- Version control timing and commit messages
+- Development server lifecycle
+- Build and deployment processes
+- Environment management
+
+The user knows their development setup best and prefers to handle these operations manually.
+
+## Implementation Notes
+- This rule applies globally with `alwaysApply: true`
+- Agent should always check this rule before suggesting terminal commands
+- Focus on code changes and suggestions rather than execution
+- Respect user autonomy in development workflow
+

@@ -3,64 +3,83 @@ description:
 globs: 
 alwaysApply: false
 ---
-# Git Commit Message Summaries
+# Git Commit Session Summaries
 
-## Provide git commit messages for previouse code change sessions.
+## Provide comprehensive git commit summaries for entire coding sessions.
 
-After every code modification, bug fix, or feature implementation, you MUST provide a short, copy-paste ready git commit message summary.
+At the end of each coding session with multiple changes, provide a detailed but concise summary of ALL changes made since the last git push to remote. This summary will be copy-pasted directly into the git commit message area.
 
-### Format Requirements:
+### Summary Requirements:
 
-1. **Keep it concise** (100 characters or less for the title)
-2. **Use imperative mood** (Fix, Add, Update, Remove, etc.)
-3. **Be specific** about what changed
-4. **Format consistently**
+1. **Comprehensive Coverage** - Include all files changed, features added, bugs fixed
+2. **Logical Grouping** - Group related changes together 
+3. **Clear Structure** - Use bullet points or numbered lists for readability
+4. **Specific Details** - Mention specific components, functions, or features affected
+5. **Copy-Paste Ready** - Format for direct use in commit message box
 
-### Examples:
+### Summary Structure:
 
-#### Good Examples:
 ```
-Fix: Remove emissive properties from MeshBasicMaterial
-Add: Hover effect dimming for text cards  
-Update: Reduce emissive intensity from 50 to 0.8
-Remove: Redundant card brightness on icon hover
-Refactor: Replace MeshBasicMaterial with MeshStandardMaterial
+[Main Action]: [Primary focus of the session]
+
+• [Category 1]: [Specific changes in this area]
+  - [Detail 1]
+  - [Detail 2]
+• [Category 2]: [Specific changes in this area]
+  - [Detail 1] 
+  - [Detail 2]
+• [Category 3]: [Additional changes]
+
+[Optional: Impact or rationale for major changes]
 ```
 
-#### Bad Examples:
+### Good Example:
 ```
-fix stuff
-updated some code
-made changes to the file
-fixed the bug we talked about
+Update: Enhanced modal system and improved cursor rules documentation
+
+• Modal Components:
+  - Fixed ScrollView configuration for better mobile compatibility
+  - Added proper keyboard handling and nested scroll support
+  - Updated ActivityListModal and SaveLoadModal sizing patterns
+
+• Cursor Rules:
+  - Created modal-popup-best-practices.mdc with mobile scrolling patterns
+  - Updated directory-structure.mdc with 8 new components and current file sizes
+  - Enhanced tech-stack.mdc with API deployment workflow and AI integration docs
+
+• API Documentation:
+  - Added critical Vercel deployment requirements (vercel --prod)
+  - Documented OpenRouter AI service integration patterns
+  - Included error handling and fallback strategies
+
+Ensures all modals work smoothly on Expo Go mobile and documents current project state accurately.
 ```
+
+### Categories to Consider:
+- **Components**: New components, component updates, UI improvements
+- **API/Backend**: API endpoints, serverless functions, external integrations
+- **Documentation**: Rule updates, README changes, code comments
+- **Bug Fixes**: Specific issues resolved, error handling improvements
+- **Features**: New functionality, feature enhancements
+- **Configuration**: Build scripts, config file updates, dependency changes
+- **Performance**: Optimizations, memory improvements, bundle size reductions
+- **Accessibility**: A11y improvements, WCAG compliance updates
 
 ### Template Format:
 
-At the end of every code change response, provide:
+At the end of major coding sessions, provide:
 
 ```
-## 📋 Git Commit Message:
+## 📋 Git Commit Summary:
 ```
-[Type]: [Brief description of change]
+[Your comprehensive session summary here]
 ```
 ```
-
-### Commit Types:
-- **Fix**: Bug fixes
-- **Add**: New features or functionality  
-- **Update**: Modifications to existing features
-- **Remove**: Deletion of code/features
-- **Refactor**: Code structure improvements
-- **Style**: Formatting, styling changes
-- **Docs**: Documentation updates
-- **Config**: Configuration file changes
 
 ### Implementation:
-This rule applies to ALL code changes, regardless of size. Even single-line fixes should get a commit message summary.
-
-The commit message should be ready to copy-paste directly into:
-```bash
-git commit -m "Your provided message"
-```
+- Provide summaries for sessions with multiple file changes
+- Focus on the user's main goals and what was accomplished
+- Be specific enough to understand what changed without being verbose
+- Ready for direct copy-paste into git commit message field
+- Include impact/rationale for major architectural changes
 

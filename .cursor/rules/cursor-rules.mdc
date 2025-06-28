@@ -4,70 +4,184 @@ globs:
 alwaysApply: false
 ---
 ---
-description: How to add or edit Cursor rules in our project
-globs:
-alwaysApply: false
+description: How to create, manage, and maintain Cursor rules in our project
+globs: **/*
+alwaysApply: true
 ---
-# Cursor Rules Location
 
-How to add new cursor rules to the project
+# Cursor Rules Management Guide
 
-1. Always place rule files in PROJECT_ROOT/.cursor/rules/:
-    ```
-    .cursor/rules/
-    ├── your-rule-name.mdc
-    ├── another-rule.mdc
-    └── ...
-    ```
+## File Location & Structure
 
-2. Follow the naming convention:
-    - Use kebab-case for filenames
-    - Always use .mdc extension
-    - Make names descriptive of the rule's purpose
-
-3. Directory structure:
-    ```
-    PROJECT_ROOT/
-    ├── .cursor/
-    │   └── rules/
-    │       ├── your-rule-name.mdc
-    │       └── ...
-    └── ...
-    ```
-
-4. Never place rule files:
-    - In the project root
-    - In subdirectories outside .cursor/rules
-    - In any other location
-
-5. Cursor rules have the following structure:
-
+### **Rule File Location** 
+Always place rule files in `.cursor/rules/` directory:
 ```
+PROJECT_ROOT/
+├── .cursor/
+│   └── rules/
+│       ├── tech-stack.mdc
+│       ├── directory-structure.mdc
+│       ├── modal-popup-best-practices.mdc
+│       ├── git-commit-messages.mdc
+│       ├── dev-environment-control.mdc
+│       ├── self-improvement.mdc
+│       └── cursor-rules.mdc
+```
+
+### **Naming Convention**
+- Use kebab-case for filenames
+- Always use `.mdc` extension
+- Make names descriptive and specific
+- Group related concepts (e.g., `api-patterns.mdc`, `component-guidelines.mdc`)
+
+### **Never Place Rules:**
+- ❌ In the project root
+- ❌ In subdirectories outside `.cursor/rules/`
+- ❌ In component or source directories
+
+## Rule File Structure
+
+### **Required Header Format:**
+```markdown
 ---
-description: Short description of the rule's purpose
-globs: optional/path/pattern/**/*
-alwaysApply: false
+description: Brief description of what this rule covers
+globs: **/*.tsx, **/*.ts (optional file patterns)
+alwaysApply: true/false
 ---
-# Rule Title
+```
 
-Main content explaining the rule with markdown formatting.
+### **Content Structure:**
+```markdown
+# Clear Rule Title
 
-1. Step-by-step instructions
-2. Code examples
-3. Guidelines
+## Problem Statement (Why this rule exists)
+Brief explanation of the issue this rule solves.
 
-Example:
+## Solution/Pattern
+The recommended approach with clear examples.
 
+### ✅ Good Examples:
 ```typescript
-// Good example
-function goodExample() {
-  // Implementation following guidelines
-}
-
-// Bad example
-function badExample() {
-  // Implementation not following guidelines
-}
+// Correct implementation
+const goodExample = () => {
+  // Show the right way
+};
 ```
+
+### ❌ Bad Examples:
+```typescript
+// Wrong implementation
+const badExample = () => {
+  // Show what to avoid
+};
+```
+
+## Additional Guidelines
+- Specific details
+- Edge cases
+- References to documentation
+```
+
+## Rule Categories & When to Create
+
+### **Technical Implementation Rules**
+Create when you have 3+ files using the same pattern:
+- Component patterns
+- API integration patterns  
+- State management approaches
+- Error handling strategies
+
+### **Project-Specific Rules**
+Create for project conventions:
+- File organization
+- Naming conventions
+- Architecture decisions
+- Deployment workflows
+
+### **Quality & Standards Rules**
+Create to prevent common issues:
+- Code quality standards
+- Performance patterns
+- Security practices
+- Accessibility requirements
+
+## Rule Management Workflow
+
+### **Creating New Rules**
+1. Identify repeated pattern or common issue
+2. Ask AI: "Should we create a cursor rule for [pattern]?"
+3. AI creates rule with real examples from codebase
+4. Review and refine the rule
+5. Test rule by referencing it in next coding session
+
+### **Updating Existing Rules**
+1. Notice rule is outdated or incomplete
+2. Ask AI: "Can you update [rule-name] with current patterns?"
+3. AI updates with latest codebase examples
+4. Verify updated rule matches current practice
+
+### **Rule Health Checks**
+Monthly review triggers:
+- Are examples still current?
+- Do rules match actual code patterns?
+- Are there new patterns not covered?
+- Can any rules be consolidated?
+
+## Rule Quality Standards
+
+### **Good Rules Include:**
+✅ **Real examples** from your actual codebase  
+✅ **Clear rationale** for why the pattern matters  
+✅ **Specific implementation** details  
+✅ **Edge cases** and common pitfalls  
+✅ **References** to relevant documentation  
+
+### **Poor Rules Avoid:**
+❌ **Vague guidelines** without specific examples  
+❌ **Hypothetical code** not used in your project  
+❌ **Outdated patterns** that no longer apply  
+❌ **Overly broad** rules that aren't actionable  
+
+## Integration with Development
+
+### **During Coding Sessions:**
+- Reference rules when giving guidance
+- Suggest rule updates when patterns evolve
+- Propose new rules for emerging patterns
+- Use rule examples as templates
+
+### **Code Reviews:**
+- Reference relevant rules in feedback
+- Update rules based on review comments
+- Create rules for commonly repeated feedback
+
+### **Onboarding:**
+- Use rules as documentation for new team members
+- Update rules to reflect current team practices
+- Create rules for frequently asked questions
+
+## Maintenance Commands
+
+### **Ask AI to Review Rules:**
+```
+"Can you review our cursor rules and suggest improvements?"
+```
+
+### **Update Specific Rule:**
+```
+"Please update [rule-name].mdc with current code patterns"
+```
+
+### **Create New Rule:**
+```
+"Should we create a cursor rule for [specific pattern]?"
+```
+
+### **Rule Health Check:**
+```
+"Check if our cursor rules need updates based on recent changes"
+```
+
+This management approach ensures rules stay current, useful, and aligned with actual development practices.
 
 

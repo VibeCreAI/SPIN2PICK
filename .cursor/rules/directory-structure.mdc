@@ -56,22 +56,29 @@ app/
 ### 🧩 `/components` - React Components
 ```
 components/
-├── RouletteWheel.tsx           # Core roulette wheel component (1113 lines)
-├── SaveLoadModal.tsx           # Save/load activity lists modal (711 lines)
-├── ActivityInput.tsx           # Activity input and management (366 lines)
+├── RouletteWheel.tsx           # Core roulette wheel component (1635 lines)
+├── SaveLoadModal.tsx           # Save/load activity lists modal (740 lines)
+├── ActivityInput.tsx           # Activity input and management (465 lines)
+├── ActivityListModal.tsx       # Activity management modal (1026 lines)
+├── DeleteActivitiesModal.tsx   # Bulk delete confirmation modal (484 lines)
+├── ColorPicker.tsx             # Color selection component (184 lines)
+├── CustomThemeModal.tsx        # Custom theme creation modal (694 lines)
+├── ThemeSelectionModal.tsx     # Theme selection interface (368 lines)
+├── ThemeButton.tsx             # Theme switching button (57 lines)
+├── ThemePreviewCard.tsx        # Theme preview component (178 lines)
 ├── AdBanner.tsx                # AdMob banner component (mobile)
 ├── AdBanner.web.tsx            # Web banner placeholder
 ├── GoogleAdSense.tsx           # Google AdSense integration (web)
-├── Celebration.tsx             # Win celebration animations
-├── ThemedText.tsx              # Theme-aware text component
-├── ThemedView.tsx              # Theme-aware view component
-├── StyledText.tsx              # Styled text component
-├── Text.tsx                    # Base text component
-├── Collapsible.tsx             # Collapsible content component
-├── ExternalLink.tsx            # External link component
-├── HapticTab.tsx               # Haptic feedback tab component
-├── HelloWave.tsx               # Animated wave component
-├── ParallaxScrollView.tsx      # Parallax scroll view
+├── Celebration.tsx             # Win celebration animations (52 lines)
+├── ThemedText.tsx              # Theme-aware text component (46 lines)
+├── ThemedView.tsx              # Theme-aware view component (24 lines)
+├── StyledText.tsx              # Styled text component (21 lines)
+├── Text.tsx                    # Base text component (27 lines)
+├── Collapsible.tsx             # Collapsible content component (46 lines)
+├── ExternalLink.tsx            # External link component (25 lines)
+├── HapticTab.tsx               # Haptic feedback tab component (19 lines)
+├── HelloWave.tsx               # Animated wave component (41 lines)
+├── ParallaxScrollView.tsx      # Parallax scroll view (83 lines)
 └── ui/                         # Platform-specific UI components
     ├── IconSymbol.tsx          # Cross-platform icon system
     ├── IconSymbol.ios.tsx      # iOS-specific icon implementation
@@ -81,6 +88,8 @@ components/
 
 **Component Categories:**
 - **Core Game Components**: `RouletteWheel.tsx`, `ActivityInput.tsx`, `SaveLoadModal.tsx`
+- **Activity Management**: `ActivityListModal.tsx`, `DeleteActivitiesModal.tsx`
+- **Theme System**: `ColorPicker.tsx`, `CustomThemeModal.tsx`, `ThemeSelectionModal.tsx`, `ThemeButton.tsx`, `ThemePreviewCard.tsx`
 - **Monetization**: `AdBanner.tsx`, `GoogleAdSense.tsx`
 - **UI/UX**: `Celebration.tsx`, themed components, haptic feedback
 - **Platform-specific**: `/ui` subdirectory for iOS/Android differences
@@ -88,17 +97,20 @@ components/
 ### 🔧 `/utils` - Utility Functions
 ```
 utils/
-├── emojiUtils.ts               # Emoji management and utilities (432 lines)
-├── colorUtils.ts               # Color generation and theming (131 lines)
+├── emojiUtils.ts               # Emoji management and utilities (387 lines)
+├── colorUtils.ts               # Color generation and theming (626 lines)
+├── colorUtils_enhanced.ts      # Enhanced color utilities (0 lines - placeholder)
+├── colorUtils.backup.ts        # Backup of previous color utilities (448 lines)
 ├── soundUtils.ts               # Audio playback management (97 lines)
-├── adMobUtils.ts               # AdMob integration (mobile)
-└── adMobUtils.web.ts           # Web ad utilities
+├── adMobUtils.ts               # AdMob integration (mobile - 113 lines)
+└── adMobUtils.web.ts           # Web ad utilities (25 lines)
 ```
 
 **Utility Categories:**
-- **Game Logic**: Emoji handling, color generation
+- **Game Logic**: Emoji handling, advanced color generation with AI features
 - **Media**: Sound effects and audio management
 - **Monetization**: Platform-specific ad implementations
+- **Color System**: Enhanced color utilities with AI-powered theme generation
 
 ### 🎨 `/assets` - Static Assets
 ```
@@ -127,14 +139,34 @@ assets/
 ### 🌐 `/api` - Serverless Functions
 ```
 api/
-├── suggest-activity.js         # AI activity suggestion endpoint (106 lines)
-└── get-emoji.js               # Emoji fetching service (58 lines)
+├── suggest-activity.js         # AI activity suggestion endpoint (116 lines)
+├── suggest-multiple-activities.js # Bulk AI activity suggestions (160 lines)
+├── generate-colors.js          # AI color palette generation (192 lines)
+└── get-emoji.js               # Emoji fetching service (68 lines)
 ```
 
 **API Features:**
-- Activity suggestion using AI/external services
-- Emoji management and retrieval
-- Designed for Vercel serverless deployment
+- **AI Services**: Activity suggestions, bulk activity generation, intelligent color palette creation
+- **Utility Services**: Emoji management and retrieval
+- **Deployment**: Vercel serverless functions with OpenRouter AI integration
+
+**⚠️ CRITICAL: API Deployment Workflow**
+```bash
+# 🚨 REQUIRED: Deploy to Vercel before API functions can be called
+vercel --prod
+
+# This deployment step is MANDATORY because:
+# 1. API functions run as Vercel serverless functions
+# 2. Environment variables (API keys) are only available in deployed environment
+# 3. Local development cannot access OpenRouter AI services
+# 4. CORS headers are configured for production domain
+```
+
+**API Endpoints (Post-Deployment):**
+- `POST /api/suggest-activity` - Single activity suggestion with AI
+- `POST /api/suggest-multiple-activities` - Bulk activity generation
+- `POST /api/generate-colors` - AI-powered color palette generation
+- `GET /api/get-emoji` - Emoji fetching and management
 
 ### 📄 `/public` - Web Public Assets
 ```
@@ -155,16 +187,35 @@ constants/
 ### 🪝 `/hooks` - Custom React Hooks
 ```
 hooks/
-├── useColorScheme.ts           # Color scheme detection (mobile)
-├── useColorScheme.web.ts       # Color scheme detection (web)
-└── useThemeColor.ts            # Theme color management
+├── useTheme.tsx                # Advanced theme management system (148 lines)
+├── useColorScheme.ts           # Color scheme detection (mobile - 2 lines)
+├── useColorScheme.web.ts       # Color scheme detection (web - 22 lines)
+└── useThemeColor.ts            # Theme color management (22 lines)
 ```
+
+**Hook Categories:**
+- **Theme System**: Advanced theme management with custom themes, presets, and persistence
+- **Platform Detection**: Color scheme detection for light/dark mode
+- **Color Management**: Theme-aware color utilities
 
 ### 📜 `/scripts` - Build Scripts
 ```
 scripts/
 └── reset-project.js            # Project reset utility (113 lines)
 ```
+
+### 🤖 `/ai` - AI Development Files
+```
+SPIN2PICK/
+├── ai_color_functions.txt      # AI-powered color analysis functions (193 lines)
+└── temp_ai_functions.txt       # Temporary AI function development (2 lines)
+```
+
+**AI Development Features:**
+- **Color Intelligence**: AI-powered color analysis with luminance, contrast, and harmony calculations
+- **Theme Generation**: Intelligent background/text color selection using WCAG standards
+- **OpenRouter Integration**: AI services for activity suggestions and color palette generation
+- **Development Utilities**: Temporary files for testing and prototyping AI features
 
 ## Configuration Files (Root Level)
 

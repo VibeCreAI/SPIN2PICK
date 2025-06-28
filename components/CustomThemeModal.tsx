@@ -115,23 +115,23 @@ export const CustomThemeModal: React.FC<CustomThemeModalProps> = ({
   const screenWidth = Dimensions.get('window').width;
   const screenHeight = Dimensions.get('window').height;
   
-  // 🌐 Improved responsive modal dimensions
+  // 🌐 Improved responsive modal dimensions with increased vertical space
   const getModalDimensions = () => {
     if (Platform.OS === 'web') {
       if (screenWidth <= 400) {
         return { width: '100vw' as any, height: '100vh' as any, borderRadius: 0 };
       } else if (screenWidth <= 480) {
-        return { width: '98vw' as any, height: '95vh' as any, maxWidth: 480, borderRadius: 8 };
+        return { width: '98vw' as any, height: '98vh' as any, maxWidth: 480, borderRadius: 8 };
       } else if (screenWidth <= 768) {
-        return { width: '90vw' as any, height: '85vh' as any, maxWidth: 600, borderRadius: 12 };
+        return { width: '90vw' as any, height: '92vh' as any, maxWidth: 600, borderRadius: 12 };
       } else {
-        return { width: 500, height: '80vh' as any, borderRadius: 16 };
+        return { width: 500, height: '88vh' as any, borderRadius: 16 };
       }
     } else {
-      // Mobile responsive
+      // Mobile responsive with increased height
       return screenWidth < 500 
-        ? { width: '98%', height: '95%', minHeight: Math.min(screenHeight * 0.75, 600), borderRadius: 12 }
-        : { width: 500, height: '90%', minHeight: 600, borderRadius: 16 };
+        ? { width: '98%', height: '98%', minHeight: Math.min(screenHeight * 0.85, 700), borderRadius: 12 }
+        : { width: 500, height: '95%', minHeight: 700, borderRadius: 16 };
     }
   };
 
@@ -426,12 +426,6 @@ export const CustomThemeModal: React.FC<CustomThemeModalProps> = ({
                 { color: currentTheme.uiColors.primary }
               ]}>
                 ⭐ Create Custom Theme
-              </Text>
-              <Text style={[
-                styles.subtitle,
-                { color: currentTheme.uiColors.secondary }
-              ]}>
-                Choose 12 colors for your wheel
               </Text>
               
               {/* Preview Colors in Header */}

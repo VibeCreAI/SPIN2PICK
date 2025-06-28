@@ -75,9 +75,15 @@ export const CustomThemeModal: React.FC<CustomThemeModalProps> = ({
       
       setColors(initialColors);
       setThemeName(initialName);
-      setColorInput(initialColors[selectedColorIndex] || initialColors[0] || '#FF6B6B');
+      setColorInput(initialColors[0] || '#FF6B6B');
+      setSelectedColorIndex(0); // Reset to first color when modal opens
     }
-  }, [visible, currentTheme.id, currentTheme.wheelColors, currentTheme.displayName, selectedColorIndex]);
+  }, [visible, currentTheme.id, currentTheme.wheelColors, currentTheme.displayName]);
+
+  // Update colorInput when selectedColorIndex changes
+  useEffect(() => {
+    setColorInput(colors[selectedColorIndex] || '#FF6B6B');
+  }, [selectedColorIndex, colors]);
 
   const screenWidth = Dimensions.get('window').width;
   const screenHeight = Dimensions.get('window').height;

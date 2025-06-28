@@ -1,5 +1,5 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
     Dimensions,
     StyleSheet,
@@ -33,6 +33,19 @@ export default function ColorPicker({ color, onColorChange, size = Math.min(scre
   const translateY = useSharedValue((1 - v) * size);
   const hueTranslateX = useSharedValue((h / 360) * size);
 
+  // Update internal state when color prop changes
+  useEffect(() => {
+    const newHsv = hexToHsv(color);
+    const [newH, newS, newV] = newHsv;
+    
+    setHsv(newHsv);
+    
+    // Update cursor positions to match the new color
+    translateX.value = newS * size;
+    translateY.value = (1 - newV) * size;
+    hueTranslateX.value = (newH / 360) * size;
+  }, [color, size, translateX, translateY, hueTranslateX]);
+
   const updateColor = useCallback((newH: number, newS: number, newV: number) => {
     const [r, g, b] = hsvToRgb(newH, newS, newV);
     const hex = rgbToHex(r, g, b);
@@ -44,8 +57,8 @@ export default function ColorPicker({ color, onColorChange, size = Math.min(scre
   const [baseR, baseG, baseB] = hsvToRgb(h, 1, 1);
   const baseColorHex = rgbToHex(baseR, baseG, baseB);
 
-  // Saturation/Brightness area gestures
-  const svPanGesture = Gesture.Pan()
+  // Create gesture handlers that recreate when HSV values change
+  const svPanGesture = useMemo(() => Gesture.Pan()
     .onStart((event) => {
       'worklet';
       const newS = Math.max(0, Math.min(1, event.x / size));
@@ -61,9 +74,9 @@ export default function ColorPicker({ color, onColorChange, size = Math.min(scre
       translateX.value = newS * size;
       translateY.value = (1 - newV) * size;
       runOnJS(updateColor)(h, newS, newV);
-    });
+    }), [h, updateColor, size, translateX, translateY]);
 
-  const svTapGesture = Gesture.Tap()
+  const svTapGesture = useMemo(() => Gesture.Tap()
     .onStart((event) => {
       'worklet';
       const newS = Math.max(0, Math.min(1, event.x / size));
@@ -71,10 +84,10 @@ export default function ColorPicker({ color, onColorChange, size = Math.min(scre
       translateX.value = newS * size;
       translateY.value = (1 - newV) * size;
       runOnJS(updateColor)(h, newS, newV);
-    });
+    }), [h, updateColor, size, translateX, translateY]);
 
   // Hue bar gestures
-  const huePanGesture = Gesture.Pan()
+  const huePanGesture = useMemo(() => Gesture.Pan()
     .onStart((event) => {
       'worklet';
       const newH = Math.max(0, Math.min(360, (event.x / size) * 360));
@@ -86,15 +99,15 @@ export default function ColorPicker({ color, onColorChange, size = Math.min(scre
       const newH = Math.max(0, Math.min(360, (event.x / size) * 360));
       hueTranslateX.value = (newH / 360) * size;
       runOnJS(updateColor)(newH, s, v);
-    });
+    }), [s, v, updateColor, size, hueTranslateX]);
 
-  const hueTapGesture = Gesture.Tap()
+  const hueTapGesture = useMemo(() => Gesture.Tap()
     .onStart((event) => {
       'worklet';
       const newH = Math.max(0, Math.min(360, (event.x / size) * 360));
       hueTranslateX.value = (newH / 360) * size;
       runOnJS(updateColor)(newH, s, v);
-    });
+    }), [s, v, updateColor, size, hueTranslateX]);
 
   // Combine gestures for smooth interaction
   const svCombinedGesture = Gesture.Race(svPanGesture, svTapGesture);

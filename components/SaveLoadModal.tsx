@@ -239,10 +239,10 @@ export const SaveLoadModal: React.FC<SaveLoadModalProps> = ({
               <Text allowFontScaling={false} style={[styles.confirmationButtonText, { color: currentTheme.uiColors.buttonText }]}>Cancel</Text>
             </TouchableOpacity>
             <TouchableOpacity 
-              style={[styles.confirmationButton, { backgroundColor: '#F44336' }]} 
+              style={[styles.confirmationButton, { backgroundColor: currentTheme.uiColors.primary }]} 
               onPress={confirmationModal.onConfirm}
             >
-              <Text allowFontScaling={false} style={[styles.confirmationButtonText, { color: '#FFFFFF' }]}>Confirm</Text>
+              <Text allowFontScaling={false} style={[styles.confirmationButtonText, { color: currentTheme.uiColors.buttonText }]}>Confirm</Text>
             </TouchableOpacity>
           </View>
         </View>

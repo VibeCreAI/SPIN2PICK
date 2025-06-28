@@ -2,19 +2,23 @@ import { FONTS } from '@/app/_layout';
 import { ActivityInput } from '@/components/ActivityInput';
 import { AdBanner } from '@/components/AdBanner';
 import { Celebration } from '@/components/Celebration';
+import HamburgerMenu from '@/components/HamburgerMenu';
 import { RouletteWheel } from '@/components/RouletteWheel';
 import { SaveLoadModal } from '@/components/SaveLoadModal';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemeSelectionModal } from '@/components/ThemeSelectionModal';
+import { TitleManagementModal } from '@/components/TitleManagementModal';
 import { useTheme } from '@/hooks/useTheme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Dimensions, KeyboardAvoidingView, LayoutChangeEvent, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, ViewStyle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { installPredeterminedTitles } from '../data/predeterminedTitles';
 import { initializeInterstitialAd, showInterstitialAd } from '../utils/adMobUtils';
 import { PASTEL_COLORS, reassignAllColors, type Activity } from '../utils/colorUtils';
 import { getAISuggestedActivity, getEmoji } from '../utils/emojiUtils';
 import { initSounds, unloadSounds } from '../utils/soundUtils';
+import { STORAGE_KEYS, Title, TitleCategory, TitleManager } from '../utils/titleUtils';
 
 // Generate random default activities for variety on first install
 const generateDefaultActivities = (count: number = 8): Activity[] => {
@@ -95,9 +99,21 @@ export default function HomeScreen() {
   // New state for theme selection
   const [showThemeModal, setShowThemeModal] = useState(false);
 
+  // New state for title management
+  const [showTitleManagementModal, setShowTitleManagementModal] = useState(false);
+
+  // Title management state
+  const [currentTitle, setCurrentTitle] = useState<Title | null>(null);
+  const [showHamburgerMenu, setShowHamburgerMenu] = useState(false);
+  const [showTitleDescription, setShowTitleDescription] = useState(false);
+  const [isLoadingTitle, setIsLoadingTitle] = useState(false);
+
   // New state for bulk AI functionality
   const [isLoadingBulkAI, setIsLoadingBulkAI] = useState(false);
   const [bulkAISuggestions, setBulkAISuggestions] = useState<string[]>([]);
+  
+  // State for external activity list control
+  const [openActivityListExternal, setOpenActivityListExternal] = useState(false);
 
   // Get screen dimensions for responsive design
   const screenData = Dimensions.get('window');
@@ -144,14 +160,8 @@ export default function HomeScreen() {
         // Initialize AdMob interstitial ads
         initializeInterstitialAd();
         
-        // Load saved activities from storage
-        const savedActivities = await AsyncStorage.getItem(STORAGE_KEY);
-        if (savedActivities) {
-          const parsedActivities = JSON.parse(savedActivities);
-          // Reassign colors to ensure optimal distribution with current theme
-          const recoloredActivities = reassignAllColors(parsedActivities, currentTheme.wheelColors);
-          setActivities(recoloredActivities);
-        }
+        // Initialize title system (handles legacy migration)
+        await initializeTitleSystem();
         
         // Load saved spin count
         const savedSpinCount = await AsyncStorage.getItem(SPIN_COUNT_KEY);
@@ -240,6 +250,92 @@ export default function HomeScreen() {
     }
   };
 
+  // Title Management Functions
+  const initializeTitleSystem = async () => {
+    try {
+      // First, install predetermined titles if they don't exist
+      await installPredeterminedTitles();
+      
+      const currentTitleId = await AsyncStorage.getItem(STORAGE_KEYS.CURRENT_TITLE_ID);
+      if (currentTitleId) {
+        const title = await TitleManager.getTitle(currentTitleId);
+        if (title) {
+          setCurrentTitle(title);
+          setActivities(title.items);
+          return;
+        }
+      }
+      
+      // Fallback to migration or default title
+      await handleLegacyMigration();
+    } catch (error) {
+      console.error('Error initializing title system:', error);
+      // Fallback to default activities
+      setCurrentTitle(null);
+    }
+  };
+
+  const handleTitleSwitch = async (titleId: string) => {
+    if (isLoadingTitle) return;
+    
+    setIsLoadingTitle(true);
+    try {
+      const title = await TitleManager.getTitle(titleId);
+      if (title) {
+        setCurrentTitle(title);
+        setActivities(title.items);
+        await AsyncStorage.setItem(STORAGE_KEYS.CURRENT_TITLE_ID, titleId);
+        setShowHamburgerMenu(false); // Close menu after switching
+      }
+    } catch (error) {
+      console.error('Error switching title:', error);
+    } finally {
+      setIsLoadingTitle(false);
+    }
+  };
+
+  const handleLegacyMigration = async () => {
+    try {
+      // Check for legacy activities
+      const legacyActivities = await AsyncStorage.getItem(STORAGE_KEY);
+      if (legacyActivities) {
+        const parsedActivities = JSON.parse(legacyActivities);
+        
+        // Create a legacy migration title
+        const migrationTitle: Title = {
+          id: 'legacy-activities',
+          name: 'My Activities',
+          emoji: '🎯',
+          description: 'Activities from your previous app version',
+          category: TitleCategory.FAMILY,
+          items: parsedActivities,
+          isCustom: false,
+          isPredetermined: false,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          isActive: true,
+          spinCount: 0
+        };
+        
+        await TitleManager.saveTitle(migrationTitle);
+        await AsyncStorage.setItem(STORAGE_KEYS.CURRENT_TITLE_ID, 'legacy-activities');
+        
+        setCurrentTitle(migrationTitle);
+        setActivities(migrationTitle.items);
+        
+        console.log('✅ Legacy data migrated to title system');
+      } else {
+        // No legacy data, set default state
+        setCurrentTitle(null);
+        setActivities(DEFAULT_ACTIVITIES);
+      }
+    } catch (error) {
+      console.error('Error during legacy migration:', error);
+      setCurrentTitle(null);
+      setActivities(DEFAULT_ACTIVITIES);
+    }
+  };
+
   const onLayout = (event: LayoutChangeEvent) => {
     const { width } = event.nativeEvent.layout;
     setContainerWidth(width);
@@ -296,8 +392,14 @@ export default function HomeScreen() {
       const existingActivityNames = activities.map(a => a.name);
       const declinedSuggestions = await getDeclinedSuggestions();
       
-      // Get AI suggested activity with both existing and declined activities
-      const suggestedActivityName = await getAISuggestedActivity(existingActivityNames, declinedSuggestions);
+      // Get AI suggested activity with both existing and declined activities and title context
+      const suggestedActivityName = await getAISuggestedActivity(
+        existingActivityNames, 
+        declinedSuggestions,
+        currentTitle?.name || 'My Activities',
+        currentTitle?.category || 'family',
+        currentTitle?.description || 'Random activities'
+      );
       
       // Show popup with suggestion instead of directly adding
       setPendingSuggestion(suggestedActivityName);
@@ -460,6 +562,41 @@ export default function HomeScreen() {
     setActivities(recoloredActivities);
   };
 
+  // Title Management handlers
+  const handleOpenTitleManagement = () => {
+    setShowTitleManagementModal(true);
+    setShowHamburgerMenu(false); // Close hamburger menu
+  };
+
+  const handleCloseTitleManagement = () => {
+    setShowTitleManagementModal(false);
+  };
+
+  const handleOpenActivityManagement = () => {
+    setOpenActivityListExternal(true);
+  };
+
+  const handleSelectTitle = async (title: Title) => {
+    try {
+      setCurrentTitle(title);
+      
+      // IMPORTANT: Apply current theme colors to the title's activities
+      // This ensures the wheel uses the current theme instead of saved colors
+      const activitiesWithCurrentTheme = reassignAllColors(title.items, currentTheme.wheelColors);
+      setActivities(activitiesWithCurrentTheme);
+      
+      await AsyncStorage.setItem(STORAGE_KEYS.CURRENT_TITLE_ID, title.id);
+      
+      // Update the title's last used timestamp
+      const updatedTitle = { ...title, lastUsed: new Date() };
+      await TitleManager.saveTitle(updatedTitle);
+      
+      console.log('✅ Title selected:', title.name, 'with current theme colors applied');
+    } catch (error) {
+      console.error('Error selecting title:', error);
+    }
+  };
+
   // New handlers for bulk functionality
   const handleAddActivities = async (activityNames: string[]) => {
     
@@ -519,9 +656,15 @@ export default function HomeScreen() {
         attempts++;
         
         try {
-          // Use existing working function with current state
+          // Use existing working function with current state and title context
           const allExisting = [...existingActivityNames, ...suggestions];
-          const newSuggestion = await getAISuggestedActivity(allExisting, declinedSuggestions);
+          const newSuggestion = await getAISuggestedActivity(
+            allExisting, 
+            declinedSuggestions,
+            currentTitle?.name || 'My Activities',
+            currentTitle?.category || 'family',
+            currentTitle?.description || 'Random activities'
+          );
           
           // Check if suggestion is unique
           if (!suggestions.includes(newSuggestion) && !existingActivityNames.includes(newSuggestion)) {
@@ -558,10 +701,27 @@ export default function HomeScreen() {
   const renderContent = () => (
           <View style={[styles.container, { backgroundColor: currentTheme.backgroundColor }]} onLayout={onLayout}>
             <View style={styles.contentWrapper}>
-              <View style={styles.headerContainer}>
-                <View style={styles.titleContainer}>
-                  <ThemedText type="title" style={[styles.title, { color: currentTheme.uiColors.primary }]}>SPIN 2 PICK</ThemedText>
+              {/* NEW: Header with hamburger menu */}
+              <View style={styles.topHeader}>
+                <ThemedText type="subtitle" style={[styles.appTitle, { color: currentTheme.uiColors.primary }]}>Spin2Pick</ThemedText>
+                <TouchableOpacity onPress={() => setShowHamburgerMenu(true)} style={styles.menuButton}>
+                  <Text style={[styles.menuIcon, { color: currentTheme.uiColors.primary }]}>☰</Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* NEW: Dynamic title header */}
+              <View style={styles.dynamicTitleContainer}>
+                <View style={styles.titleRow}>
+                  <Text style={styles.titleEmoji}>{currentTitle?.emoji || '🎯'}</Text>
+                  <ThemedText type="title" style={[styles.dynamicTitle, { color: currentTheme.uiColors.primary }]}>
+                    {currentTitle?.name || 'My Activities'}
+                  </ThemedText>
                 </View>
+                <TouchableOpacity onPress={() => setShowTitleDescription(!showTitleDescription)}>
+                  <ThemedText style={[styles.titleDescription, { color: currentTheme.uiColors.secondary }]}>
+                    {currentTitle?.description || 'Tap to explore different activity categories'}
+                  </ThemedText>
+                </TouchableOpacity>
               </View>
               
               <ActivityInput
@@ -582,6 +742,8 @@ export default function HomeScreen() {
                 bulkAISuggestions={bulkAISuggestions}
                 onAcceptBulkSuggestions={handleAcceptBulkSuggestions}
                 onClearBulkSuggestions={handleClearBulkSuggestions}
+                externalOpenActivityList={openActivityListExternal}
+                onExternalOpenHandled={() => setOpenActivityListExternal(false)}
               />
               
                               <ThemedText style={[styles.subtitle, { color: currentTheme.uiColors.secondary }]}>Press ✨ for AI suggestions, 📃 to manage!</ThemedText>
@@ -772,6 +934,29 @@ export default function HomeScreen() {
         currentActivities={activities}
         onLoadActivities={handleLoadActivities}
       />
+      
+      {/* Hamburger Menu */}
+      <HamburgerMenu
+        visible={showHamburgerMenu}
+        onClose={() => setShowHamburgerMenu(false)}
+        onTitleSelected={handleSelectTitle}
+        currentTitle={currentTitle?.name || ''}
+        onNavigateToTitleManagement={handleOpenTitleManagement}
+        onNavigateToActivityManagement={handleOpenActivityManagement}
+        onNavigateToSettings={() => {/* TODO: Implement */}}
+        onNavigateToThemes={() => setShowThemeModal(true)}
+        onNavigateToSaveLoad={() => setShowSaveLoadModal(true)}
+        onReset={() => setShowResetConfirmation(true)}
+        onExportData={() => {/* TODO: Implement */}}
+      />
+      
+      {/* Title Management Modal */}
+      <TitleManagementModal
+        visible={showTitleManagementModal}
+        onClose={handleCloseTitleManagement}
+        onSelectTitle={handleSelectTitle}
+        currentTitle={currentTitle}
+      />
     </SafeAreaView>
   );
 }
@@ -820,6 +1005,52 @@ const styles = StyleSheet.create({
     marginTop: 30,
     marginBottom: 0,
     fontFamily: FONTS.jua,
+  },
+  // NEW: Top header styles
+  topHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    backgroundColor: 'transparent',
+  },
+  appTitle: {
+    fontSize: 18,
+    fontFamily: FONTS.jua,
+  },
+  menuButton: {
+    padding: 8,
+  },
+  menuIcon: {
+    fontSize: 24,
+    fontFamily: FONTS.jua,
+  },
+  // NEW: Dynamic title styles
+  dynamicTitleContainer: {
+    alignItems: 'center',
+    marginVertical: 10,
+    paddingHorizontal: 20,
+  },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 5,
+  },
+  titleEmoji: {
+    fontSize: 32,
+    marginRight: 10,
+  },
+  dynamicTitle: {
+    fontSize: 28,
+    fontFamily: FONTS.jua,
+    textAlign: 'center',
+  },
+  titleDescription: {
+    fontSize: 14,
+    textAlign: 'center',
+    fontStyle: 'italic',
+    opacity: 0.8,
   },
   subtitle: {
     fontSize: 16,

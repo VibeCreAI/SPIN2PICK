@@ -21,7 +21,15 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'API key not configured' });
   }
 
-  const { existingActivities, declinedSuggestions = [], count = 5, category } = req.body;
+  const { 
+    existingActivities, 
+    declinedSuggestions = [], 
+    count = 5, 
+    category,
+    titleName = 'My Activities',
+    titleCategory = 'family',
+    titleDescription = 'Random activities'
+  } = req.body;
 
   if (!Array.isArray(existingActivities)) {
     return res.status(400).json({ error: 'Existing activities must be an array' });
@@ -44,52 +52,120 @@ export default async function handler(req, res) {
       ? declinedSuggestions.join(', ') 
       : 'None declined yet';
 
-    const categoryFilter = category 
-      ? `Focus on ${category.toLowerCase()} activities. `
-      : '';
+    // Generate context-aware prompt based on title category
+    const generateSystemPrompt = (category, titleName, description) => {
+      const categoryPrompts = {
+        food: `You are a culinary expert suggesting delicious food options. Focus on meals, snacks, cuisines, and food experiences.
+        
+GUIDELINES:
+- Suggest appetizing food options from different cuisines and meal types
+- Include quick snacks, full meals, beverages, and desserts
+- Consider dietary preferences, cooking methods, and occasions
+- Range from simple to elaborate options
+- Examples: "Thai Green Curry", "Grilled Sandwich", "Smoothie Bowl", "Fish Tacos"`,
 
-    // Enhanced prompt for bulk activity generation
-    const systemPrompt = `You are a practical activity expert for kids aged 3-12. Your goal is to suggest simple, recognizable activities that kids and parents easily understand.
+        games: `You are a game expert suggesting fun activities and games. Focus on party games, sports, challenges, and entertainment.
+        
+GUIDELINES:
+- Suggest engaging games for various group sizes and ages
+- Include party games, sports, puzzles, challenges, and competitions
+- Consider indoor/outdoor options and required materials
+- Range from quick games to longer activities
+- Examples: "Scavenger Hunt", "Word Association", "Frisbee", "Card Games"`,
 
-PRACTICAL GUIDELINES:
-- Suggest COMMON, well-known activities that most families can do
-- Focus on simple, clear activities like: "Play Soccer", "Draw Pictures", "Bake Cookies", "Read Books", "Build Blocks"
-- Consider different categories: arts & crafts, sports, cooking, reading, building, music, outdoor play, board games
-- Avoid abstract, complex, or unusual activities
-- Keep suggestions practical and immediately recognizable
-- Ensure variety across different activity types
-- Each activity should be 1-3 words maximum, under 20 characters
+        numbers: `You are providing random numbers for various purposes. Focus on numerical selections for games, decisions, or randomization.
+        
+GUIDELINES:
+- Suggest numbers appropriate for the context
+- Consider ranges, sequences, and special number formats
+- Include lottery numbers, game numbers, or decision numbers
+- Keep numbers practical and useful
+- Examples: "42", "7", "100", "Lucky Number 13"`,
 
-GOOD EXAMPLES: "Play Tag", "Make Slime", "Ride Bikes", "Do Puzzles", "Plant Seeds", "Play Chess", "Sing Songs"
-BAD EXAMPLES: Abstract concepts, overly creative names, complex multi-step activities
+        entertainment: `You are an entertainment expert suggesting movies, books, music, and media. Focus on discovery and enjoyment.
+        
+GUIDELINES:
+- Suggest diverse entertainment options across genres and formats
+- Include classic and modern options
+- Consider different moods, occasions, and preferences
+- Range from mainstream to niche discoveries
+- Examples: "Action Movie", "Jazz Music", "Mystery Novel", "Documentary"`,
+
+        education: `You are an educational expert suggesting learning topics and activities. Focus on knowledge, skills, and personal development.
+        
+GUIDELINES:
+- Suggest educational topics and learning activities
+- Include academic subjects, practical skills, and creative pursuits
+- Consider different learning styles and difficulty levels
+- Range from basic to advanced topics
+- Examples: "Spanish Language", "Photography", "Critical Thinking", "Science Experiment"`,
+
+        workplace: `You are a workplace wellness expert suggesting professional break activities. Focus on office-appropriate stress relief and productivity.
+        
+GUIDELINES:
+- Suggest professional, office-appropriate activities
+- Include stress relief, networking, and skill development options
+- Consider different time constraints (5-30 minutes)
+- Focus on activities that refresh and energize
+- Examples: "Quick Walk", "Desk Yoga", "Team Coffee", "Brain Games"`,
+
+        family: `You are a family activity expert suggesting engaging activities for all ages. Focus on bonding, fun, and shared experiences.
+        
+GUIDELINES:
+- Suggest activities suitable for families and groups
+- Include indoor/outdoor options and various skill levels
+- Consider bonding, learning, and entertainment value
+- Range from quiet to active activities
+- Examples: "Board Game Night", "Nature Walk", "Cooking Together", "Craft Project"`,
+
+        custom: `You are a versatile suggestion expert. Based on the title "${titleName}" and description "${description}", provide relevant suggestions.
+        
+GUIDELINES:
+- Analyze the title and description to understand the context
+- Suggest items that fit the specific theme or purpose
+- Be creative but practical within the given context
+- Consider the variety and usefulness of suggestions
+- Examples will vary based on the specific title context`
+      };
+
+      const basePrompt = categoryPrompts[category] || categoryPrompts.custom;
+      
+      return `${basePrompt}
+
+CONTEXT: "${titleName}" - ${description}
 
 OUTPUT FORMAT:
-- Return ONLY a numbered list of activity names
-- Each line should be: "1. Activity Name"
+- Return ONLY a numbered list (1. Item Name)
+- Each suggestion should be 1-4 words maximum, under 25 characters
+- Make each item clear and actionable
 - NO explanations, quotes, or extra text
-- Each activity should be unique and different`;
+- Ensure variety and uniqueness across all suggestions
+- Match the style and theme of existing items`;
+    };
 
-    const userPrompt = `Current activities: ${activitiesList}
+    const systemPrompt = generateSystemPrompt(titleCategory, titleName, titleDescription);
+
+    const userPrompt = `Current items: ${activitiesList}
 Previously declined suggestions: ${declinedList}
 
-${categoryFilter}Generate ${count} simple, recognizable activities that:
-1. Are completely different from ALL existing activities
+Generate ${count} appropriate items that:
+1. Are completely different from ALL existing items
 2. Are NOT any of the previously declined suggestions
-3. Are common activities most kids know
-4. Are age-appropriate for kids (3-12 years)
-5. Are practical and easy to understand
-6. Cover different types of activities for variety
+3. Fit perfectly with the theme "${titleName}"
+4. Match the context: ${titleDescription}
+5. Are practical and easily understood
+6. Provide variety within the theme
 
 IMPORTANT: 
-- Do not suggest any activity from the declined list
-- Make sure all ${count} activities are different from each other
-- Focus on well-known, practical activities
-- If existing activities are mostly physical, include some arts/crafts or quiet activities
-- If mostly indoor, include some simple outdoor activities
+- Do not suggest any item from the declined list
+- Make sure all ${count} items are different from each other
+- Analyze the existing items to understand the pattern and style
+- Maintain consistency with the theme while adding diversity
+- Each suggestion should fit naturally within this category
 
-Return exactly ${count} activities in this format:
-1. Activity Name
-2. Activity Name
+Return exactly ${count} items in this format:
+1. Item Name
+2. Item Name
 ...`;
 
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {

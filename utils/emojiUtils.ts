@@ -127,10 +127,22 @@ export const getEmoji = async (activityName: string): Promise<string> => {
  * @param declinedSuggestions Array of previously declined suggestion names
  * @returns A promise that resolves to a suggested activity name
  */
-export const getAISuggestedActivity = async (existingActivities: string[], declinedSuggestions: string[] = []): Promise<string> => {
+export const getAISuggestedActivity = async (
+  existingActivities: string[], 
+  declinedSuggestions: string[] = [],
+  titleName: string = 'My Activities',
+  titleCategory: string = 'family',
+  titleDescription: string = 'Random activities'
+): Promise<string> => {
   try {
     const baseUrl = getApiBaseUrl();
-    const requestBody = { existingActivities, declinedSuggestions };
+    const requestBody = { 
+      existingActivities, 
+      declinedSuggestions,
+      titleName,
+      titleCategory,
+      titleDescription
+    };
     
     const response = await fetch(`${baseUrl}/api/suggest-activity`, {
       method: 'POST',

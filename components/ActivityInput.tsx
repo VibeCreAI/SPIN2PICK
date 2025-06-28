@@ -1,14 +1,14 @@
 import { FONTS } from '@/app/_layout';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
-  Dimensions,
-  Modal,
-  Platform,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View
+    Dimensions,
+    Modal,
+    Platform,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View
 } from 'react-native';
 import { useTheme } from '../hooks/useTheme';
 import { Activity } from '../utils/colorUtils';
@@ -33,6 +33,9 @@ interface ActivityInputProps {
   bulkAISuggestions?: string[];
   onAcceptBulkSuggestions: (selectedActivities: string[]) => void;
   onClearBulkSuggestions: () => void;
+  // External control for opening the activity list modal
+  externalOpenActivityList?: boolean;
+  onExternalOpenHandled?: () => void;
 }
 
 export const ActivityInput: React.FC<ActivityInputProps> = ({
@@ -53,6 +56,8 @@ export const ActivityInput: React.FC<ActivityInputProps> = ({
   bulkAISuggestions = [],
   onAcceptBulkSuggestions,
   onClearBulkSuggestions,
+  externalOpenActivityList = false,
+  onExternalOpenHandled,
 }) => {
   const { currentTheme } = useTheme();
   const [inputText, setInputText] = useState('');
@@ -120,6 +125,14 @@ export const ActivityInput: React.FC<ActivityInputProps> = ({
     
     return () => clearTimeout(timer);
   }, []);
+
+  // Handle external request to open activity list modal
+  useEffect(() => {
+    if (externalOpenActivityList) {
+      setShowListModal(true);
+      onExternalOpenHandled?.();
+    }
+  }, [externalOpenActivityList, onExternalOpenHandled]);
 
   return (
     <ThemedView 

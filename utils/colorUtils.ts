@@ -82,12 +82,16 @@ export interface CustomThemeData {
   isActive: boolean;
 }
 
-export interface Activity {
-  id: string;
-  name: string;
-  color: string;
-  emoji?: string;
+// Import the new Item interface from titleUtils
+import { Item } from './titleUtils';
+
+// Legacy Activity interface - now extends Item for backwards compatibility
+export interface Activity extends Item {
+  // Activity is now just an alias for Item - maintains existing API
 }
+
+// Type alias for better readability and migration
+export type { Item } from './titleUtils';
 
 export interface ColorTheme {
   id: string;
@@ -387,19 +391,20 @@ export const loadCustomTheme = async (): Promise<CustomThemeData | null> => {
   }
 };
 
-// Reassign colors optimally to all activities with custom color palette
-export const reassignAllColors = (activities: Activity[], colorPalette: string[] = PASTEL_COLORS): Activity[] => {
-  const numActivities = activities.length;
+// Reassign colors optimally to all items/activities with custom color palette
+// Works with both Item and Activity interfaces for universal compatibility
+export const reassignAllColors = <T extends Item>(items: T[], colorPalette: string[] = PASTEL_COLORS): T[] => {
+  const numItems = items.length;
   const numColors = colorPalette.length;
 
-  if (numActivities === 0) {
+  if (numItems === 0) {
     return [];
   }
 
-  // Create a new array of activities to avoid modifying the original array directly.
-  const result = activities.map(activity => ({ ...activity, color: '' }));
+  // Create a new array of items to avoid modifying the original array directly.
+  const result = items.map(item => ({ ...item, color: '' }));
 
-  for (let i = 0; i < numActivities; i++) {
+  for (let i = 0; i < numItems; i++) {
     const forbidden = new Set<string>();
 
     // Add the previous slice's color to the forbidden set.
@@ -409,7 +414,7 @@ export const reassignAllColors = (activities: Activity[], colorPalette: string[]
 
     // For the last slice, it must also not conflict with the first slice's color
     // to ensure a seamless wrap-around on the wheel.
-    if (i === numActivities - 1 && numActivities > 1) {
+    if (i === numItems - 1 && numItems > 1) {
       forbidden.add(result[0].color);
     }
 
@@ -441,6 +446,9 @@ export const reassignAllColors = (activities: Activity[], colorPalette: string[]
 
   return result;
 };
+
+// Legacy function name for backwards compatibility
+export const reassignAllActivities = reassignAllColors;
 
 // Default storage key for theme persistence
 export const THEME_STORAGE_KEY = 'SPIN2PICK_THEME';

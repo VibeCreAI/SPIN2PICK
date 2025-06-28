@@ -14,6 +14,7 @@ import {
     TouchableOpacity,
     View
 } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useTheme } from '../hooks/useTheme';
 import { CustomThemeData, DEFAULT_CUSTOM_COLORS, generateRandomColors } from '../utils/colorUtils';
 import ColorPicker from './ColorPicker';
@@ -49,10 +50,13 @@ export const CustomThemeModal: React.FC<CustomThemeModalProps> = ({
   const [colors, setColors] = useState<string[]>([...DEFAULT_CUSTOM_COLORS]);
   const [selectedColorIndex, setSelectedColorIndex] = useState(0);
   const [colorInput, setColorInput] = useState('#FF6B6B');
-  const [useVisualPicker, setUseVisualPicker] = useState(false);
+
 
   const screenWidth = Dimensions.get('window').width;
-  const modalWidth = screenWidth < 500 ? '95%' : 500;
+  const screenHeight = Dimensions.get('window').height;
+  const modalWidth = screenWidth < 500 ? '98%' : 500;
+  const modalHeight = screenWidth < 500 ? '95%' : '90%';
+  const modalMinHeight = screenWidth < 500 ? Math.min(screenHeight * 0.75, 600) : 600;
 
   const handleColorChange = (colorIndex: number, newColor: string) => {
     const updatedColors = [...colors];
@@ -169,132 +173,200 @@ export const CustomThemeModal: React.FC<CustomThemeModalProps> = ({
       onRequestClose={onClose}
     >
       <View style={styles.overlay}>
-        <View style={[
-          styles.modalContainer, 
-          { 
-            width: modalWidth,
-            backgroundColor: currentTheme.uiColors.modalBackground,
-            borderColor: currentTheme.uiColors.primary,
-          }
-        ]}>
-          {/* Header */}
-          <View style={[styles.header, { borderBottomColor: currentTheme.uiColors.secondary }]}>
-            <Text style={[
-              styles.title,
-              { color: currentTheme.uiColors.primary }
-            ]}>
-              ⭐ Create Custom Theme
-            </Text>
-            <Text style={[
-              styles.subtitle,
-              { color: currentTheme.uiColors.secondary }
-            ]}>
-              Choose 12 colors for your wheel
-            </Text>
-          </View>
-
-          {/* Content Container with proper scroll handling */}
-          <View style={styles.contentWrapper}>
-            <ScrollView
-              style={styles.content}
-              contentContainerStyle={styles.scrollContent}
-              showsVerticalScrollIndicator={true}
-              scrollEnabled={true}
-              nestedScrollEnabled={true}
-              bounces={Platform.OS === 'ios'}
-              alwaysBounceVertical={false}
-              keyboardShouldPersistTaps="handled"
-              keyboardDismissMode="on-drag"
-              automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
-              contentInsetAdjustmentBehavior={Platform.OS === 'ios' ? 'automatic' : undefined}
-            >
-            {/* Theme Name Input */}
-            <View style={styles.section}>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <View style={[
+            styles.modalContainer, 
+            { 
+              width: modalWidth,
+              maxHeight: modalHeight,
+              minHeight: modalMinHeight,
+              backgroundColor: currentTheme.uiColors.modalBackground,
+              borderColor: currentTheme.uiColors.primary,
+            }
+          ]}>
+            {/* Header */}
+            <View style={[styles.header, { borderBottomColor: currentTheme.uiColors.secondary }]}>
               <Text style={[
-                styles.sectionTitle,
-                { color: currentTheme.uiColors.text }
+                styles.title,
+                { color: currentTheme.uiColors.primary }
               ]}>
-                Theme Name
+                ⭐ Create Custom Theme
               </Text>
-              <TextInput
-                style={[
-                  styles.textInput,
-                  {
-                    borderColor: currentTheme.uiColors.secondary,
-                    color: currentTheme.uiColors.text,
-                    backgroundColor: currentTheme.uiColors.cardBackground,
-                  }
-                ]}
-                value={themeName}
-                onChangeText={setThemeName}
-                placeholder="Enter theme name"
-                placeholderTextColor={currentTheme.uiColors.secondary}
-                maxLength={20}
-                allowFontScaling={false}
-              />
-            </View>
-
-            {/* Color Grid */}
-            <View style={styles.section}>
               <Text style={[
-                styles.sectionTitle,
-                { color: currentTheme.uiColors.text }
+                styles.subtitle,
+                { color: currentTheme.uiColors.secondary }
               ]}>
-                Colors ({colors.length}/12)
+                Choose 12 colors for your wheel
               </Text>
-              <View style={styles.colorGrid}>
-                {colors.map((color, index) => (
-                  <TouchableOpacity
-                    key={index}
-                    style={[
-                      styles.colorBox,
-                      { backgroundColor: color },
-                      selectedColorIndex === index && {
-                        borderColor: currentTheme.uiColors.primary,
-                        borderWidth: 3,
-                      }
-                    ]}
-                    onPress={() => {
-                      setSelectedColorIndex(index);
-                      setColorInput(color);
-                    }}
-                  >
-                    <Text allowFontScaling={false} style={styles.colorIndex}>{index + 1}</Text>
-                  </TouchableOpacity>
-                ))}
+              
+              {/* Preview Colors in Header */}
+              <View style={styles.headerPreviewSection}>
+                <View style={styles.previewContainer}>
+                  {colors.map((color, index) => (
+                    <View
+                      key={index}
+                      style={[
+                        styles.previewSlice,
+                        { backgroundColor: color }
+                      ]}
+                    />
+                  ))}
+                </View>
               </View>
             </View>
 
-            {/* Color Input */}
-            <View style={styles.section}>
-              <View style={styles.sectionHeader}>
+            {/* Content Container with proper scroll handling */}
+            <View style={styles.contentWrapper}>
+              <ScrollView
+                style={styles.content}
+                contentContainerStyle={styles.scrollContent}
+                showsVerticalScrollIndicator={true}
+                scrollEnabled={true}
+                nestedScrollEnabled={true}
+                bounces={Platform.OS === 'ios'}
+                alwaysBounceVertical={false}
+                keyboardShouldPersistTaps="handled"
+                keyboardDismissMode="on-drag"
+                automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
+                contentInsetAdjustmentBehavior={Platform.OS === 'ios' ? 'automatic' : undefined}
+              >
+              {/* Theme Name Input */}
+              <View style={styles.section}>
+                <Text style={[
+                  styles.sectionTitle,
+                  { color: currentTheme.uiColors.text }
+                ]}>
+                  Theme Name
+                </Text>
+                <TextInput
+                  style={[
+                    styles.textInput,
+                    {
+                      borderColor: currentTheme.uiColors.secondary,
+                      color: currentTheme.uiColors.text,
+                      backgroundColor: currentTheme.uiColors.cardBackground,
+                    }
+                  ]}
+                  value={themeName}
+                  onChangeText={setThemeName}
+                  placeholder="Enter theme name"
+                  placeholderTextColor={currentTheme.uiColors.secondary}
+                  maxLength={20}
+                  allowFontScaling={false}
+                />
+              </View>
+
+              {/* Color Generation Buttons */}
+              <View style={styles.section}>
+                <View style={styles.buttonRow}>
+                  <TouchableOpacity
+                    style={[
+                      styles.halfButton,
+                      { backgroundColor: currentTheme.uiColors.accent }
+                    ]}
+                    onPress={handleRandomColors}
+                  >
+                    <Text allowFontScaling={false} style={[
+                      styles.buttonText,
+                      { color: currentTheme.uiColors.buttonText }
+                    ]}>
+                      🎲 Random Colors
+                    </Text>
+                  </TouchableOpacity>
+                  
+                  <TouchableOpacity
+                    style={[
+                      styles.halfButton,
+                      { 
+                        backgroundColor: isAIGenerating 
+                          ? currentTheme.uiColors.secondary 
+                          : currentTheme.uiColors.primary,
+                        opacity: isAIGenerating ? 0.7 : 1
+                      }
+                    ]}
+                    onPress={handleAIColors}
+                    disabled={isAIGenerating}
+                  >
+                    {isAIGenerating ? (
+                      <View style={styles.loadingContainer}>
+                        <ActivityIndicator 
+                          size="small" 
+                          color={currentTheme.uiColors.buttonText} 
+                        />
+                        <Text allowFontScaling={false} style={[
+                          styles.buttonText,
+                          { color: currentTheme.uiColors.buttonText, marginLeft: 8 }
+                        ]}>
+                          Generating...
+                        </Text>
+                      </View>
+                    ) : (
+                      <Text allowFontScaling={false} style={[
+                        styles.buttonText,
+                        { color: currentTheme.uiColors.buttonText }
+                      ]}>
+                        ✨ AI Colors
+                      </Text>
+                    )}
+                  </TouchableOpacity>
+                </View>
+
+                {/* Error Message */}
+                {aiError && (
+                  <View style={styles.errorContainer}>
+                    <Text allowFontScaling={false} style={[
+                      styles.errorText,
+                      { color: '#E74C3C' }
+                    ]}>
+                      ⚠️ {aiError}
+                    </Text>
+                  </View>
+                )}
+
+
+              </View>
+
+              {/* Color Grid */}
+              <View style={styles.section}>
+                <Text style={[
+                  styles.sectionTitle,
+                  { color: currentTheme.uiColors.text }
+                ]}>
+                  Colors ({colors.length}/12)
+                </Text>
+                <View style={styles.colorGrid}>
+                  {colors.map((color, index) => (
+                    <TouchableOpacity
+                      key={index}
+                      style={[
+                        styles.colorBox,
+                        { backgroundColor: color },
+                        selectedColorIndex === index && {
+                          borderColor: currentTheme.uiColors.primary,
+                          borderWidth: 3,
+                        }
+                      ]}
+                      onPress={() => {
+                        setSelectedColorIndex(index);
+                        setColorInput(color);
+                      }}
+                    >
+                      <Text allowFontScaling={false} style={styles.colorIndex}>{index + 1}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+
+              {/* Color Input */}
+              <View style={styles.section}>
                 <Text style={[
                   styles.sectionTitle,
                   { color: currentTheme.uiColors.text }
                 ]}>
                   Edit Color #{selectedColorIndex + 1}
                 </Text>
-                <TouchableOpacity
-                  style={[
-                    styles.toggleButton,
-                    { 
-                      backgroundColor: useVisualPicker 
-                        ? currentTheme.uiColors.accent 
-                        : currentTheme.uiColors.secondary 
-                    }
-                  ]}
-                  onPress={() => setUseVisualPicker(!useVisualPicker)}
-                >
-                  <Text allowFontScaling={false} style={[
-                    styles.toggleButtonText,
-                    { color: currentTheme.uiColors.buttonText }
-                  ]}>
-                    {useVisualPicker ? '🎨 Visual' : '# Hex'}
-                  </Text>
-                </TouchableOpacity>
-              </View>
 
-              {useVisualPicker ? (
+                {/* Visual Color Picker */}
                 <View style={styles.visualPickerContainer}>
                   <ColorPicker
                     color={colors[selectedColorIndex]}
@@ -305,170 +377,96 @@ export const CustomThemeModal: React.FC<CustomThemeModalProps> = ({
                     size={Math.min(screenWidth - 120, 240)}
                   />
                 </View>
-              ) : (
-                <View style={styles.colorInputContainer}>
-                  <TextInput
-                    style={[
-                      styles.colorInput,
-                      {
-                        borderColor: currentTheme.uiColors.secondary,
-                        color: currentTheme.uiColors.text,
-                        backgroundColor: currentTheme.uiColors.cardBackground,
-                      }
-                    ]}
-                    value={colorInput}
-                    onChangeText={setColorInput}
-                    placeholder="#FFFFFF"
-                    placeholderTextColor={currentTheme.uiColors.secondary}
-                    maxLength={7}
-                    autoCapitalize="characters"
-                    allowFontScaling={false}
-                  />
-                  <TouchableOpacity
-                    style={[
-                      styles.applyColorButton,
-                      { backgroundColor: currentTheme.uiColors.accent }
-                    ]}
-                    onPress={() => {
-                      if (isValidHexColor(colorInput)) {
-                        handleColorChange(selectedColorIndex, colorInput);
-                      } else {
-                        Alert.alert('Invalid Color', 'Please enter a valid hex color (e.g., #FF6B6B)');
-                      }
-                    }}
-                  >
-                    <Text allowFontScaling={false} style={[
-                      styles.applyColorButtonText,
-                      { color: currentTheme.uiColors.buttonText }
-                    ]}>
-                      Apply
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              )}
 
-              {/* Color Generation Buttons */}
-              <View style={styles.buttonRow}>
-                <TouchableOpacity
-                  style={[
-                    styles.halfButton,
-                    { backgroundColor: currentTheme.uiColors.accent }
-                  ]}
-                  onPress={handleRandomColors}
-                >
-                  <Text allowFontScaling={false} style={[
-                    styles.buttonText,
-                    { color: currentTheme.uiColors.buttonText }
+                {/* Hex Input */}
+                <View style={styles.hexInputSection}>
+                  <Text style={[
+                    styles.hexInputLabel,
+                    { color: currentTheme.uiColors.text }
                   ]}>
-                    🎲 Random Colors
+                    Hex Code
                   </Text>
-                </TouchableOpacity>
-                
-                <TouchableOpacity
-                  style={[
-                    styles.halfButton,
-                    { 
-                      backgroundColor: isAIGenerating 
-                        ? currentTheme.uiColors.secondary 
-                        : currentTheme.uiColors.primary,
-                      opacity: isAIGenerating ? 0.7 : 1
-                    }
-                  ]}
-                  onPress={handleAIColors}
-                  disabled={isAIGenerating}
-                >
-                  {isAIGenerating ? (
-                    <View style={styles.loadingContainer}>
-                      <ActivityIndicator 
-                        size="small" 
-                        color={currentTheme.uiColors.buttonText} 
-                      />
+                  <View style={styles.colorInputContainer}>
+                    <TextInput
+                      style={[
+                        styles.colorInput,
+                        {
+                          borderColor: currentTheme.uiColors.secondary,
+                          color: currentTheme.uiColors.text,
+                          backgroundColor: currentTheme.uiColors.cardBackground,
+                        }
+                      ]}
+                      value={colorInput}
+                      onChangeText={setColorInput}
+                      placeholder="#FFFFFF"
+                      placeholderTextColor={currentTheme.uiColors.secondary}
+                      maxLength={7}
+                      autoCapitalize="characters"
+                      allowFontScaling={false}
+                    />
+                    <TouchableOpacity
+                      style={[
+                        styles.applyColorButton,
+                        { backgroundColor: currentTheme.uiColors.accent }
+                      ]}
+                      onPress={() => {
+                        if (isValidHexColor(colorInput)) {
+                          handleColorChange(selectedColorIndex, colorInput);
+                        } else {
+                          Alert.alert('Invalid Color', 'Please enter a valid hex color (e.g., #FF6B6B)');
+                        }
+                      }}
+                    >
                       <Text allowFontScaling={false} style={[
-                        styles.buttonText,
-                        { color: currentTheme.uiColors.buttonText, marginLeft: 8 }
+                        styles.applyColorButtonText,
+                        { color: currentTheme.uiColors.buttonText }
                       ]}>
-                        Generating...
+                        Apply
                       </Text>
-                    </View>
-                  ) : (
-                    <Text allowFontScaling={false} style={[
-                      styles.buttonText,
-                      { color: currentTheme.uiColors.buttonText }
-                    ]}>
-                      🤖 AI Colors
-                    </Text>
-                  )}
-                </TouchableOpacity>
-              </View>
-
-              {/* Error Message */}
-              {aiError && (
-                <View style={styles.errorContainer}>
-                  <Text allowFontScaling={false} style={[
-                    styles.errorText,
-                    { color: '#E74C3C' }
-                  ]}>
-                    ⚠️ {aiError}
-                  </Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
-              )}
-            </View>
 
-            {/* Preview */}
-            <View style={styles.section}>
-              <Text style={[
-                styles.sectionTitle,
-                { color: currentTheme.uiColors.text }
-              ]}>
-                Preview
-              </Text>
-              <View style={styles.previewContainer}>
-                {colors.map((color, index) => (
-                  <View
-                    key={index}
-                    style={[
-                      styles.previewSlice,
-                      { backgroundColor: color }
-                    ]}
-                  />
-                ))}
+
               </View>
-            </View>
-            </ScrollView>
-          </View>
 
-          {/* Footer */}
-          <View style={styles.footer}>
-            <TouchableOpacity
-              style={[
-                styles.footerButton,
-                { backgroundColor: currentTheme.uiColors.secondary }
-              ]}
-              onPress={onClose}
-            >
-              <Text allowFontScaling={false} style={[
-                styles.footerButtonText,
-                { color: currentTheme.uiColors.buttonText }
-              ]}>
-                Cancel
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.footerButton,
-                { backgroundColor: currentTheme.uiColors.accent }
-              ]}
-              onPress={handleSaveTheme}
-            >
-              <Text allowFontScaling={false} style={[
-                styles.footerButtonText,
-                { color: currentTheme.uiColors.buttonText }
-              ]}>
-                Save & Apply
-              </Text>
-            </TouchableOpacity>
+
+              </ScrollView>
+            </View>
+
+            {/* Footer */}
+            <View style={styles.footer}>
+              <TouchableOpacity
+                style={[
+                  styles.footerButton,
+                  { backgroundColor: currentTheme.uiColors.secondary }
+                ]}
+                onPress={onClose}
+              >
+                <Text allowFontScaling={false} style={[
+                  styles.footerButtonText,
+                  { color: currentTheme.uiColors.buttonText }
+                ]}>
+                  Cancel
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.footerButton,
+                  { backgroundColor: currentTheme.uiColors.accent }
+                ]}
+                onPress={handleSaveTheme}
+              >
+                <Text allowFontScaling={false} style={[
+                  styles.footerButtonText,
+                  { color: currentTheme.uiColors.buttonText }
+                ]}>
+                  Save & Apply
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
+        </GestureHandlerRootView>
       </View>
     </Modal>
   );
@@ -485,8 +483,6 @@ const styles = StyleSheet.create({
   modalContainer: {
     borderRadius: 16,
     borderWidth: 2,
-    maxHeight: '90%',
-    minHeight: 600,
     elevation: 10,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
@@ -500,6 +496,10 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#00000010',
   },
+  headerPreviewSection: {
+    marginTop: 16,
+    width: '100%',
+  },
   title: {
     fontSize: 20,
     fontWeight: 'bold',
@@ -512,7 +512,6 @@ const styles = StyleSheet.create({
   },
   contentWrapper: {
     flex: 1,
-    minHeight: 400,
   },
   content: {
     flex: 1,
@@ -520,7 +519,6 @@ const styles = StyleSheet.create({
   scrollContent: {
     padding: 20,
     paddingTop: 15,
-    minHeight: 400,
     flexGrow: 1,
   },
   section: {
@@ -690,5 +688,23 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: FONTS.nunito,
     textAlign: 'center',
+  },
+  previewSection: {
+    marginTop: 16,
+  },
+  previewLabel: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    fontFamily: FONTS.nunito,
+    marginBottom: 8,
+  },
+  hexInputSection: {
+    marginTop: 16,
+  },
+  hexInputLabel: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    fontFamily: FONTS.nunito,
+    marginBottom: 8,
   },
 }); 

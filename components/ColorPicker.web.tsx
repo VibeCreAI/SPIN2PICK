@@ -28,7 +28,7 @@ export default function ColorPicker({ color, onColorChange, size = Math.min(scre
   const [hsv, setHsv] = useState(() => hexToHsv(color));
   const [h, s, v] = hsv;
 
-  // Shared values for animations
+  // Shared values for animations  
   const translateX = useSharedValue(s * size);
   const translateY = useSharedValue((1 - v) * size);
   const hueTranslateX = useSharedValue((h / 360) * size);

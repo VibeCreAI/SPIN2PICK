@@ -127,6 +127,19 @@ export const CustomThemeModal: React.FC<CustomThemeModalProps> = ({
   const [isAIGenerating, setIsAIGenerating] = useState(false);
   const [aiError, setAIError] = useState<string | null>(null);
   const [aiUsageCount, setAiUsageCount] = useState(0);
+  const [selectedAIStyle, setSelectedAIStyle] = useState('modern_vibrant');
+
+  // AI Color Style options with descriptions
+  const aiColorStyles = [
+    { id: 'modern_vibrant', name: 'Modern Vibrant', emoji: '🌟', description: 'Bright, energetic colors' },
+    { id: 'neon_futuristic', name: 'Neon Futuristic', emoji: '🌃', description: 'Electric cyberpunk colors' },
+    { id: 'pastel_harmony', name: 'Pastel Harmony', emoji: '🌸', description: 'Soft, gentle colors' },
+    { id: 'sunset_gradient', name: 'Sunset Gradient', emoji: '🌅', description: 'Warm flowing colors' },
+    { id: 'ocean_depths', name: 'Ocean Depths', emoji: '🌊', description: 'Cool blues and teals' },
+    { id: 'forest_earth', name: 'Forest Earth', emoji: '🌲', description: 'Natural earth tones' },
+    { id: 'retro_synthwave', name: 'Retro Synthwave', emoji: '🕹️', description: '80s electric colors' },
+    { id: 'minimal_elegant', name: 'Minimal Elegant', emoji: '✨', description: 'Sophisticated muted tones' },
+  ];
 
   const handleAIColors = async () => {
     setIsAIGenerating(true);
@@ -141,8 +154,8 @@ export const CustomThemeModal: React.FC<CustomThemeModalProps> = ({
         },
         body: JSON.stringify({
           count: 12,
-          style: 'modern and vibrant',
-          context: 'game interface',
+          style: selectedAIStyle,
+          context: 'roulette wheel game',
           existingColors: colors // Pass current colors to avoid duplicates
         }),
       });
@@ -159,10 +172,28 @@ export const CustomThemeModal: React.FC<CustomThemeModalProps> = ({
       // Fallback if API didn't return valid colors
       if (!Array.isArray(aiColors) || aiColors.length === 0) {
         console.warn('AI API returned invalid colors, using fallback');
-        aiColors = [
+        
+        // Style-specific fallback colors
+        const styleDefaults: Record<string, string[]> = {
+          neon_futuristic: ['#FF0080', '#00FFFF', '#FF1493', '#00FF00', '#FF4500', '#9400D3'],
+          pastel_harmony: ['#FFACAB', '#FFCEA2', '#FFF29C', '#E4FEBD', '#C2FFE1', '#ABFCFE'],
+          sunset_gradient: ['#FF6B35', '#F7931E', '#FF8E53', '#FFD93D', '#FFC72C', '#FF9F1C'],
+          ocean_depths: ['#0077BE', '#00A8CC', '#7DD3C0', '#86C5D8', '#4CB5F5', '#2E8BC0'],
+          retro_synthwave: ['#FF00FF', '#00FFFF', '#FF1493', '#FFFF00', '#FF0080', '#00FF00'],
+          forest_earth: ['#228B22', '#32CD32', '#90EE90', '#9ACD32', '#8FBC8F', '#66CDAA'],
+          minimal_elegant: ['#E8E8E8', '#D1D1D1', '#B8B8B8', '#A0A0A0', '#909090', '#808080']
+        };
+        
+        aiColors = styleDefaults[selectedAIStyle] || [
           '#E74C3C', '#3498DB', '#2ECC71', '#F39C12', '#9B59B6', '#1ABC9C',
           '#E67E22', '#34495E', '#F1C40F', '#E91E63', '#FF9800', '#607D8B'
         ];
+        
+        // Extend to 12 colors if needed
+        while (aiColors.length < 12) {
+          aiColors.push(aiColors[aiColors.length % 6]);
+        }
+        aiColors = aiColors.slice(0, 12);
       }
       
       // Update colors and current color input
@@ -173,6 +204,7 @@ export const CustomThemeModal: React.FC<CustomThemeModalProps> = ({
       setAiUsageCount(prev => prev + 1);
       
       console.log('🤖 AI generated colors:', aiColors);
+      console.log('🎨 Style used:', data.styleName || selectedAIStyle);
       console.log('📊 AI usage count:', aiUsageCount + 1);
       
     } catch (error) {
@@ -287,6 +319,87 @@ export const CustomThemeModal: React.FC<CustomThemeModalProps> = ({
                   maxLength={20}
                   allowFontScaling={false}
                 />
+              </View>
+
+              {/* AI Style Selection */}
+              <View style={styles.section}>
+                <View style={styles.sectionHeader}>
+                  <Text style={[
+                    styles.sectionTitle,
+                    { color: currentTheme.uiColors.text }
+                  ]}>
+                    AI Color Style
+                  </Text>
+                  {Platform.OS === 'web' && (
+                    <Text style={[
+                      styles.scrollHint,
+                      { color: currentTheme.uiColors.secondary }
+                    ]}>
+                      Scroll →
+                    </Text>
+                  )}
+                </View>
+                <ScrollView 
+                  horizontal 
+                  showsHorizontalScrollIndicator={Platform.OS === 'web'}
+                  style={[
+                    styles.styleSelector,
+                    Platform.OS === 'web' && styles.styleSelectorWeb
+                  ]}
+                  contentContainerStyle={styles.styleSelectorContent}
+                  {...(Platform.OS === 'web' && {
+                    overScrollMode: 'never', // Prevent rubber band effect on web
+                  })}
+                >
+                  {aiColorStyles.map((style) => (
+                    <TouchableOpacity
+                      key={style.id}
+                      style={[
+                        styles.styleButton,
+                        {
+                          backgroundColor: selectedAIStyle === style.id 
+                            ? currentTheme.uiColors.primary 
+                            : currentTheme.uiColors.cardBackground,
+                          borderColor: selectedAIStyle === style.id 
+                            ? currentTheme.uiColors.primary 
+                            : currentTheme.uiColors.secondary,
+                        }
+                      ]}
+                      onPress={() => setSelectedAIStyle(style.id)}
+                    >
+                      <Text style={[
+                        styles.styleEmoji,
+                        { 
+                          color: selectedAIStyle === style.id 
+                            ? currentTheme.uiColors.buttonText 
+                            : currentTheme.uiColors.text 
+                        }
+                      ]}>
+                        {style.emoji}
+                      </Text>
+                      <Text allowFontScaling={false} style={[
+                        styles.styleName,
+                        { 
+                          color: selectedAIStyle === style.id 
+                            ? currentTheme.uiColors.buttonText 
+                            : currentTheme.uiColors.text 
+                        }
+                      ]}>
+                        {style.name}
+                      </Text>
+                      <Text allowFontScaling={false} style={[
+                        styles.styleDescription,
+                        { 
+                          color: selectedAIStyle === style.id 
+                            ? currentTheme.uiColors.buttonText 
+                            : currentTheme.uiColors.secondary 
+                        }
+                      ]}>
+                        {style.description}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
               </View>
 
               {/* Color Generation Buttons */}
@@ -739,5 +852,50 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontFamily: FONTS.nunito,
     marginBottom: 8,
+  },
+  // AI Style Selection styles
+  styleSelector: {
+    marginTop: 8,
+  },
+  styleSelectorWeb: {
+    // Web-specific horizontal scroll styling
+    scrollbarWidth: 'thin',
+    scrollbarColor: '#888 #f1f1f1',
+  } as any, // Cast to any because React Native StyleSheet doesn't recognize web CSS properties
+  styleSelectorContent: {
+    paddingHorizontal: 4,
+  },
+  scrollHint: {
+    fontSize: 12,
+    fontFamily: FONTS.nunito,
+    fontStyle: 'italic',
+    opacity: 0.7,
+  },
+  styleButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    marginHorizontal: 4,
+    borderRadius: 12,
+    borderWidth: 2,
+    minWidth: 100,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  styleEmoji: {
+    fontSize: 24,
+    marginBottom: 4,
+  },
+  styleName: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    fontFamily: FONTS.nunito,
+    textAlign: 'center',
+    marginBottom: 2,
+  },
+  styleDescription: {
+    fontSize: 10,
+    fontFamily: FONTS.nunito,
+    textAlign: 'center',
+    opacity: 0.8,
   },
 }); 

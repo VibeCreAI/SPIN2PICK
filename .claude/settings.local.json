@@ -11,7 +11,8 @@
       "Bash(ls:*)",
       "Bash(cat:*)",
       "Bash(find:*)",
-      "Bash(export CLAUDE_NO_AUTO_UPDATE=1)"
+      "Bash(export CLAUDE_NO_AUTO_UPDATE=1)",
+      "Bash(npx tsc:*)"
     ],
     "deny": []
   }

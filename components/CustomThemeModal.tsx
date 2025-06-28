@@ -16,7 +16,7 @@ import {
 } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useTheme } from '../hooks/useTheme';
-import { CustomThemeData, DEFAULT_CUSTOM_COLORS, generateRandomColors } from '../utils/colorUtils';
+import { CustomThemeData, DEFAULT_CUSTOM_COLORS, generateRandomColors, generateRandomBackgroundColor, getStyleBackground } from '../utils/colorUtils';
 import ColorPicker from './ColorPicker';
 
 /**
@@ -66,25 +66,51 @@ export const CustomThemeModal: React.FC<CustomThemeModalProps> = ({
   const [colors, setColors] = useState<string[]>(getInitialColors());
   const [selectedColorIndex, setSelectedColorIndex] = useState(0);
   const [colorInput, setColorInput] = useState(getInitialColors()[0] || '#FF6B6B');
+  
+  // Background color state management
+  const [backgroundColor, setBackgroundColor] = useState<string>(() => {
+    if (currentTheme.id === 'custom' && currentTheme.backgroundColor) {
+      return currentTheme.backgroundColor;
+    }
+    return '#f8f9fa'; // Default light background
+  });
+  const [backgroundColorInput, setBackgroundColorInput] = useState<string>(() => {
+    if (currentTheme.id === 'custom' && currentTheme.backgroundColor) {
+      return currentTheme.backgroundColor;
+    }
+    return '#f8f9fa';
+  });
+  const [showBackgroundColorPicker, setShowBackgroundColorPicker] = useState(false);
 
   // Update state when modal opens or current theme changes
   useEffect(() => {
     if (visible) {
       const initialColors = getInitialColors();
       const initialName = getInitialThemeName();
+      const initialBackground = (currentTheme.id === 'custom' && currentTheme.backgroundColor) 
+        ? currentTheme.backgroundColor 
+        : '#f8f9fa';
       
       setColors(initialColors);
       setThemeName(initialName);
       setColorInput(initialColors[0] || '#FF6B6B');
       setSelectedColorIndex(0); // Reset to first color when modal opens
       setAiColorsUsed(false); // Reset AI flag when modal opens
+      setBackgroundColor(initialBackground);
+      setBackgroundColorInput(initialBackground);
+      setShowBackgroundColorPicker(false);
     }
-  }, [visible, currentTheme.id, currentTheme.wheelColors, currentTheme.displayName]);
+  }, [visible, currentTheme.id, currentTheme.wheelColors, currentTheme.displayName, currentTheme.backgroundColor]);
 
   // Update colorInput when selectedColorIndex changes
   useEffect(() => {
     setColorInput(colors[selectedColorIndex] || '#FF6B6B');
   }, [selectedColorIndex, colors]);
+
+  // Update backgroundColorInput when backgroundColor changes
+  useEffect(() => {
+    setBackgroundColorInput(backgroundColor);
+  }, [backgroundColor]);
 
   const screenWidth = Dimensions.get('window').width;
   const screenHeight = Dimensions.get('window').height;
@@ -128,13 +154,16 @@ export const CustomThemeModal: React.FC<CustomThemeModalProps> = ({
       return;
     }
 
+    // Validate background color before saving
+    if (!backgroundColor || !isValidHexColor(backgroundColor)) {
+      Alert.alert('Error', 'Please select a valid background color before saving.');
+      return;
+    }
+
     try {
-      // 🎨 Get the background color if AI was used
-      const backgroundColor = aiColorsUsed ? aiStyleBackgrounds[selectedAIStyle] : undefined;
-      
       const customData: CustomThemeData = {
         colors,
-        backgroundColor, // Include AI background if used
+        backgroundColor: backgroundColor, // Always include the validated background color
         name: themeName.trim(),
         createdAt: new Date(),
         isActive: true,
@@ -142,22 +171,29 @@ export const CustomThemeModal: React.FC<CustomThemeModalProps> = ({
 
       console.log('🎨 Saving theme:', {
         name: customData.name,
+        wheelColors: customData.colors.length,
+        backgroundColor: customData.backgroundColor,
         aiUsed: aiColorsUsed,
-        style: selectedAIStyle,
-        backgroundColor: backgroundColor
+        style: selectedAIStyle
       });
 
       await setCustomTheme(customData);
       onClose();
     } catch (error) {
+      console.error('Error saving custom theme:', error);
       Alert.alert('Error', 'Failed to save custom theme. Please try again.');
     }
   };
 
   const handleRandomColors = () => {
     const randomColors = generateRandomColors(12);
+    const randomBackground = generateRandomBackgroundColor(randomColors);
+    
     setColors(randomColors);
     setColorInput(randomColors[selectedColorIndex]);
+    setBackgroundColor(randomBackground);
+    setBackgroundColorInput(randomBackground);
+    
     // Reset AI flag when using random colors
     setAiColorsUsed(false);
   };
@@ -216,8 +252,9 @@ export const CustomThemeModal: React.FC<CustomThemeModalProps> = ({
 
       const data = await response.json();
       
-      // Extract colors from the API response
+      // Extract colors and background from the API response
       let aiColors = data.extractedColors;
+      let aiBackground = data.backgroundColor;
       
       // Fallback if API didn't return valid colors
       if (!Array.isArray(aiColors) || aiColors.length === 0) {
@@ -244,11 +281,23 @@ export const CustomThemeModal: React.FC<CustomThemeModalProps> = ({
           aiColors.push(aiColors[aiColors.length % 6]);
         }
         aiColors = aiColors.slice(0, 12);
+        
+        // Generate fallback background if not provided by API
+        if (!aiBackground) {
+          aiBackground = getStyleBackground(selectedAIStyle, aiColors);
+        }
       }
       
-      // Update colors and current color input
+      // Validate background color format
+      if (!aiBackground || !/^#[0-9A-Fa-f]{6}$/i.test(aiBackground)) {
+        aiBackground = getStyleBackground(selectedAIStyle, aiColors);
+      }
+      
+      // Update colors, background, and current color input
       setColors(aiColors);
       setColorInput(aiColors[selectedColorIndex]);
+      setBackgroundColor(aiBackground);
+      setBackgroundColorInput(aiBackground);
       
       // Set AI flag when AI colors are used
       setAiColorsUsed(true);
@@ -257,6 +306,7 @@ export const CustomThemeModal: React.FC<CustomThemeModalProps> = ({
       setAiUsageCount(prev => prev + 1);
       
       console.log('🤖 AI generated colors:', aiColors);
+      console.log('🎨 Background color:', aiBackground);
       console.log('🎨 Style used:', data.styleName || selectedAIStyle);
       console.log('📊 AI usage count:', aiUsageCount + 1);
       
@@ -266,13 +316,17 @@ export const CustomThemeModal: React.FC<CustomThemeModalProps> = ({
       
       // Fallback to random colors on error
       const fallbackColors = generateRandomColors(12);
+      const fallbackBackground = generateRandomBackgroundColor(fallbackColors);
+      
       setColors(fallbackColors);
       setColorInput(fallbackColors[selectedColorIndex]);
+      setBackgroundColor(fallbackBackground);
+      setBackgroundColorInput(fallbackBackground);
       setAiColorsUsed(false); // Reset AI flag for fallback
       
       Alert.alert(
         'AI Generation Failed', 
-        'Could not connect to AI service. Generated random colors instead.',
+        'Could not connect to AI service. Generated random colors and background instead.',
         [{ text: 'OK' }]
       );
     } finally {
@@ -282,6 +336,55 @@ export const CustomThemeModal: React.FC<CustomThemeModalProps> = ({
 
   const isValidHexColor = (color: string): boolean => {
     return /^#[0-9A-F]{6}$/i.test(color);
+  };
+
+  const handleBackgroundColorChange = (newColor: string) => {
+    try {
+      if (isValidHexColor(newColor)) {
+        setBackgroundColor(newColor);
+        setBackgroundColorInput(newColor);
+        setAiColorsUsed(false); // Reset AI flag when manually changing
+        return true;
+      } else {
+        Alert.alert(
+          'Invalid Background Color', 
+          'Please enter a valid hex color for the background (e.g., #F8F9FA)'
+        );
+        return false;
+      }
+    } catch (error) {
+      console.error('Error updating background color:', error);
+      Alert.alert('Error', 'Failed to update background color. Please try again.');
+      return false;
+    }
+  };
+
+  const validateAndSetBackgroundColor = (colorString: string): boolean => {
+    const trimmedColor = colorString.trim();
+    
+    // Check if empty
+    if (!trimmedColor) {
+      Alert.alert('Invalid Color', 'Background color cannot be empty.');
+      return false;
+    }
+    
+    // Auto-add # if missing
+    const formattedColor = trimmedColor.startsWith('#') ? trimmedColor : `#${trimmedColor}`;
+    
+    // Validate format
+    if (!isValidHexColor(formattedColor)) {
+      Alert.alert(
+        'Invalid Background Color', 
+        'Please enter a valid 6-digit hex color (e.g., #F8F9FA or F8F9FA)'
+      );
+      return false;
+    }
+    
+    // Set the validated color
+    setBackgroundColor(formattedColor);
+    setBackgroundColorInput(formattedColor);
+    setAiColorsUsed(false);
+    return true;
   };
 
   return (
@@ -333,6 +436,12 @@ export const CustomThemeModal: React.FC<CustomThemeModalProps> = ({
               
               {/* Preview Colors in Header */}
               <View style={styles.headerPreviewSection}>
+                <Text style={[
+                  styles.previewLabel,
+                  { color: currentTheme.uiColors.text, marginBottom: 8 }
+                ]}>
+                  Wheel Colors Preview
+                </Text>
                 <View style={styles.previewContainer}>
                   {colors.map((color, index) => (
                     <View
@@ -343,6 +452,29 @@ export const CustomThemeModal: React.FC<CustomThemeModalProps> = ({
                       ]}
                     />
                   ))}
+                </View>
+                
+                {/* Background Color Preview */}
+                <Text style={[
+                  styles.previewLabel,
+                  { color: currentTheme.uiColors.text, marginTop: 12, marginBottom: 8 }
+                ]}>
+                  Background Color Preview
+                </Text>
+                <View style={[
+                  styles.backgroundPreviewInHeader,
+                  { backgroundColor: backgroundColor }
+                ]}>
+                  <Text allowFontScaling={false} style={[
+                    styles.backgroundPreviewTextInHeader,
+                    { 
+                      color: backgroundColor === '#ffffff' || backgroundColor === '#f8f9fa' 
+                        ? currentTheme.uiColors.text 
+                        : '#ffffff'
+                    }
+                  ]}>
+                    {backgroundColor.toUpperCase()}
+                  </Text>
                 </View>
               </View>
             </View>
@@ -641,6 +773,146 @@ export const CustomThemeModal: React.FC<CustomThemeModalProps> = ({
                 </View>
 
 
+              </View>
+
+              {/* Background Color Section */}
+              <View style={styles.section}>
+                <View style={styles.sectionHeader}>
+                  <Text style={[
+                    styles.sectionTitle,
+                    { color: currentTheme.uiColors.text }
+                  ]}>
+                    Background Color
+                  </Text>
+                  <TouchableOpacity
+                    style={[
+                      styles.toggleButton,
+                      { 
+                        backgroundColor: showBackgroundColorPicker 
+                          ? currentTheme.uiColors.primary 
+                          : currentTheme.uiColors.secondary 
+                      }
+                    ]}
+                    onPress={() => setShowBackgroundColorPicker(!showBackgroundColorPicker)}
+                  >
+                    <Text allowFontScaling={false} style={[
+                      styles.toggleButtonText,
+                      { color: currentTheme.uiColors.buttonText }
+                    ]}>
+                      {showBackgroundColorPicker ? 'Hide' : 'Edit'}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+
+                {/* Background Color Preview */}
+                <View style={styles.backgroundPreviewSection}>
+                  <View style={[
+                    styles.backgroundPreview,
+                    { backgroundColor: backgroundColor }
+                  ]}>
+                    <Text allowFontScaling={false} style={[
+                      styles.backgroundPreviewText,
+                      { 
+                        color: backgroundColor === '#ffffff' || backgroundColor === '#f8f9fa' 
+                          ? currentTheme.uiColors.text 
+                          : '#ffffff'
+                      }
+                    ]}>
+                      Background Preview
+                    </Text>
+                  </View>
+                </View>
+
+                {showBackgroundColorPicker && (
+                  <>
+                    {/* Visual Background Color Picker */}
+                    <View style={styles.visualPickerContainer}>
+                      <ColorPicker
+                        color={backgroundColor}
+                        onColorChange={(newColor) => {
+                          handleBackgroundColorChange(newColor);
+                        }}
+                        size={Math.min(screenWidth - 120, 240)}
+                      />
+                    </View>
+
+                    {/* Background Hex Input */}
+                    <View style={styles.hexInputSection}>
+                      <Text style={[
+                        styles.hexInputLabel,
+                        { color: currentTheme.uiColors.text }
+                      ]}>
+                        Background Hex Code
+                      </Text>
+                      <View style={styles.colorInputContainer}>
+                        <TextInput
+                          style={[
+                            styles.colorInput,
+                            {
+                              borderColor: currentTheme.uiColors.secondary,
+                              color: currentTheme.uiColors.text,
+                              backgroundColor: currentTheme.uiColors.cardBackground,
+                            }
+                          ]}
+                          value={backgroundColorInput}
+                          onChangeText={setBackgroundColorInput}
+                          placeholder="#F8F9FA"
+                          placeholderTextColor={currentTheme.uiColors.secondary}
+                          maxLength={7}
+                          autoCapitalize="characters"
+                          allowFontScaling={false}
+                        />
+                        <TouchableOpacity
+                          style={[
+                            styles.applyColorButton,
+                            { backgroundColor: currentTheme.uiColors.accent }
+                          ]}
+                          onPress={() => {
+                            validateAndSetBackgroundColor(backgroundColorInput);
+                          }}
+                        >
+                          <Text allowFontScaling={false} style={[
+                            styles.applyColorButtonText,
+                            { color: currentTheme.uiColors.buttonText }
+                          ]}>
+                            Apply
+                          </Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+
+                    {/* Random Background Button */}
+                    <TouchableOpacity
+                      style={[
+                        styles.singleRandomButton,
+                        { backgroundColor: currentTheme.uiColors.secondary }
+                      ]}
+                      onPress={() => {
+                        try {
+                          // Generate a random background color that harmonizes with wheel colors
+                          const randomBg = generateRandomBackgroundColor(colors);
+                          if (randomBg && isValidHexColor(randomBg)) {
+                            setBackgroundColor(randomBg);
+                            setBackgroundColorInput(randomBg);
+                            setAiColorsUsed(false);
+                          } else {
+                            throw new Error('Generated invalid background color');
+                          }
+                        } catch (error) {
+                          console.error('Error generating random background:', error);
+                          Alert.alert('Error', 'Failed to generate random background color. Please try again.');
+                        }
+                      }}
+                    >
+                      <Text allowFontScaling={false} style={[
+                        styles.randomizerButtonText,
+                        { color: currentTheme.uiColors.buttonText }
+                      ]}>
+                        🎲 Random Background
+                      </Text>
+                    </TouchableOpacity>
+                  </>
+                )}
               </View>
 
 
@@ -964,5 +1236,39 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.nunito,
     textAlign: 'center',
     opacity: 0.8,
+  },
+  // Background color picker styles
+  backgroundPreviewSection: {
+    marginTop: 12,
+    marginBottom: 16,
+  },
+  backgroundPreview: {
+    height: 60,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#ddd',
+  },
+  backgroundPreviewText: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    fontFamily: FONTS.nunito,
+    textAlign: 'center',
+  },
+  // Header background preview styles
+  backgroundPreviewInHeader: {
+    height: 40,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#ddd',
+  },
+  backgroundPreviewTextInHeader: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    fontFamily: FONTS.nunito,
+    textAlign: 'center',
   },
 }); 

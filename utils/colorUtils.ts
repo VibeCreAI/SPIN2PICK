@@ -632,4 +632,87 @@ const getColorDistance = (color1: string, color2: string): number => {
     Math.pow(g1 - g2, 2) + 
     Math.pow(b1 - b2, 2)
   );
+};
+
+// Generate a background color that harmonizes with wheel colors
+export const generateRandomBackgroundColor = (wheelColors: string[] = []): string => {
+  if (wheelColors.length === 0) {
+    // Return a neutral light background if no wheel colors provided
+    const neutralBackgrounds = ['#f8f9fa', '#ffffff', '#fefefe', '#f5f5f5', '#f0f0f0'];
+    return neutralBackgrounds[Math.floor(Math.random() * neutralBackgrounds.length)];
+  }
+  
+  // Analyze the wheel colors to determine the best background approach
+  const avgLuminance = wheelColors.reduce((sum, color) => {
+    return sum + getLuminance(color);
+  }, 0) / wheelColors.length;
+  
+  // Determine if we should use a light or dark background based on wheel colors
+  const useDarkBackground = avgLuminance > 0.6; // If wheel colors are bright, use dark background
+  
+  if (useDarkBackground) {
+    // Generate dark backgrounds for bright wheel colors
+    const darkBackgrounds = [
+      '#1a1a2e', '#16213e', '#0d1117', '#1e1e1e', '#2a2a2a',
+      '#1a1b23', '#0f0f23', '#1f1f2e', '#252538', '#2d2d44'
+    ];
+    return darkBackgrounds[Math.floor(Math.random() * darkBackgrounds.length)];
+  } else {
+    // Generate light backgrounds for darker wheel colors
+    // Create tints based on the average color of the wheel
+    const [avgR, avgG, avgB] = wheelColors.reduce((acc, color) => {
+      const r = parseInt(color.slice(1, 3), 16);
+      const g = parseInt(color.slice(3, 5), 16);
+      const b = parseInt(color.slice(5, 7), 16);
+      return [acc[0] + r, acc[1] + g, acc[2] + b];
+    }, [0, 0, 0]).map(sum => Math.round(sum / wheelColors.length));
+    
+    // Create a very light tint (95% white, 5% average color)
+    const tintR = Math.round(avgR * 0.05 + 255 * 0.95);
+    const tintG = Math.round(avgG * 0.05 + 255 * 0.95);
+    const tintB = Math.round(avgB * 0.05 + 255 * 0.95);
+    
+    return rgbToHex(tintR, tintG, tintB);
+  }
+};
+
+// Get style-appropriate background color for AI styles
+export const getStyleBackground = (style: string, wheelColors: string[] = []): string => {
+  const styleBackgrounds: Record<string, string[]> = {
+    'modern_vibrant': ['#f8f9fa', '#ffffff', '#fefefe'],
+    'neon_futuristic': ['#0d1117', '#1a1a2e', '#16213e'],
+    'pastel_harmony': ['#faf8ff', '#fff5f8', '#f8f0ff'],
+    'sunset_gradient': ['#fff5e6', '#fdf4f0', '#fef7f0'],
+    'ocean_depths': ['#f0f9ff', '#e6f3ff', '#f0f8ff'],
+    'forest_earth': ['#f8fff8', '#f0f8f0', '#f5fff5'],
+    'retro_synthwave': ['#0d1117', '#1a1a2e', '#16213e'],
+    'minimal_elegant': ['#fafafa', '#f5f5f5', '#f8f8f8']
+  };
+  
+  const backgrounds = styleBackgrounds[style] || styleBackgrounds['modern_vibrant'];
+  return backgrounds[Math.floor(Math.random() * backgrounds.length)];
+};
+
+// Generate harmonious background based on color theory
+export const generateHarmoniousBackground = (wheelColors: string[]): string => {
+  if (wheelColors.length === 0) {
+    return '#f8f9fa';
+  }
+  
+  // Find the dominant hue in the wheel colors
+  const hues = wheelColors.map(color => {
+    const [h] = hexToHsv(color);
+    return h;
+  });
+  
+  // Calculate average hue
+  const avgHue = hues.reduce((sum, hue) => sum + hue, 0) / hues.length;
+  
+  // Generate complementary background (opposite on color wheel) but very light
+  const complementaryHue = (avgHue + 180) % 360;
+  
+  // Create a very light background with complementary hue
+  const [r, g, b] = hsvToRgb(complementaryHue, 0.08, 0.98); // Very low saturation, very high brightness
+  
+  return rgbToHex(r, g, b);
 }; 

@@ -22,6 +22,7 @@ PROJECT_ROOT/
 │       ├── tech-stack.mdc
 │       ├── directory-structure.mdc
 │       ├── modal-popup-best-practices.mdc
+│       ├── font-scaling-prevention.mdc
 │       ├── git-commit-messages.mdc
 │       ├── dev-environment-control.mdc
 │       ├── self-improvement.mdc

@@ -1,0 +1,170 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Font Scaling Prevention Rules
+
+## Problem Statement
+Android users can increase their system font size, which causes React Native Text components to scale beyond intended sizes, breaking UI layouts and designs. This rule ensures all text components automatically disable font scaling.
+
+## Solution: Always Use Custom Text Components
+
+### ✅ Required Import Patterns:
+```typescript
+// For standard text - ALWAYS use this
+import { Text } from '@/components/Text';
+
+// For themed text - use this for styled text
+import { ThemedText } from '@/components/ThemedText';
+```
+
+### ❌ Forbidden Import Patterns:
+```typescript
+// NEVER import Text directly from react-native
+import { Text } from 'react-native';  // ❌ WRONG - breaks layouts
+
+// NEVER use these component imports for text
+import { Text as RNText } from 'react-native';  // ❌ WRONG
+```
+
+## Implementation Rules
+
+### **Text Component Usage**
+✅ **Correct Usage:**
+```typescript
+import { Text } from '@/components/Text';
+import { ThemedText } from '@/components/ThemedText';
+
+function MyComponent() {
+  return (
+    <View>
+      <Text>Standard text that won't scale</Text>
+      <ThemedText type="title">Themed text that won't scale</ThemedText>
+      <Text style={{ fontSize: 16 }}>Custom styled text</Text>
+    </View>
+  );
+}
+```
+
+❌ **Incorrect Usage:**
+```typescript
+import { Text } from 'react-native';  // DON'T DO THIS
+
+function MyComponent() {
+  return (
+    <View>
+      {/* This will break layouts on Android with large fonts */}
+      <Text allowFontScaling={true}>This text will break layouts</Text>
+      
+      {/* Even without allowFontScaling=true, RN Text scales by default */}
+      <Text>This will also break layouts</Text>
+    </View>
+  );
+}
+```
+
+### **Property Rules**
+
+✅ **Allowed Properties:**
+```typescript
+// These are fine to use
+<Text style={{ fontSize: 16, color: 'blue' }}>Styled text</Text>
+<Text numberOfLines={2}>Text with line limits</Text>
+<Text ellipsizeMode="tail">Text with ellipsis</Text>
+```
+
+❌ **Forbidden Properties:**
+```typescript
+// NEVER set allowFontScaling to true
+<Text allowFontScaling={true}>DON'T DO THIS</Text>
+
+// allowFontScaling is false by default in our custom component
+<Text allowFontScaling={false}>Redundant - already handled</Text>
+```
+
+## ThemedText Usage Patterns
+
+### **Available Types:**
+```typescript
+// Use these predefined themed text types
+<ThemedText type="default">Standard text</ThemedText>
+<ThemedText type="title">Large title text</ThemedText>
+<ThemedText type="defaultSemiBold">Bold text</ThemedText>
+<ThemedText type="subtitle">Subtitle text</ThemedText>
+<ThemedText type="link">Clickable link text</ThemedText>
+```
+
+### **With Custom Styling:**
+```typescript
+// Combine themed text with custom styles
+<ThemedText 
+  type="title" 
+  style={{ textAlign: 'center', marginBottom: 20 }}
+>
+  Centered title
+</ThemedText>
+```
+
+## Button and Interactive Text
+
+### **Buttons with Text:**
+```typescript
+import { Text } from '@/components/Text';
+
+// ✅ Good: Custom text component in buttons
+<Pressable onPress={handlePress}>
+  <Text style={styles.buttonText}>Button Label</Text>
+</Pressable>
+
+// ✅ Good: ThemedText in buttons
+<TouchableOpacity onPress={handlePress}>
+  <ThemedText type="defaultSemiBold">Themed Button</ThemedText>
+</TouchableOpacity>
+```
+
+## Code Migration Rules
+
+### **When Adding New Text:**
+1. Always import from `@/components/Text` or `@/components/ThemedText`
+2. Never import `Text` from `react-native`
+3. Choose `ThemedText` when you need consistent app theming
+4. Choose `Text` for custom styling or simple text
+
+### **When Editing Existing Components:**
+```typescript
+// If you see this import, flag for update:
+import { Text } from 'react-native';  // ❌ Update needed
+
+// Replace with:
+import { Text } from '@/components/Text';  // ✅ Correct
+```
+
+## Testing Considerations
+
+### **Manual Testing Checklist:**
+- Test on Android devices with large system font settings
+- Verify UI layouts remain consistent
+- Check that text doesn't overflow containers
+- Ensure buttons remain properly sized
+
+### **Key Areas to Test:**
+- Modal dialogs and popups
+- Button labels and navigation text
+- Form labels and input text
+- Activity list items and wheel segments
+
+## Performance Notes
+
+### **Component Performance:**
+- Custom Text component has minimal overhead
+- Font scaling prevention doesn't impact performance
+- ThemedText provides efficient themed styling
+
+### **Bundle Size:**
+- No additional dependencies required
+- Custom components add negligible bundle size
+- Reuses existing React Native Text internally
+
+This rule ensures consistent UI layouts across all devices and accessibility settings by preventing system font scaling from breaking the app's design.
+

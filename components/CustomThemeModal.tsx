@@ -16,7 +16,7 @@ import {
 } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useTheme } from '../hooks/useTheme';
-import { CustomThemeData, DEFAULT_CUSTOM_COLORS, generateRandomColors } from '../utils/colorUtils';
+import { createCustomTheme, CustomThemeData, DEFAULT_CUSTOM_COLORS, generateRandomColors } from '../utils/colorUtils';
 import ColorPicker from './ColorPicker';
 
 /**
@@ -77,6 +77,7 @@ export const CustomThemeModal: React.FC<CustomThemeModalProps> = ({
       setThemeName(initialName);
       setColorInput(initialColors[0] || '#FF6B6B');
       setSelectedColorIndex(0); // Reset to first color when modal opens
+      setAiColorsUsed(false); // Reset AI flag when modal opens
     }
   }, [visible, currentTheme.id, currentTheme.wheelColors, currentTheme.displayName]);
 
@@ -87,14 +88,38 @@ export const CustomThemeModal: React.FC<CustomThemeModalProps> = ({
 
   const screenWidth = Dimensions.get('window').width;
   const screenHeight = Dimensions.get('window').height;
-  const modalWidth = screenWidth < 500 ? '98%' : 500;
-  const modalHeight = screenWidth < 500 ? '95%' : '90%';
-  const modalMinHeight = screenWidth < 500 ? Math.min(screenHeight * 0.75, 600) : 600;
+  
+  // 🌐 Improved responsive modal dimensions
+  const getModalDimensions = () => {
+    if (Platform.OS === 'web') {
+      if (screenWidth <= 400) {
+        return { width: '100vw' as any, height: '100vh' as any, borderRadius: 0 };
+      } else if (screenWidth <= 480) {
+        return { width: '98vw' as any, height: '95vh' as any, maxWidth: 480, borderRadius: 8 };
+      } else if (screenWidth <= 768) {
+        return { width: '90vw' as any, height: '85vh' as any, maxWidth: 600, borderRadius: 12 };
+      } else {
+        return { width: 500, height: '80vh' as any, borderRadius: 16 };
+      }
+    } else {
+      // Mobile responsive
+      return screenWidth < 500 
+        ? { width: '98%', height: '95%', minHeight: Math.min(screenHeight * 0.75, 600), borderRadius: 12 }
+        : { width: 500, height: '90%', minHeight: 600, borderRadius: 16 };
+    }
+  };
+
+  const modalDimensions = getModalDimensions();
+  
+  // Track if AI was used for current colors
+  const [aiColorsUsed, setAiColorsUsed] = useState(false);
 
   const handleColorChange = (colorIndex: number, newColor: string) => {
     const updatedColors = [...colors];
     updatedColors[colorIndex] = newColor;
     setColors(updatedColors);
+    // Reset AI flag when manually changing colors
+    setAiColorsUsed(false);
   };
 
   const handleSaveTheme = async () => {
@@ -111,7 +136,30 @@ export const CustomThemeModal: React.FC<CustomThemeModalProps> = ({
         isActive: true,
       };
 
-      await setCustomTheme(customData);
+      // 🎨 Apply hard-coded background if AI colors were used
+      if (aiColorsUsed) {
+        const selectedBackground = aiStyleBackgrounds[selectedAIStyle] || '#f8f9fa';
+        console.log('🎨 Applying AI style background:', selectedBackground, 'for style:', selectedAIStyle);
+        
+        // Update the theme with the background color
+        const customTheme = createCustomTheme(customData);
+        customTheme.backgroundColor = selectedBackground;
+        
+        // Adjust text colors based on background
+        if (selectedBackground === '#0d1117' || selectedBackground === '#1a1a2e') {
+          // Dark backgrounds need light text
+          customTheme.uiColors.text = '#ffffff';
+          customTheme.uiColors.modalBackground = selectedBackground;
+          customTheme.uiColors.cardBackground = selectedBackground;
+        }
+        
+        await setCustomTheme(customData);
+        console.log('🎨 Custom theme saved with AI background');
+      } else {
+        await setCustomTheme(customData);
+        console.log('🎨 Custom theme saved with default background');
+      }
+
       onClose();
     } catch (error) {
       Alert.alert('Error', 'Failed to save custom theme. Please try again.');
@@ -122,12 +170,26 @@ export const CustomThemeModal: React.FC<CustomThemeModalProps> = ({
     const randomColors = generateRandomColors(12);
     setColors(randomColors);
     setColorInput(randomColors[selectedColorIndex]);
+    // Reset AI flag when using random colors
+    setAiColorsUsed(false);
   };
 
   const [isAIGenerating, setIsAIGenerating] = useState(false);
   const [aiError, setAIError] = useState<string | null>(null);
   const [aiUsageCount, setAiUsageCount] = useState(0);
   const [selectedAIStyle, setSelectedAIStyle] = useState('modern_vibrant');
+
+  // 🎨 Simple hard-coded background colors for each AI style
+  const aiStyleBackgrounds: Record<string, string> = {
+    'modern_vibrant': '#f8f9fa',      // Light neutral for vibrant colors
+    'neon_futuristic': '#0d1117',     // Dark space for neon colors  
+    'pastel_harmony': '#fefefe',      // Pure white for pastels
+    'sunset_gradient': '#fef7f0',     // Warm cream for sunset
+    'ocean_depths': '#f0f9ff',        // Light blue for ocean
+    'forest_earth': '#f8fff8',        // Light green for forest
+    'retro_synthwave': '#1a1a2e',     // Dark purple for synthwave
+    'minimal_elegant': '#fafafa'      // Soft gray for minimal
+  };
 
   // AI Color Style options with descriptions
   const aiColorStyles = [
@@ -207,6 +269,9 @@ export const CustomThemeModal: React.FC<CustomThemeModalProps> = ({
       console.log('🎨 Style used:', data.styleName || selectedAIStyle);
       console.log('📊 AI usage count:', aiUsageCount + 1);
       
+      // Set AI flag when AI colors are used
+      setAiColorsUsed(true);
+      
     } catch (error) {
       console.error('Error generating AI colors:', error);
       setAIError('Failed to generate AI colors. Please try again.');
@@ -237,16 +302,29 @@ export const CustomThemeModal: React.FC<CustomThemeModalProps> = ({
       animationType="slide"
       onRequestClose={onClose}
     >
-      <View style={styles.overlay}>
+      <View style={[
+        styles.overlay,
+        Platform.OS === 'web' && {
+          padding: 2,
+          overflowX: 'hidden' as any,
+          maxWidth: '100vw' as any,
+          maxHeight: '100vh' as any
+        }
+      ]}>
         <GestureHandlerRootView style={{ flex: 1 }}>
           <View style={[
             styles.modalContainer, 
             { 
-              width: modalWidth,
-              maxHeight: modalHeight,
-              minHeight: modalMinHeight,
+              width: modalDimensions.width,
+              maxHeight: modalDimensions.height,
+              minHeight: modalDimensions.minHeight,
               backgroundColor: currentTheme.uiColors.modalBackground,
               borderColor: currentTheme.uiColors.primary,
+              borderRadius: modalDimensions.borderRadius,
+              ...(Platform.OS === 'web' && modalDimensions.maxWidth && {
+                maxWidth: modalDimensions.maxWidth,
+                overflowX: 'hidden' as any
+              })
             }
           ]}>
             {/* Header */}

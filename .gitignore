@@ -10,7 +10,6 @@ web-build/
 expo-env.d.ts
 
 # Native
-.kotlin/
 *.orig.*
 *.jks
 *.p8
@@ -18,9 +17,9 @@ expo-env.d.ts
 *.key
 *.mobileprovision
 
-# Native directories (let Expo prebuild generate these)
-/android
-/ios
+# Native directories
+/android/
+/ios/
 
 # Metro
 .metro-health-check*
@@ -29,9 +28,11 @@ expo-env.d.ts
 npm-debug.*
 yarn-debug.*
 yarn-error.*
+*.log
 
 # macOS
 .DS_Store
+Thumbs.db
 *.pem
 
 # local env files
@@ -47,6 +48,10 @@ config.local.js
 # typescript
 *.tsbuildinfo
 
+# Generated/cache directories
 app-example
-
 .vercel
+
+# Temporary files
+*.tmp
+*.temp

@@ -1045,8 +1045,8 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
               top: -7,
             }
           ]}>
-            <ThemedView style={styles.pointerBorder} />
-            <ThemedView style={styles.pointer} />
+            <ThemedView style={[styles.pointerBorder, { borderTopColor: currentTheme.backgroundColor }]} />
+            <ThemedView style={[styles.pointer, { borderTopColor: currentTheme.uiColors.primary }]} />
           </ThemedView>
 
           <Animated.View 
@@ -1382,7 +1382,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 28,
     borderLeftColor: 'transparent',
     borderRightColor: 'transparent',
-    borderTopColor: '#FFFFFF', // White border
+    // borderTopColor is now set dynamically
     position: 'absolute',
     left: 0,
     top: 0,
@@ -1397,10 +1397,10 @@ const styles = StyleSheet.create({
     borderTopWidth: 25,
     borderLeftColor: 'transparent',
     borderRightColor: 'transparent',
-    borderTopColor: '#9fe7f5',
+    // borderTopColor is now set dynamically
     position: 'absolute', // Explicitly absolute
-    left: 3, // (36 - 30) / 2 to center within pointerBorder
-    top: 1.5, // Adjusts for border thickness difference
+    left: 1.5,
+    top: 1.5,
   },
   spinButton: { 
     width: 100,

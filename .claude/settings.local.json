@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm audit:*)",
+      "Bash(npm ls:*)",
+      "Bash(npx expo install:*)",
+      "Bash(npm run lint)",
+      "Bash(claude --version)",
+      "Bash(npm view:*)",
+      "Bash(claude doctor)",
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(find:*)",
+      "Bash(export CLAUDE_NO_AUTO_UPDATE=1)"
+    ],
+    "deny": []
+  }
+}

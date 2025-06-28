@@ -1,6 +1,6 @@
 import { FONTS } from '@/app/_layout';
 import Constants from 'expo-constants';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     ActivityIndicator,
     Alert,
@@ -46,11 +46,38 @@ export const CustomThemeModal: React.FC<CustomThemeModalProps> = ({
   onClose 
 }) => {
   const { currentTheme, setCustomTheme } = useTheme();
-  const [themeName, setThemeName] = useState('My Custom Theme');
-  const [colors, setColors] = useState<string[]>([...DEFAULT_CUSTOM_COLORS]);
+  
+  // Initialize with current custom theme if active, otherwise use defaults
+  const getInitialColors = () => {
+    if (currentTheme.id === 'custom' && currentTheme.wheelColors) {
+      return [...currentTheme.wheelColors];
+    }
+    return [...DEFAULT_CUSTOM_COLORS];
+  };
+  
+  const getInitialThemeName = () => {
+    if (currentTheme.id === 'custom' && currentTheme.displayName) {
+      return currentTheme.displayName;
+    }
+    return 'My Custom Theme';
+  };
+  
+  const [themeName, setThemeName] = useState(getInitialThemeName());
+  const [colors, setColors] = useState<string[]>(getInitialColors());
   const [selectedColorIndex, setSelectedColorIndex] = useState(0);
-  const [colorInput, setColorInput] = useState('#FF6B6B');
+  const [colorInput, setColorInput] = useState(getInitialColors()[0] || '#FF6B6B');
 
+  // Update state when modal opens or current theme changes
+  useEffect(() => {
+    if (visible) {
+      const initialColors = getInitialColors();
+      const initialName = getInitialThemeName();
+      
+      setColors(initialColors);
+      setThemeName(initialName);
+      setColorInput(initialColors[selectedColorIndex] || initialColors[0] || '#FF6B6B');
+    }
+  }, [visible, currentTheme.id, currentTheme.wheelColors, currentTheme.displayName, selectedColorIndex]);
 
   const screenWidth = Dimensions.get('window').width;
   const screenHeight = Dimensions.get('window').height;

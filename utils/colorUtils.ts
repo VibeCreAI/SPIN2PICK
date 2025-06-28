@@ -76,6 +76,7 @@ export const DEFAULT_CUSTOM_COLORS = [
 // Interface for custom theme data
 export interface CustomThemeData {
   colors: string[];
+  backgroundColor?: string;  // AI-generated background color
   name: string;
   createdAt: Date;
   isActive: boolean;
@@ -318,8 +319,8 @@ const createDarkVariant = (hexColor: string): string => {
 
 // Create custom theme object
 export const createCustomTheme = (customData: CustomThemeData): ColorTheme => {
-  // Use the first color to create a subtle background tint
-  const backgroundTint = createLightTint(customData.colors[0]);
+  // Use AI-provided background color if available, otherwise create a subtle background tint
+  const backgroundTint = customData.backgroundColor || createLightTint(customData.colors[0]);
   
   // Get optimal text color based on background luminance
   const textColor = getOptimalTextColor(backgroundTint);

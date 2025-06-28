@@ -143,7 +143,7 @@ OUTPUT FORMAT:
 - NO explanations, quotes, or extra text
 - NO markdown formatting or code blocks`;
 
-    const userPrompt = `Create a ${selectedStyle.name} color palette with ${count} colors for a ${context}.
+    const userPrompt = `Create a ${selectedStyle.name} color palette with ${count} colors plus a matching background color for a ${context}.
 
 STYLE REQUIREMENTS:
 - Theme: ${selectedStyle.name}
@@ -161,9 +161,21 @@ CRITICAL: Generate colors that work TOGETHER as a cohesive set. They should eith
 3. Create balanced contrast (complementary pairs)
 4. Share similar saturation/brightness for unity
 
+BACKGROUND COLOR REQUIREMENTS:
+- Generate ONE additional background color that complements the wheel colors
+- Background should be subtle but match the style aesthetic
+- For neon/cyberpunk: dark backgrounds (#1a1a2e, #16213e)
+- For pastel: very light tints (#f8f0ff, #fff5f8)
+- For sunset: warm light backgrounds (#fff5e6, #fdf4f0)
+- For ocean: cool light backgrounds (#f0f9ff, #e6f3ff)
+- For forest: natural light backgrounds (#f8fff8, #f0f8f0)
+- For synthwave: dark electric backgrounds (#0d1117, #1a1a2e)
+- For minimal: neutral light backgrounds (#fafafa, #f5f5f5)
+
 The colors should look like they belong to the same design system, not random colors thrown together.
 
-Return exactly ${count} colors as a JSON array:`;
+Return as JSON object with "wheelColors" array of ${count} colors and "backgroundColor" string:
+Example: {"wheelColors": ["#FF0080", "#00FFFF", ...], "backgroundColor": "#1a1a2e"}`;
 
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
@@ -198,8 +210,9 @@ Return exactly ${count} colors as a JSON array:`;
 
     const data = await response.json();
     
-    // Parse the response to extract colors
+    // Parse the response to extract colors and background
     let colors = [];
+    let backgroundColor = '';
     let reasoning = '';
     
     if (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) {
@@ -207,16 +220,30 @@ Return exactly ${count} colors as a JSON array:`;
       reasoning = content;
       
       try {
-        // Try to parse as JSON array first
-        const jsonMatch = content.match(/\[.*\]/);
-        if (jsonMatch) {
-          colors = JSON.parse(jsonMatch[0]);
+        // Try to parse as JSON object first (new format)
+        const jsonObjectMatch = content.match(/\{[^}]*"wheelColors"[^}]*\}/);
+        if (jsonObjectMatch) {
+          const parsed = JSON.parse(jsonObjectMatch[0]);
+          if (parsed.wheelColors && Array.isArray(parsed.wheelColors)) {
+            colors = parsed.wheelColors;
+            backgroundColor = parsed.backgroundColor || '';
+          }
         } else {
-          // Fallback: extract hex codes with regex
-          const hexPattern = /#[0-9A-Fa-f]{6}/g;
-          const matches = content.match(hexPattern);
-          if (matches) {
-            colors = matches.slice(0, count);
+          // Fallback: Try to parse as JSON array (old format)
+          const jsonArrayMatch = content.match(/\[.*\]/);
+          if (jsonArrayMatch) {
+            colors = JSON.parse(jsonArrayMatch[0]);
+          } else {
+            // Final fallback: extract hex codes with regex
+            const hexPattern = /#[0-9A-Fa-f]{6}/g;
+            const matches = content.match(hexPattern);
+            if (matches) {
+              colors = matches.slice(0, count);
+              // Use first color for background generation if no specific background provided
+              if (matches.length > count) {
+                backgroundColor = matches[count];
+              }
+            }
           }
         }
         
@@ -226,35 +253,79 @@ Return exactly ${count} colors as a JSON array:`;
           /^#[0-9A-Fa-f]{6}$/i.test(color)
         );
         
+        // Validate background color
+        if (backgroundColor && !/^#[0-9A-Fa-f]{6}$/i.test(backgroundColor)) {
+          backgroundColor = '';
+        }
+        
         // Ensure we have the requested count with fallbacks by style
-        if (colors.length < count) {
+        if (colors.length < count || !backgroundColor) {
           const fallbacksByStyle = {
-            neon_futuristic: [
-              '#FF0080', '#00FFFF', '#FF1493', '#00FF00', '#FF4500', '#9400D3',
-              '#FF00FF', '#00BFFF', '#FF69B4', '#32CD32', '#FFD700', '#FF8C00'
-            ],
-            pastel_harmony: [
-              '#FFACAB', '#FFCEA2', '#FFF29C', '#E4FEBD', '#C2FFE1', '#ABFCFE',
-              '#C5E5FE', '#C4D1FE', '#DDC4FC', '#FEE0F3', '#FFC7C6', '#FFD7B3'
-            ],
-            sunset_gradient: [
-              '#FF6B35', '#F7931E', '#FF8E53', '#FFD93D', '#FFC72C', '#FF9F1C',
-              '#FF7F00', '#FF5722', '#FF4081', '#E91E63', '#9C27B0', '#673AB7'
-            ],
-            ocean_depths: [
-              '#0077BE', '#00A8CC', '#7DD3C0', '#86C5D8', '#4CB5F5', '#2E8BC0',
-              '#1E6091', '#0F3460', '#00BCD4', '#26C6DA', '#4DD0E1', '#80DEEA'
-            ],
-            retro_synthwave: [
-              '#FF00FF', '#00FFFF', '#FF1493', '#FFFF00', '#FF0080', '#00FF00',
-              '#FF4500', '#9400D3', '#FF69B4', '#32CD32', '#FFD700', '#FF8C00'
-            ]
+            neon_futuristic: {
+              colors: [
+                '#FF0080', '#00FFFF', '#FF1493', '#00FF00', '#FF4500', '#9400D3',
+                '#FF00FF', '#00BFFF', '#FF69B4', '#32CD32', '#FFD700', '#FF8C00'
+              ],
+              background: '#1a1a2e'
+            },
+            pastel_harmony: {
+              colors: [
+                '#FFACAB', '#FFCEA2', '#FFF29C', '#E4FEBD', '#C2FFE1', '#ABFCFE',
+                '#C5E5FE', '#C4D1FE', '#DDC4FC', '#FEE0F3', '#FFC7C6', '#FFD7B3'
+              ],
+              background: '#faf8ff'
+            },
+            sunset_gradient: {
+              colors: [
+                '#FF6B35', '#F7931E', '#FF8E53', '#FFD93D', '#FFC72C', '#FF9F1C',
+                '#FF7F00', '#FF5722', '#FF4081', '#E91E63', '#9C27B0', '#673AB7'
+              ],
+              background: '#fff5e6'
+            },
+            ocean_depths: {
+              colors: [
+                '#0077BE', '#00A8CC', '#7DD3C0', '#86C5D8', '#4CB5F5', '#2E8BC0',
+                '#1E6091', '#0F3460', '#00BCD4', '#26C6DA', '#4DD0E1', '#80DEEA'
+              ],
+              background: '#f0f9ff'
+            },
+            retro_synthwave: {
+              colors: [
+                '#FF00FF', '#00FFFF', '#FF1493', '#FFFF00', '#FF0080', '#00FF00',
+                '#FF4500', '#9400D3', '#FF69B4', '#32CD32', '#FFD700', '#FF8C00'
+              ],
+              background: '#0d1117'
+            },
+            forest_earth: {
+              colors: [
+                '#228B22', '#32CD32', '#90EE90', '#9ACD32', '#8FBC8F', '#66CDAA',
+                '#20B2AA', '#3CB371', '#2E8B57', '#006400', '#008000', '#00FF00'
+              ],
+              background: '#f8fff8'
+            },
+            minimal_elegant: {
+              colors: [
+                '#E8E8E8', '#D1D1D1', '#B8B8B8', '#A0A0A0', '#909090', '#808080',
+                '#F5F5F5', '#DCDCDC', '#C0C0C0', '#A9A9A9', '#696969', '#2F4F4F'
+              ],
+              background: '#fafafa'
+            },
+            modern_vibrant: {
+              colors: [
+                '#E74C3C', '#3498DB', '#2ECC71', '#F39C12', '#9B59B6', '#1ABC9C',
+                '#E67E22', '#34495E', '#F1C40F', '#E91E63', '#FF9800', '#607D8B'
+              ],
+              background: '#f8f9fa'
+            }
           };
           
-          const fallbackColors = fallbacksByStyle[style] || [
-            '#E74C3C', '#3498DB', '#2ECC71', '#F39C12', '#9B59B6', '#1ABC9C',
-            '#E67E22', '#34495E', '#F1C40F', '#E91E63', '#FF9800', '#607D8B'
-          ];
+          const fallbackData = fallbacksByStyle[style] || fallbacksByStyle.modern_vibrant;
+          const fallbackColors = fallbackData.colors;
+          
+          // Use fallback background if not provided by AI
+          if (!backgroundColor) {
+            backgroundColor = fallbackData.background;
+          }
           
           while (colors.length < count && fallbackColors.length > 0) {
             const fallback = fallbackColors.shift();
@@ -272,18 +343,43 @@ Return exactly ${count} colors as a JSON array:`;
         
         // Style-specific fallback colors
         const styleDefaults = {
-          neon_futuristic: ['#FF0080', '#00FFFF', '#FF1493', '#00FF00', '#FF4500', '#9400D3'],
-          pastel_harmony: ['#FFACAB', '#FFCEA2', '#FFF29C', '#E4FEBD', '#C2FFE1', '#ABFCFE'],
-          sunset_gradient: ['#FF6B35', '#F7931E', '#FF8E53', '#FFD93D', '#FFC72C', '#FF9F1C'],
-          ocean_depths: ['#0077BE', '#00A8CC', '#7DD3C0', '#86C5D8', '#4CB5F5', '#2E8BC0'],
-          retro_synthwave: ['#FF00FF', '#00FFFF', '#FF1493', '#FFFF00', '#FF0080', '#00FF00']
+          neon_futuristic: {
+            colors: ['#FF0080', '#00FFFF', '#FF1493', '#00FF00', '#FF4500', '#9400D3'],
+            background: '#1a1a2e'
+          },
+          pastel_harmony: {
+            colors: ['#FFACAB', '#FFCEA2', '#FFF29C', '#E4FEBD', '#C2FFE1', '#ABFCFE'],
+            background: '#faf8ff'
+          },
+          sunset_gradient: {
+            colors: ['#FF6B35', '#F7931E', '#FF8E53', '#FFD93D', '#FFC72C', '#FF9F1C'],
+            background: '#fff5e6'
+          },
+          ocean_depths: {
+            colors: ['#0077BE', '#00A8CC', '#7DD3C0', '#86C5D8', '#4CB5F5', '#2E8BC0'],
+            background: '#f0f9ff'
+          },
+          retro_synthwave: {
+            colors: ['#FF00FF', '#00FFFF', '#FF1493', '#FFFF00', '#FF0080', '#00FF00'],
+            background: '#0d1117'
+          },
+          forest_earth: {
+            colors: ['#228B22', '#32CD32', '#90EE90', '#9ACD32', '#8FBC8F', '#66CDAA'],
+            background: '#f8fff8'
+          },
+          minimal_elegant: {
+            colors: ['#E8E8E8', '#D1D1D1', '#B8B8B8', '#A0A0A0', '#909090', '#808080'],
+            background: '#fafafa'
+          },
+          modern_vibrant: {
+            colors: ['#E74C3C', '#3498DB', '#2ECC71', '#F39C12', '#9B59B6', '#1ABC9C'],
+            background: '#f8f9fa'
+          }
         };
         
-        const defaultSet = styleDefaults[style] || [
-          '#E74C3C', '#3498DB', '#2ECC71', '#F39C12', '#9B59B6', '#1ABC9C'
-        ];
-        
-        colors = [...defaultSet].slice(0, count);
+        const defaultData = styleDefaults[style] || styleDefaults.modern_vibrant;
+        colors = [...defaultData.colors].slice(0, count);
+        backgroundColor = defaultData.background;
         
         // Fill remaining if needed
         while (colors.length < count) {
@@ -296,6 +392,7 @@ Return exactly ${count} colors as a JSON array:`;
     res.status(200).json({
       ...data,
       extractedColors: colors,
+      backgroundColor: backgroundColor,
       requestedCount: count,
       actualCount: colors.length,
       style: style,

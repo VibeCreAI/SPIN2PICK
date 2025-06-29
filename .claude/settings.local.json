@@ -14,7 +14,8 @@
       "Bash(export CLAUDE_NO_AUTO_UPDATE=1)",
       "Bash(npx tsc:*)",
       "Bash(grep:*)",
-      "Bash(true)"
+      "Bash(true)",
+      "Bash(rg:*)"
     ],
     "deny": []
   }

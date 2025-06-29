@@ -27,6 +27,30 @@ interface TitleManagementModalProps {
   currentTitle?: Title | null;
 }
 
+// Helper function to remove duplicate titles
+const removeDuplicatesTitles = (titles: Title[]): Title[] => {
+  const seen = new Map<string, Title>();
+  
+  // First pass: collect all titles, handling specific duplicates
+  titles.forEach(title => {
+    const normalizedName = title.name.toLowerCase().trim();
+    
+    // Skip "Chores Roulette" if we have "Chore Assignments" (keep Chore Assignments)
+    if (normalizedName === 'chores roulette' && 
+        titles.some(t => t.name.toLowerCase() === 'chore assignments')) {
+      return;
+    }
+    
+    // For general duplicates, prefer predetermined titles over custom ones
+    const existing = seen.get(normalizedName);
+    if (!existing || (title.isPredetermined && !existing.isPredetermined)) {
+      seen.set(normalizedName, title);
+    }
+  });
+  
+  return Array.from(seen.values());
+};
+
 export const TitleManagementModal: React.FC<TitleManagementModalProps> = ({
   visible,
   onClose,
@@ -54,20 +78,41 @@ export const TitleManagementModal: React.FC<TitleManagementModalProps> = ({
   const MODAL_MAX_WIDTH = 500;
   const containerWidth = screenWidth < MODAL_MAX_WIDTH ? '95%' : MODAL_MAX_WIDTH;
 
-  // Load saved titles on mount
+  // Load saved titles on mount and cleanup duplicates
   useEffect(() => {
     if (visible) {
-      loadSavedTitles();
+      cleanupDuplicatesInStorage().then(() => {
+        loadSavedTitles();
+      });
     }
   }, [visible]);
+
+  // Cleanup duplicates from storage
+  const cleanupDuplicatesInStorage = async () => {
+    try {
+      const allTitles = await TitleManager.getAllTitles();
+      const cleanedTitles = removeDuplicatesTitles(allTitles);
+      
+      if (cleanedTitles.length < allTitles.length) {
+        console.log(`🧹 Removing ${allTitles.length - cleanedTitles.length} duplicate titles from storage`);
+        await TitleManager.saveTitles(cleanedTitles);
+        await loadSavedTitles(); // Reload the UI
+      }
+    } catch (error) {
+      console.error('Error cleaning up duplicates:', error);
+    }
+  };
 
   const loadSavedTitles = async () => {
     setIsLoading(true);
     try {
-      const titles = await TitleManager.getAllTitles();
-      setSavedTitles(titles);
+      const allTitles = await TitleManager.getAllTitles();
       
-      // Categorize titles
+      // Filter out duplicates and legacy titles
+      const filteredTitles = removeDuplicatesTitles(allTitles);
+      setSavedTitles(filteredTitles.filter(title => title.isCustom));
+      
+      // Categorize titles (only show predetermined titles in categories, not in Featured section)
       const categorized: Record<string, Title[]> = {
         'family': [],
         'food': [],
@@ -80,7 +125,7 @@ export const TitleManagementModal: React.FC<TitleManagementModalProps> = ({
         'custom': [],
       };
       
-      titles.forEach(title => {
+      filteredTitles.forEach(title => {
         if (categorized[title.category]) {
           categorized[title.category].push(title);
         }
@@ -319,11 +364,6 @@ export const TitleManagementModal: React.FC<TitleManagementModalProps> = ({
                   </View>
                 ))}
 
-                {/* Predetermined Titles Section */}
-                <Text style={[styles.sectionTitle, { color: currentTheme.uiColors.text }]}>
-                  Featured Wheels
-                </Text>
-                {PREDETERMINED_TITLES.map((title) => renderTitleCard(title, true))}
 
                 {/* Custom Wheels Section */}
                 {savedTitles.length > 0 && (

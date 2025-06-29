@@ -751,6 +751,29 @@ export default function HomeScreen() {
     }
   };
 
+  // Helper function to get maximum items available for current wheel
+  const getMaxItemsForCurrentWheel = (): number => {
+    if (currentTitle && currentTitle.items) {
+      return currentTitle.items.length;
+    }
+    // Fallback to 100 for legacy or undefined cases
+    return 100;
+  };
+
+  // Helper function to get dynamic font size based on text length
+  const getDynamicFontSize = (text: string): number => {
+    const length = text.length;
+    if (length <= 15) {
+      return 28; // Original size for short titles
+    } else if (length <= 25) {
+      return 24; // Slightly smaller for medium titles
+    } else if (length <= 35) {
+      return 20; // Smaller for longer titles
+    } else {
+      return 18; // Minimum size for very long titles
+    }
+  };
+
   const handleSelectTitle = async (title: Title) => {
     try {
       setCurrentTitle(title);
@@ -891,28 +914,6 @@ export default function HomeScreen() {
   const renderContent = () => (
           <View style={[styles.container, { backgroundColor: currentTheme.backgroundColor }]} onLayout={onLayout}>
             <View style={styles.contentWrapper}>
-              {/* NEW: Header with hamburger menu */}
-              <View style={styles.topHeader}>
-                <ThemedText type="subtitle" style={[styles.appTitle, { color: currentTheme.uiColors.primary }]}>Spin2Pick</ThemedText>
-                <TouchableOpacity onPress={handleOpenHamburgerMenu} style={styles.menuButton}>
-                  <Ionicons name="menu" size={32} color={currentTheme.uiColors.primary} />
-                </TouchableOpacity>
-              </View>
-
-              {/* NEW: Dynamic title header */}
-              <View style={styles.dynamicTitleContainer}>
-                <View style={styles.titleRow}>
-                  <Text style={styles.titleEmoji}>{currentTitle?.emoji || '🎯'}</Text>
-                  <ThemedText type="title" style={[styles.dynamicTitle, { color: currentTheme.uiColors.primary }]}>
-                    {currentTitle?.name || 'Kids Activity'}
-                  </ThemedText>
-                </View>
-                <TouchableOpacity onPress={() => setShowTitleDescription(!showTitleDescription)}>
-                  <ThemedText style={[styles.titleDescription, { color: currentTheme.uiColors.secondary }]}>
-                    {currentTitle?.description || 'Tap to explore different activity categories'}
-                  </ThemedText>
-                </TouchableOpacity>
-              </View>
               
               <ActivityInput
                 onAddActivity={handleAddActivity}
@@ -970,6 +971,52 @@ export default function HomeScreen() {
         enabled={Platform.OS === 'ios'}
       >
         <View style={[styles.mainContainer, { backgroundColor: currentTheme.backgroundColor }]}>
+          {/* Fixed Header at Top */}
+          <View style={[styles.fixedHeader, { 
+            backgroundColor: currentTheme.backgroundColor,
+            borderBottomColor: currentTheme.uiColors.secondary + '40'
+          }]}>
+            <View style={styles.headerContentWrapper}>
+              {/* NEW: Header with hamburger menu */}
+              <View style={styles.topHeader}>
+                <ThemedText type="subtitle" style={[styles.appTitle, { color: currentTheme.uiColors.primary }]}>Spin2Pick</ThemedText>
+                <TouchableOpacity onPress={handleOpenHamburgerMenu} style={styles.menuButton}>
+                  <Ionicons name="menu" size={32} color={currentTheme.uiColors.primary} />
+                </TouchableOpacity>
+              </View>
+
+              {/* NEW: Dynamic title header */}
+              <View style={styles.dynamicTitleContainer}>
+                <View style={styles.titleRow}>
+                  <Text style={styles.titleEmoji}>{currentTitle?.emoji || '🎯'}</Text>
+                  <ThemedText 
+                    type="title" 
+                    style={[
+                      styles.dynamicTitle, 
+                      { 
+                        color: currentTheme.uiColors.primary,
+                        fontSize: getDynamicFontSize(currentTitle?.name || 'Kids Activity')
+                      }
+                    ]}
+                    numberOfLines={1}
+                    adjustsFontSizeToFit={true}
+                    minimumFontScale={0.7}
+                  >
+                    {currentTitle?.name || 'Kids Activity'}
+                  </ThemedText>
+                </View>
+                <TouchableOpacity onPress={() => setShowTitleDescription(!showTitleDescription)}>
+                  <ThemedText style={[styles.titleDescription, { color: currentTheme.uiColors.secondary }]}>
+                    {showTitleDescription 
+                      ? (currentTitle?.description || 'Fun activities for kids of all ages') 
+                      : `${currentTitle?.items?.length || activities.length} activities • Tap for details`
+                    }
+                  </ThemedText>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+          
           {/* ScrollView for all platforms */}
           <ScrollView 
             style={styles.scrollContainer}
@@ -1065,7 +1112,9 @@ export default function HomeScreen() {
                 ? `How many items from "${currentTitle.name}" do you want?`
                 : 'How many random picks do you want?'}
             </Text>
-            <Text allowFontScaling={false} style={[styles.popupMessage, { color: currentTheme.uiColors.secondary, fontSize: 14, textAlign: 'center', marginTop: -5, marginBottom: 15 }]}>(Max 100)</Text>
+            <Text allowFontScaling={false} style={[styles.popupMessage, { color: currentTheme.uiColors.secondary, fontSize: 14, textAlign: 'center', marginTop: -5, marginBottom: 15 }]}>
+              (Max {getMaxItemsForCurrentWheel()} for this wheel)
+            </Text>
             <TextInput
               style={[styles.resetCountInput, { 
                 borderColor: currentTheme.uiColors.primary,
@@ -1074,12 +1123,13 @@ export default function HomeScreen() {
               keyboardType="numeric"
               onChangeText={(text: string) => {
                 const num = parseInt(text, 10);
-                if (!isNaN(num) && num > 0 && num <= 100) {
+                const maxItems = getMaxItemsForCurrentWheel();
+                if (!isNaN(num) && num > 0 && num <= maxItems) {
                   setResetCount(num);
                 } else if (text === '') {
                   setResetCount(0); // Allow empty input temporarily
                 }
-                // Silently ignore values > 100
+                // Silently ignore invalid values (negative, zero, or above max)
               }}
               value={resetCount.toString()}
               placeholder="8"
@@ -1173,11 +1223,29 @@ const styles = StyleSheet.create({
       minHeight: '100vh' as any,
     }),
   } as ViewStyle,
+  fixedHeader: {
+    width: '100%',
+    paddingTop: 10,
+    paddingBottom: 15,
+    borderBottomWidth: 1,
+    zIndex: 100,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    alignItems: 'center', // Center the content wrapper
+  },
+  headerContentWrapper: {
+    width: '100%',
+    maxWidth: 350, // Match the content wrapper width
+    paddingHorizontal: 20,
+  },
   container: {
     width: '100%',
     alignItems: 'center', // Center the content wrapper
     padding: 0,
-    paddingTop: 0,
+    paddingTop: 20, // Add top padding since header is now fixed
     paddingBottom: 10,
   },
   contentWrapper: {
@@ -1235,9 +1303,10 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   dynamicTitle: {
-    fontSize: 28,
+    fontSize: 28, // Default size, will be overridden dynamically
     fontFamily: FONTS.jua,
     textAlign: 'center',
+    flex: 1, // Allow text to use available space
   },
   titleDescription: {
     fontSize: 14,

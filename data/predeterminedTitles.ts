@@ -802,12 +802,18 @@ export const installPredeterminedTitles = async (): Promise<void> => {
     console.log('🔄 Installing predetermined titles...');
     
     for (const title of PREDETERMINED_TITLES) {
-      const exists = existingTitles.find((t: Title) => t.id === title.id);
-      if (!exists) {
+      // Check both by ID and by name to prevent duplicates
+      const existsById = existingTitles.find((t: Title) => t.id === title.id);
+      const existsByName = existingTitles.find((t: Title) => 
+        t.name.toLowerCase().trim() === title.name.toLowerCase().trim()
+      );
+      
+      if (!existsById && !existsByName) {
         await TitleManager.saveTitle(title);
         console.log(`✅ Installed title: ${title.name}`);
       } else {
-        console.log(`⚠️ Title already exists: ${title.name}`);
+        const reason = existsById ? 'ID already exists' : 'Name already exists';
+        console.log(`⚠️ Title skipped (${reason}): ${title.name}`);
       }
     }
     

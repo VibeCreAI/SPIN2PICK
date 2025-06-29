@@ -303,19 +303,43 @@ export class TitleManager {
 
   // Get titles by category
   static async getTitlesByCategory(category: TitleCategory): Promise<Title[]> {
-    const titles = await this.getAllTitles();
-    return titles.filter(title => title.category === category);
+    try {
+      const titles = await this.getAllTitles();
+      return titles.filter(title => title.category === category);
+    } catch (error) {
+      console.error(`Error getting titles for category ${category}:`, error);
+      return [];
+    }
   }
 
   // Search titles by name or description
   static async searchTitles(query: string): Promise<Title[]> {
-    const titles = await this.getAllTitles();
-    const lowercaseQuery = query.toLowerCase();
-    
-    return titles.filter(title => 
-      title.name.toLowerCase().includes(lowercaseQuery) ||
-      title.description.toLowerCase().includes(lowercaseQuery)
-    );
+    try {
+      if (!query) return [];
+      const titles = await this.getAllTitles();
+      const lowercaseQuery = query.toLowerCase();
+      
+      return titles.filter(title => 
+        title.name.toLowerCase().includes(lowercaseQuery) ||
+        title.description.toLowerCase().includes(lowercaseQuery)
+      );
+    } catch (error) {
+      console.error('Error searching titles:', error);
+      return [];
+    }
+  }
+
+  static async getRecentlyUsedTitles(limit: number = 3): Promise<Title[]> {
+    try {
+      const titles = await this.getAllTitles();
+      return titles
+        .filter(title => title.lastUsed)
+        .sort((a, b) => b.lastUsed!.getTime() - a.lastUsed!.getTime())
+        .slice(0, limit);
+    } catch (error) {
+      console.error('Error getting recently used titles:', error);
+      return [];
+    }
   }
 }
 

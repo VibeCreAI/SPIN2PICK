@@ -1252,7 +1252,7 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
                 <ThemedText style={[
                   styles.actionButtonText,
                   { color: currentTheme.uiColors.buttonText }
-                ]}>🔄 Reset</ThemedText>
+                ]}>🔄 Reset Wheel</ThemedText>
               </TouchableOpacity>
             )}
 

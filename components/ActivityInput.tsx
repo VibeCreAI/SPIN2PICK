@@ -1,14 +1,14 @@
 import { FONTS } from '@/app/_layout';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
-    Dimensions,
-    Modal,
-    Platform,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View
+  Dimensions,
+  Modal,
+  Platform,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import { useTheme } from '../hooks/useTheme';
 import { Activity } from '../utils/colorUtils';
@@ -172,7 +172,7 @@ export const ActivityInput: React.FC<ActivityInputProps> = ({
               ]}
               value={inputText}
               onChangeText={setInputText}
-              placeholder="Enter new activity..."
+              placeholder="Add new to wheel..."
               placeholderTextColor={currentTheme.uiColors.secondary}
               onSubmitEditing={handleSubmit}
               returnKeyType="done"

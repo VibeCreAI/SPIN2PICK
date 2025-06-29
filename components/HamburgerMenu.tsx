@@ -1,4 +1,5 @@
 import { FONTS } from '@/app/_layout';
+import { Title } from '@/utils/titleUtils';
 import { BlurView } from 'expo-blur';
 import React, { useEffect, useRef } from 'react';
 import {
@@ -20,27 +21,27 @@ interface HamburgerMenuProps {
     onClose: () => void;
     // Navigation props
     onNavigateToTitleManagement: () => void;
-    onNavigateToActivityManagement: () => void;
     onNavigateToSettings: () => void;
     onNavigateToThemes: () => void;
     onNavigateToSaveLoad: () => void;
-    onReset: () => void;
     onExportData: () => void;
+    recentlyUsedTitles: Title[];
+    onSelectTitle: (title: Title) => void;
 }
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
-export default function HamburgerMenu({
+export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
     visible,
     onClose,
     onNavigateToTitleManagement,
-    onNavigateToActivityManagement,
     onNavigateToSettings,
     onNavigateToThemes,
     onNavigateToSaveLoad,
-    onReset,
-    onExportData
-}: HamburgerMenuProps) {
+    onExportData,
+    recentlyUsedTitles,
+    onSelectTitle,
+}) => {
     const { currentTheme } = useTheme();
     const slideAnim = useRef(new Animated.Value(screenWidth)).current;
     const overlayOpacity = useRef(new Animated.Value(0)).current;
@@ -180,6 +181,23 @@ export default function HamburgerMenu({
             color: currentTheme.uiColors.accent,
             fontWeight: 'bold',
         },
+        navItem: {
+            paddingVertical: 14,
+            paddingHorizontal: 16,
+            marginVertical: 2,
+            backgroundColor: currentTheme.uiColors.cardBackground,
+            borderRadius: 12,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 1 },
+            shadowOpacity: 0.05,
+            shadowRadius: 2,
+            elevation: 2,
+        },
+        navText: {
+            fontSize: 16,
+            fontFamily: FONTS.nunito,
+            color: currentTheme.uiColors.text,
+        },
     });
 
     if (!visible) return null;
@@ -224,52 +242,84 @@ export default function HamburgerMenu({
                         showsVerticalScrollIndicator={false}
                         keyboardShouldPersistTaps="handled"
                     >
-                        {/* Navigation Section */}
+                        {/* Manage Section */}
                         <View style={styles.navigationSection}>
-                            <Text style={styles.sectionTitle}>🛠️ App Functions</Text>
-                            
-                            <TouchableOpacity style={styles.menuItem} onPress={() => { onNavigateToTitleManagement(); onClose(); }}>
-                                <Text style={styles.menuItemIcon}>📝</Text>
-                                <Text style={styles.menuItemText}>Manage Titles</Text>
-                                <Text style={styles.menuItemArrow}>›</Text>
+                            <Text style={styles.sectionTitle}>Manage</Text>
+                            <TouchableOpacity
+                                style={styles.navItem}
+                                onPress={() => {
+                                    onNavigateToTitleManagement();
+                                    onClose();
+                                }}
+                            >
+                                <Text style={styles.navText}>🎯 Manage Wheels</Text>
                             </TouchableOpacity>
-                            
-                            <TouchableOpacity style={styles.menuItem} onPress={() => { onNavigateToActivityManagement(); onClose(); }}>
-                                <Text style={styles.menuItemIcon}>🏃</Text>
-                                <Text style={styles.menuItemText}>Manage Picks</Text>
-                                <Text style={styles.menuItemArrow}>›</Text>
-                            </TouchableOpacity>
-                            
-                            <TouchableOpacity style={styles.menuItem} onPress={() => { onNavigateToThemes(); onClose(); }}>
-                                <Text style={styles.menuItemIcon}>🎨</Text>
-                                <Text style={styles.menuItemText}>Themes</Text>
-                                <Text style={styles.menuItemArrow}>›</Text>
-                            </TouchableOpacity>
-                            
-                            <TouchableOpacity style={styles.menuItem} onPress={() => { onNavigateToSaveLoad(); onClose(); }}>
-                                <Text style={styles.menuItemIcon}>💾</Text>
-                                <Text style={styles.menuItemText}>Save/Load</Text>
-                                <Text style={styles.menuItemArrow}>›</Text>
-                            </TouchableOpacity>
-                            
-                            <TouchableOpacity style={styles.menuItem} onPress={() => { onReset(); onClose(); }}>
-                                <Text style={styles.menuItemIcon}>🔄</Text>
-                                <Text style={styles.menuItemText}>Reset Picks</Text>
-                                <Text style={styles.menuItemArrow}>›</Text>
-                            </TouchableOpacity>
-                            
-                            <TouchableOpacity style={styles.menuItem} onPress={() => { onExportData(); onClose(); }}>
-                                <Text style={styles.menuItemIcon}>📤</Text>
-                                <Text style={styles.menuItemText}>Export Data</Text>
-                                <Text style={styles.menuItemArrow}>›</Text>
-                            </TouchableOpacity>
-                            
-                            <TouchableOpacity style={styles.menuItem} onPress={() => { onNavigateToSettings(); onClose(); }}>
-                                <Text style={styles.menuItemIcon}>⚙️</Text>
-                                <Text style={styles.menuItemText}>Settings</Text>
-                                <Text style={styles.menuItemArrow}>›</Text>
+                            <TouchableOpacity
+                                style={styles.navItem}
+                                onPress={() => {
+                                    onNavigateToSaveLoad();
+                                    onClose();
+                                }}
+                            >
+                                <Text style={styles.navText}>💾 Save/Load Lists</Text>
                             </TouchableOpacity>
                         </View>
+
+                        {/* Settings Section */}
+                        <View style={styles.navigationSection}>
+                            <Text style={styles.sectionTitle}>Settings</Text>
+                            <TouchableOpacity
+                                style={styles.navItem}
+                                onPress={() => {
+                                    onNavigateToThemes();
+                                    onClose();
+                                }}
+                            >
+                                <Text style={styles.navText}>🎨 Themes</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={styles.navItem}
+                                onPress={() => {
+                                    onNavigateToSettings();
+                                    onClose();
+                                }}
+                            >
+                                <Text style={styles.navText}>⚙️ Settings</Text>
+                            </TouchableOpacity>
+                        </View>
+
+                        {/* Data Section */}
+                        <View style={styles.navigationSection}>
+                            <Text style={styles.sectionTitle}>Data</Text>
+                            <TouchableOpacity
+                                style={styles.navItem}
+                                onPress={() => {
+                                    onExportData();
+                                    onClose();
+                                }}
+                            >
+                                <Text style={styles.navText}>📤 Export Data</Text>
+                            </TouchableOpacity>
+                        </View>
+
+                        {/* Recently Used Titles Section */}
+                        {recentlyUsedTitles && recentlyUsedTitles.length > 0 && (
+                            <View style={styles.navigationSection}>
+                                <Text style={styles.sectionTitle}>🕒 Recently Used</Text>
+                                {recentlyUsedTitles.map(title => (
+                                    <TouchableOpacity
+                                        key={title.id}
+                                        style={styles.navItem}
+                                        onPress={() => {
+                                            onSelectTitle(title);
+                                            onClose();
+                                        }}
+                                    >
+                                        <Text style={styles.navText}>{title.emoji} {title.name}</Text>
+                                    </TouchableOpacity>
+                                ))}
+                            </View>
+                        )}
                     </ScrollView>
                 </Animated.View>
             </Animated.View>

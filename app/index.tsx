@@ -5,13 +5,14 @@ import { FONTS } from '@/app/_layout';
 import { ActivityInput } from '@/components/ActivityInput';
 import { AdBanner } from '@/components/AdBanner';
 import { Celebration } from '@/components/Celebration';
-import HamburgerMenu from '@/components/HamburgerMenu';
+import { HamburgerMenu } from '@/components/HamburgerMenu';
 import { RouletteWheel } from '@/components/RouletteWheel';
 import { SaveLoadModal } from '@/components/SaveLoadModal';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemeSelectionModal } from '@/components/ThemeSelectionModal';
 import { TitleManagementModal } from '@/components/TitleManagementModal';
 import { useTheme } from '@/hooks/useTheme';
+import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Dimensions, KeyboardAvoidingView, LayoutChangeEvent, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, ViewStyle } from 'react-native';
@@ -137,6 +138,12 @@ export default function HomeScreen() {
   
   // State for external activity list control
   const [openActivityListExternal, setOpenActivityListExternal] = useState(false);
+
+  // New state for recently used titles
+  const [recentlyUsedTitles, setRecentlyUsedTitles] = useState<Title[]>([]);
+
+  // New state for activity management modal
+  const [showActivityManagementModal, setShowActivityManagementModal] = useState(false);
 
   // Get screen dimensions for responsive design
   const screenData = Dimensions.get('window');
@@ -674,8 +681,6 @@ export default function HomeScreen() {
     setActivities(recoloredActivities);
   };
 
-
-
   const handleCloseSaveLoad = () => {
     setShowSaveLoadModal(false);
   };
@@ -689,12 +694,22 @@ export default function HomeScreen() {
   };
 
   const handleSaveLoad = (loadedActivities: Activity[]) => {
-    // Reassign colors to ensure optimal distribution with current theme
     const recoloredActivities = reassignAllColors(loadedActivities, currentTheme.wheelColors);
     setActivities(recoloredActivities);
   };
 
   // Title Management handlers
+  const handleOpenHamburgerMenu = async () => {
+    try {
+      const recent = await TitleManager.getRecentlyUsedTitles(3);
+      setRecentlyUsedTitles(recent);
+      setShowHamburgerMenu(true);
+    } catch (error) {
+      console.error("Failed to load recent titles for menu:", error);
+      setShowHamburgerMenu(true);
+    }
+  };
+
   const handleOpenTitleManagement = () => {
     setShowTitleManagementModal(true);
     setShowHamburgerMenu(false); // Close hamburger menu
@@ -877,8 +892,8 @@ export default function HomeScreen() {
               {/* NEW: Header with hamburger menu */}
               <View style={styles.topHeader}>
                 <ThemedText type="subtitle" style={[styles.appTitle, { color: currentTheme.uiColors.primary }]}>Spin2Pick</ThemedText>
-                <TouchableOpacity onPress={() => setShowHamburgerMenu(true)} style={styles.menuButton}>
-                  <Text style={[styles.menuIcon, { color: currentTheme.uiColors.primary }]}>☰</Text>
+                <TouchableOpacity onPress={handleOpenHamburgerMenu} style={styles.menuButton}>
+                  <Ionicons name="menu" size={32} color={currentTheme.uiColors.primary} />
                 </TouchableOpacity>
               </View>
 
@@ -919,7 +934,7 @@ export default function HomeScreen() {
                 onExternalOpenHandled={() => setOpenActivityListExternal(false)}
               />
               
-                              <ThemedText style={[styles.subtitle, { color: currentTheme.uiColors.secondary }]}>Press ✨ for AI suggestions, 📃 to manage!</ThemedText>
+                              <ThemedText style={[styles.subtitle, { color: currentTheme.uiColors.secondary }]}>✨ for AI suggestions, 📃 to manage more!</ThemedText>
 
               {containerWidth > 0 ? (
                 <ErrorBoundary>
@@ -927,11 +942,12 @@ export default function HomeScreen() {
                     activities={activities}
                     onActivitySelect={handleActivitySelect}
                     onActivityDelete={handleDeleteActivity}
+                    onPreviousActivityChange={handlePreviousActivityChange}
                     parentWidth={containerWidth}
                     selectedActivity={selectedActivity}
-                    onPreviousActivityChange={handlePreviousActivityChange}
                     newlyAddedActivityId={newlyAddedActivityId}
                     onNewActivityIndicatorComplete={handleNewActivityIndicatorComplete}
+                    onReset={() => setShowResetConfirmation(true)}
                   />
                 </ErrorBoundary>
               ) : (
@@ -1116,12 +1132,12 @@ export default function HomeScreen() {
         visible={showHamburgerMenu}
         onClose={() => setShowHamburgerMenu(false)}
         onNavigateToTitleManagement={handleOpenTitleManagement}
-        onNavigateToActivityManagement={handleOpenActivityManagement}
         onNavigateToSettings={() => {/* TODO: Implement */}}
         onNavigateToThemes={() => setShowThemeModal(true)}
         onNavigateToSaveLoad={() => setShowSaveLoadModal(true)}
-        onReset={() => setShowResetConfirmation(true)}
         onExportData={() => {/* TODO: Implement */}}
+        recentlyUsedTitles={recentlyUsedTitles}
+        onSelectTitle={handleSelectTitle}
       />
       
       {/* Title Management Modal */}

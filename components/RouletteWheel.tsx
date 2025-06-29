@@ -449,12 +449,14 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
         <SvgText 
           key="single-activity-text"
           x={CENTER} 
-          y={CENTER - 10} 
-          textAnchor="middle" 
-          fontSize="18" 
-          fill={currentTheme.uiColors.primary}
+          y={CENTER - 10}
+          textAnchor="middle"
+          fontSize={24}
           fontFamily={FONTS.jua}
-          fontWeight="bold"
+          fill={getTextColorForTheme(currentTheme.name)}
+          stroke={getStrokeColorForTheme(currentTheme.name)}
+          strokeWidth={0.5}
+          strokeOpacity={0.3}
         >
           {activity.emoji ? `${activity.emoji} ${activity.name}` : activity.name}
         </SvgText>,
@@ -462,12 +464,13 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
         <SvgText 
           key="single-activity-subtitle"
           x={CENTER} 
-          y={CENTER + 15} 
-          textAnchor="middle" 
-          fontSize="12" 
-          fill={currentTheme.uiColors.primary}
-          fontFamily={FONTS.jua}
-          opacity="0.8"
+          y={CENTER + 20}
+          textAnchor="middle"
+          fontSize={20}
+          fill={getTextColorForTheme(currentTheme.name)}
+          stroke={getStrokeColorForTheme(currentTheme.name)}
+          strokeWidth={0.2}
+          strokeOpacity={0.3}
         >
           Add more to spin!
         </SvgText>
@@ -790,7 +793,7 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
 
   // Create emoji content separately to avoid opacity inheritance
   const emojiContent = useMemo(() => {
-    if (activities.length === 0) return [];
+    if (activities.length <= 1) return [];
 
     const sliceAngleDegrees = 360 / activities.length;
 

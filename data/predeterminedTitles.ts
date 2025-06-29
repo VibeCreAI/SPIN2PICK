@@ -1,5 +1,5 @@
-import { Title, TitleCategory, Item, TitleManager } from '../utils/titleUtils';
 import { PASTEL_COLORS } from '../utils/colorUtils';
+import { Item, Title, TitleCategory, TitleManager } from '../utils/titleUtils';
 
 // Helper function to create items with colors
 const createItems = (names: string[], startIndex: number = 0): Item[] => {

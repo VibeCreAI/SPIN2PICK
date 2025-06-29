@@ -8,6 +8,7 @@ import { Activity } from '../utils/colorUtils';
 export interface SaveSlot {
   id: string;
   name: string;
+  title: string;
   activities: Activity[];
   createdAt: Date;
 }
@@ -16,7 +17,8 @@ interface SaveLoadModalProps {
   visible: boolean;
   onClose: () => void;
   currentActivities: Activity[];
-  onLoadActivities: (activities: Activity[]) => void;
+  currentTitle: string;
+  onLoadActivities: (activities: Activity[], title: string) => void;
 }
 
 const SAVE_SLOTS_KEY = 'SPIN2PICK_SAVE_SLOTS';
@@ -27,6 +29,7 @@ export const SaveLoadModal: React.FC<SaveLoadModalProps> = ({
   visible,
   onClose,
   currentActivities,
+  currentTitle,
   onLoadActivities,
 }) => {
   const { currentTheme } = useTheme();
@@ -98,7 +101,7 @@ export const SaveLoadModal: React.FC<SaveLoadModalProps> = ({
 
   const handleSavePress = (slotIndex: number, isOverwrite = false) => {
     const slot = saveSlots[slotIndex];
-    setSaveName(isOverwrite && slot ? slot.name : '');
+    setSaveName(isOverwrite && slot ? slot.name : currentTitle);
     setSaveModal({ visible: true, slotIndex, isOverwrite });
   };
 
@@ -114,6 +117,7 @@ export const SaveLoadModal: React.FC<SaveLoadModalProps> = ({
       const newSlot: SaveSlot = {
         id: Date.now().toString(),
         name: saveName.trim(),
+        title: currentTitle,
         activities: currentActivities,
         createdAt: new Date(),
       };
@@ -141,10 +145,10 @@ export const SaveLoadModal: React.FC<SaveLoadModalProps> = ({
     if (!slot) return;
     setConfirmationModal({
       visible: true,
-      title: 'Load Activities',
-      message: `Load "${slot.name}"? This will replace your current activities.`,
+      title: 'Load Wheel',
+      message: `Load "${slot.name}"? This will replace your current wheel.`,
       onConfirm: () => {
-        onLoadActivities(slot.activities);
+        onLoadActivities(slot.activities, slot.title);
         setConfirmationModal({ visible: false, title: '', message: '', onConfirm: () => {} });
         onClose();
       },
@@ -196,7 +200,7 @@ export const SaveLoadModal: React.FC<SaveLoadModalProps> = ({
             <View style={styles.slotInfoVertical}>
               <Text allowFontScaling={false} style={[styles.slotName, { color: currentTheme.uiColors.primary }]}>{slot.name}</Text>
               <Text allowFontScaling={false} style={[styles.slotDetails, { color: currentTheme.uiColors.secondary }]}>
-                {slot.activities.length} activities • {new Date(slot.createdAt).toLocaleDateString()}
+                {`"${slot.title || slot.name}"`} • {slot.activities.length} slices • {new Date(slot.createdAt).toLocaleDateString()}
               </Text>
             </View>
             <View style={styles.slotActions}>
@@ -251,38 +255,40 @@ export const SaveLoadModal: React.FC<SaveLoadModalProps> = ({
   );
 
   const renderSaveInputModal = () => (
-    <Modal visible={saveModal.visible} transparent animationType="fade" onRequestClose={() => setSaveModal({ ...saveModal, visible: false })}>
-      <View style={styles.saveInputOverlay}>
-        <View style={[styles.saveInputContainer, { backgroundColor: currentTheme.uiColors.modalBackground }]}>
-          <Text allowFontScaling={false} style={[styles.saveInputTitle, { color: currentTheme.uiColors.text }]}>{saveModal.isOverwrite ? 'Overwrite Save' : 'Save Activities'}</Text>
+    <Modal visible={saveModal.visible} transparent animationType="fade" onRequestClose={() => setSaveModal({ visible: false, slotIndex: null, isOverwrite: false })}>
+      <View style={styles.confirmationOverlay}>
+        <View style={[styles.confirmationContainer, { backgroundColor: currentTheme.uiColors.modalBackground }]}>
+          <Text allowFontScaling={false} style={[styles.confirmationTitle, { color: currentTheme.uiColors.text }]}>
+            {saveModal.isOverwrite ? 'Overwrite Save' : 'Save Wheel'}
+          </Text>
           <TextInput
-            style={[styles.textInput, { 
-              borderColor: currentTheme.uiColors.secondary,
-              color: currentTheme.uiColors.text,
+            style={[styles.saveInput, { 
+              color: currentTheme.uiColors.text, 
+              borderColor: currentTheme.uiColors.primary,
               backgroundColor: currentTheme.uiColors.cardBackground,
             }]}
-            value={saveName}
-            onChangeText={(text) => setSaveName(text.slice(0, MAX_SAVE_NAME_LENGTH))}
-            placeholder="My Awesome Activities"
+            placeholder="Enter a name for your wheel"
             placeholderTextColor={currentTheme.uiColors.secondary}
+            value={saveName}
+            onChangeText={setSaveName}
             maxLength={MAX_SAVE_NAME_LENGTH}
-            autoFocus
-            allowFontScaling={false}
           />
-          <Text allowFontScaling={false} style={[{ fontSize: 12, color: currentTheme.uiColors.secondary, textAlign: 'center', marginBottom: 10 }]}>{MAX_SAVE_NAME_LENGTH - saveName.length} characters remaining</Text>
-          <View style={styles.saveInputActions}>
+          <Text style={[styles.charCount, { color: currentTheme.uiColors.secondary }]}>
+            {MAX_SAVE_NAME_LENGTH - saveName.length} characters remaining
+          </Text>
+          <View style={styles.confirmationActions}>
             <TouchableOpacity 
-              style={[styles.saveInputButton, { backgroundColor: currentTheme.uiColors.secondary }]} 
+              style={[styles.confirmationButton, { backgroundColor: currentTheme.uiColors.secondary }]} 
               onPress={() => setSaveModal({ visible: false, slotIndex: null, isOverwrite: false })}
             >
-              <Text allowFontScaling={false} style={[styles.saveInputButtonText, { color: currentTheme.uiColors.buttonText }]}>Cancel</Text>
+              <Text allowFontScaling={false} style={[styles.confirmationButtonText, { color: currentTheme.uiColors.buttonText }]}>Cancel</Text>
             </TouchableOpacity>
             <TouchableOpacity 
-              style={[styles.saveInputButton, { backgroundColor: currentTheme.uiColors.accent }]} 
+              style={[styles.confirmationButton, { backgroundColor: currentTheme.uiColors.accent }]} 
               onPress={handleSaveToSlot} 
               disabled={isLoading || !saveName.trim()}
             >
-              {isLoading ? <ActivityIndicator color={currentTheme.uiColors.buttonText} /> : <Text allowFontScaling={false} style={[styles.saveInputButtonText, { color: currentTheme.uiColors.buttonText }]}>Save</Text>}
+              {isLoading ? <ActivityIndicator color={currentTheme.uiColors.buttonText} /> : <Text allowFontScaling={false} style={[styles.confirmationButtonText, { color: currentTheme.uiColors.buttonText }]}>Save</Text>}
             </TouchableOpacity>
           </View>
         </View>
@@ -350,7 +356,7 @@ export const SaveLoadModal: React.FC<SaveLoadModalProps> = ({
               ) : (
                 <>
                   <Text allowFontScaling={false} style={[styles.subtitle, { color: currentTheme.uiColors.text }]}>
-                    Save and load your activity lists. You can have up to {MAX_SLOTS} saves.
+                    Save and load your wheel. You can have up to {MAX_SLOTS} saves.
                   </Text>
                   
                   {/* Render save slots */}
@@ -360,10 +366,10 @@ export const SaveLoadModal: React.FC<SaveLoadModalProps> = ({
                   <View style={[styles.instructionsContainer, { backgroundColor: currentTheme.uiColors.cardBackground, borderColor: currentTheme.uiColors.secondary }]}>
                     <Text allowFontScaling={false} style={[styles.instructionsTitle, { color: currentTheme.uiColors.text }]}>Instructions:</Text>
                     <Text allowFontScaling={false} style={[styles.instructionsText, { color: currentTheme.uiColors.secondary }]}>
-                      • Tap &quot;Save&quot; to save your current activities to an empty slot{'\n'}
-                      • Tap &quot;Load&quot; to replace your current activities with saved ones{'\n'}
+                      • Tap &quot;Save&quot; to save your current wheel to an empty slot{'\n'}
+                      • Tap &quot;Load&quot; to replace your current wheel with saved one{'\n'}
                       • Tap &quot;Overwrite&quot; to replace an existing save{'\n'}
-                      • Tap &quot;Delete&quot; to remove a saved activity list
+                      • Tap &quot;Delete&quot; to remove a saved wheel
                     </Text>
                   </View>
                 </>
@@ -583,59 +589,6 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     fontFamily: FONTS.nunito,
   },
-  saveInputOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  saveInputContainer: {
-    width: '80%',
-    maxWidth: 300,
-    borderRadius: 15,
-    padding: 20,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  saveInputTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 15,
-    textAlign: 'center',
-    fontFamily: FONTS.nunito,
-  },
-  textInput: {
-    borderWidth: 1,
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-    marginBottom: 20,
-    fontFamily: FONTS.nunito,
-  },
-  saveInputActions: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 10,
-  },
-  saveInputButton: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  saveInputButtonText: {
-    // Color applied dynamically based on theme
-    fontSize: 16,
-    fontWeight: 'bold',
-    fontFamily: FONTS.nunito,
-  },
   confirmationOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
@@ -735,5 +688,17 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     fontFamily: FONTS.nunito,
+  },
+  saveInput: {
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    marginBottom: 20,
+    fontFamily: FONTS.nunito,
+  },
+  charCount: {
+    fontSize: 12,
+    textAlign: 'center',
   },
 });

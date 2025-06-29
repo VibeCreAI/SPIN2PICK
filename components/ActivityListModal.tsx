@@ -209,7 +209,7 @@ export const ActivityListModal: React.FC<ActivityListModalProps> = ({
         styles.tabDescription,
         { color: currentTheme.uiColors.secondary }
       ]}>
-        Tap an activity to delete it
+        Tap a slice to delete it
       </Text>
       
       {activities.length === 0 ? (
@@ -218,13 +218,13 @@ export const ActivityListModal: React.FC<ActivityListModalProps> = ({
             styles.emptyText,
             { color: currentTheme.uiColors.secondary }
           ]}>
-            📝 No activities yet
+            📝 No slices yet
           </Text>
           <Text allowFontScaling={false} style={[
             styles.emptySubtext,
             { color: currentTheme.uiColors.secondary }
           ]}>
-            Add some activities first!
+            Add some slices first!
           </Text>
         </View>
       ) : (
@@ -284,7 +284,7 @@ export const ActivityListModal: React.FC<ActivityListModalProps> = ({
         styles.tabDescription,
         { color: currentTheme.uiColors.secondary }
       ]}>
-        Enter multiple activities separated by commas or new lines
+        Enter multiple slices separated by commas or new lines
       </Text>
       
       <TextInput
@@ -312,7 +312,7 @@ export const ActivityListModal: React.FC<ActivityListModalProps> = ({
             styles.previewTitle,
             { color: currentTheme.uiColors.primary }
           ]}>
-            Preview ({parsedActivities.length} activities):
+            Preview ({parsedActivities.length} slices):
           </Text>
           <View style={styles.previewGrid}>
             {parsedActivities.map((activity, index) => (
@@ -347,7 +347,7 @@ export const ActivityListModal: React.FC<ActivityListModalProps> = ({
               styles.addButtonText,
               { color: currentTheme.uiColors.buttonText }
             ]}>
-              ➕ Add All Activities
+              ➕ Add All Slices
             </Text>
           </TouchableOpacity>
         </View>
@@ -370,7 +370,7 @@ export const ActivityListModal: React.FC<ActivityListModalProps> = ({
         styles.tabDescription,
         { color: currentTheme.uiColors.secondary }
       ]}>
-        Generate multiple activities using AI
+        Generate multiple slices using AI
       </Text>
       
       {bulkAISuggestions.length === 0 && (
@@ -379,7 +379,7 @@ export const ActivityListModal: React.FC<ActivityListModalProps> = ({
             styles.aiControlLabel,
             { color: currentTheme.uiColors.text }
           ]}>
-            Number of activities:
+            Number of slices:
           </Text>
           
           <View style={styles.countSelector}>
@@ -423,7 +423,7 @@ export const ActivityListModal: React.FC<ActivityListModalProps> = ({
               styles.generateButtonText,
               { color: currentTheme.uiColors.buttonText }
             ]}>
-              {isLoadingBulkAI ? '🤔 Thinking...' : '🤖 Generate Activities'}
+              {isLoadingBulkAI ? '🤔 Thinking...' : '🤖 Generate Slices'}
             </Text>
           </TouchableOpacity>
         </View>
@@ -537,7 +537,7 @@ export const ActivityListModal: React.FC<ActivityListModalProps> = ({
             styles.confirmationTitle,
             { color: currentTheme.uiColors.primary }
           ]}>
-            ⚠️ Delete Activity?
+            ⚠️ Delete Slice?
           </Text>
           
           <Text allowFontScaling={false} style={[
@@ -626,7 +626,7 @@ export const ActivityListModal: React.FC<ActivityListModalProps> = ({
                 styles.title,
                 { color: currentTheme.uiColors.primary }
               ]}>
-                📃 Manage Activities
+                📃 Manage Slices
               </Text>
             </View>
 

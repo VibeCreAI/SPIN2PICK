@@ -675,10 +675,12 @@ export default function HomeScreen() {
     setNewlyAddedActivityId(null);
   }, []);
 
-  const handleLoadActivities = (loadedActivities: Activity[]) => {
-    // Reassign colors to ensure optimal distribution with current theme
-    const recoloredActivities = reassignAllColors(loadedActivities, currentTheme.wheelColors);
-    setActivities(recoloredActivities);
+  const handleLoadActivities = (loadedActivities: Activity[], title: string) => {
+    const rethemedActivities = reassignAllColors(loadedActivities, currentTheme.wheelColors);
+    setActivities(rethemedActivities);
+    if (currentTitle && title) {
+      setCurrentTitle({ ...currentTitle, name: title });
+    }
   };
 
   const handleCloseSaveLoad = () => {
@@ -1124,6 +1126,7 @@ export default function HomeScreen() {
         visible={showSaveLoadModal}
         onClose={handleCloseSaveLoad}
         currentActivities={activities}
+        currentTitle={currentTitle?.name || ''}
         onLoadActivities={handleLoadActivities}
       />
       

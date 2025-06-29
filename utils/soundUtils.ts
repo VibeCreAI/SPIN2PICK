@@ -1,6 +1,7 @@
-// Check if expo-audio is available
+// Sound utilities using expo-audio (not expo-av)
 let isAudioAvailable = false;
 let createAudioPlayer: any = null;
+let audioContextInitialized = false;
 
 try {
   const audioModule = require('expo-audio');
@@ -12,10 +13,10 @@ try {
   isAudioAvailable = false;
 }
 
-// Sound objects using the new expo-audio API
-let clickSound: any = null;
-let spinningSound: any = null;
-let successSound: any = null;
+// Audio player objects using expo-audio API
+let clickPlayer: any = null;
+let spinningPlayer: any = null;
+let successPlayer: any = null;
 
 // Initialize sounds
 export const initSounds = async () => {
@@ -27,10 +28,10 @@ export const initSounds = async () => {
   try {
     console.log('Loading sounds...');
     
-    // Create audio players for each sound using createAudioPlayer
-    clickSound = createAudioPlayer(require('../assets/sounds/click.mp3'));
-    spinningSound = createAudioPlayer(require('../assets/sounds/spinning.mp3'));
-    successSound = createAudioPlayer(require('../assets/sounds/success.mp3'));
+    // Create audio players using expo-audio
+    clickPlayer = createAudioPlayer(require('../assets/sounds/click.mp3'));
+    spinningPlayer = createAudioPlayer(require('../assets/sounds/spinning.mp3'));
+    successPlayer = createAudioPlayer(require('../assets/sounds/success.mp3'));
 
     console.log('Sounds loaded successfully');
   } catch (error) {
@@ -41,9 +42,9 @@ export const initSounds = async () => {
 // Play click sound
 export const playClickSound = async () => {
   try {
-    if (clickSound) {
-      await clickSound.seekTo(0);
-      clickSound.play();
+    if (clickPlayer) {
+      clickPlayer.seekTo(0);
+      clickPlayer.play();
     }
   } catch (error) {
     console.error('Error playing click sound:', error);
@@ -53,9 +54,9 @@ export const playClickSound = async () => {
 // Play spinning sound
 export const playSpinningSound = async () => {
   try {
-    if (spinningSound) {
-      await spinningSound.seekTo(0);
-      spinningSound.play();
+    if (spinningPlayer) {
+      spinningPlayer.seekTo(0);
+      spinningPlayer.play();
     }
   } catch (error) {
     console.error('Error playing spinning sound:', error);
@@ -65,20 +66,42 @@ export const playSpinningSound = async () => {
 // Stop spinning sound
 export const stopSpinningSound = async () => {
   try {
-    if (spinningSound) {
-      spinningSound.pause();
+    if (spinningPlayer) {
+      spinningPlayer.pause();
     }
   } catch (error) {
     console.error('Error stopping spinning sound:', error);
   }
 };
 
+// Initialize audio context on user interaction (required for mobile)
+export const initializeAudioContext = async () => {
+  if (!audioContextInitialized && isAudioAvailable) {
+    try {
+      console.log('🎵 Initializing audio context on user interaction...');
+      audioContextInitialized = true;
+      console.log('✅ Audio context initialized');
+    } catch (error) {
+      console.log('Audio context initialization failed:', error);
+    }
+  }
+};
+
 // Play success sound
 export const playSuccessSound = async () => {
   try {
-    if (successSound) {
-      await successSound.seekTo(0);
-      successSound.play();
+    // Initialize audio context if not done yet
+    if (!audioContextInitialized) {
+      await initializeAudioContext();
+    }
+    
+    if (successPlayer) {
+      console.log('🔊 Playing success sound...');
+      successPlayer.seekTo(0);
+      successPlayer.play();
+      console.log('✅ Success sound played');
+    } else {
+      console.log('❌ Success sound not available');
     }
   } catch (error) {
     console.error('Error playing success sound:', error);
@@ -88,9 +111,9 @@ export const playSuccessSound = async () => {
 // Clean up sounds when app closes
 export const unloadSounds = async () => {
   try {
-    if (clickSound) clickSound.remove();
-    if (spinningSound) spinningSound.remove();
-    if (successSound) successSound.remove();
+    if (clickPlayer) clickPlayer.remove();
+    if (spinningPlayer) spinningPlayer.remove();
+    if (successPlayer) successPlayer.remove();
   } catch (error) {
     console.error('Error unloading sounds:', error);
   }

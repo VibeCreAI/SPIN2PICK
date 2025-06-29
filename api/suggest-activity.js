@@ -24,7 +24,7 @@ export default async function handler(req, res) {
   const { 
     existingActivities, 
     declinedSuggestions = [], 
-    titleName = 'My Activities',
+    titleName = 'Kids Activity',
     titleCategory = 'family',
     titleDescription = 'Random activities'
   } = req.body;

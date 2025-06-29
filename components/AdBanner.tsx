@@ -1,18 +1,26 @@
 import React from 'react';
 import { Platform, StyleSheet, Text, View } from 'react-native';
-import { AD_UNIT_IDS, isAdMobAvailable } from '../utils/adMobUtils';
+import { getAdUnitIds, isAdMobAvailable } from '../utils/adMobUtils';
 
 // Conditional import for AdMob components
 let BannerAd: any = null;
 let BannerAdSize: any = null;
 
+// Always disable AdMob for Expo Go compatibility
+console.log('AdMob disabled for Expo Go compatibility');
+
+// Check if we're in Expo Go first
+let isExpoGo = true; // Force to true for now
 try {
-  const mobileAds = require('react-native-google-mobile-ads');
-  BannerAd = mobileAds.BannerAd;
-  BannerAdSize = mobileAds.BannerAdSize;
-} catch (error) {
-  console.log('AdMob BannerAd not available - running in Expo Go mode');
+  const Constants = require('expo-constants');
+  isExpoGo = Constants.appOwnership === 'expo' || true; // Always true for now
+} catch (e) {
+  // Constants not available, assume Expo Go
+  isExpoGo = true;
 }
+
+// Never load AdMob modules for now
+console.log('AdMob modules disabled - using placeholder mode');
 
 interface AdBannerProps {
   size?: any; // Using any since BannerAdSize might not be available
@@ -39,10 +47,12 @@ export const AdBanner: React.FC<AdBannerProps> = ({
     );
   }
 
+  const adUnitIds = getAdUnitIds();
+  
   return (
     <View style={styles.container}>
       <BannerAd
-        unitId={AD_UNIT_IDS.banner}
+        unitId={adUnitIds.banner}
         size={size || BannerAdSize?.ADAPTIVE_BANNER}
         requestOptions={{
           requestNonPersonalizedAdsOnly: true,

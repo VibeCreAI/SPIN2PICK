@@ -1,3 +1,6 @@
+// Enable Fast Refresh for web
+import '@expo/metro-runtime';
+
 import { FONTS } from '@/app/_layout';
 import { ActivityInput } from '@/components/ActivityInput';
 import { AdBanner } from '@/components/AdBanner';
@@ -14,11 +17,31 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Dimensions, KeyboardAvoidingView, LayoutChangeEvent, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, ViewStyle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { installPredeterminedTitles } from '../data/predeterminedTitles';
-import { initializeInterstitialAd, showInterstitialAd } from '../utils/adMobUtils';
 import { PASTEL_COLORS, reassignAllColors, type Activity } from '../utils/colorUtils';
 import { getAISuggestedActivity, getEmoji } from '../utils/emojiUtils';
 import { initSounds, unloadSounds } from '../utils/soundUtils';
 import { STORAGE_KEYS, Title, TitleCategory, TitleManager } from '../utils/titleUtils';
+// Conditional import for AdMob - only in development builds, not Expo Go
+let initializeInterstitialAd: (() => void) | null = null;
+let showInterstitialAd: (() => Promise<boolean>) | null = null;
+
+// Check if we're in Expo Go
+let isExpoGo = false;
+try {
+  const Constants = require('expo-constants');
+  isExpoGo = Constants.appOwnership === 'expo';
+} catch (e) {
+  // Constants not available
+}
+
+// Always use safe AdMob functions for Expo Go compatibility
+try {
+  const adMobUtils = require('../utils/adMobUtils');
+  initializeInterstitialAd = adMobUtils.initializeInterstitialAd;
+  showInterstitialAd = adMobUtils.showInterstitialAd;
+} catch (error) {
+  console.log('AdMob utils not available - using fallback');
+}
 
 // Generate random default activities for variety on first install
 const generateDefaultActivities = (count: number = 8): Activity[] => {
@@ -157,8 +180,10 @@ export default function HomeScreen() {
         // Initialize sound effects
         await initSounds();
         
-        // Initialize AdMob interstitial ads
-        initializeInterstitialAd();
+        // Initialize AdMob interstitial ads (only if available)
+        if (initializeInterstitialAd) {
+          initializeInterstitialAd();
+        }
         
         // Initialize title system (handles legacy migration)
         await initializeTitleSystem();
@@ -256,12 +281,27 @@ export default function HomeScreen() {
       // First, install predetermined titles if they don't exist
       await installPredeterminedTitles();
       
+      // Force update legacy titles to fix cached old values
+      await forceLegacyTitleUpdate();
+      
       const currentTitleId = await AsyncStorage.getItem(STORAGE_KEYS.CURRENT_TITLE_ID);
       if (currentTitleId) {
         const title = await TitleManager.getTitle(currentTitleId);
         if (title) {
           setCurrentTitle(title);
-          setActivities(title.items);
+          
+          // Apply optimized count and theme colors during initialization
+          const optimalCount = getOptimalCountForCategory(title.category);
+          const itemsToUse = title.items.slice(0, Math.min(optimalCount, title.items.length));
+          
+          const activitiesWithEmojis = await Promise.all(itemsToUse.map(async (item, index) => ({
+            id: (index + 1).toString(),
+            name: item.name,
+            color: currentTheme.wheelColors[index % currentTheme.wheelColors.length],
+            emoji: item.emoji || await getEmoji(item.name)
+          })));
+          
+          setActivities(activitiesWithEmojis);
           return;
         }
       }
@@ -275,6 +315,28 @@ export default function HomeScreen() {
     }
   };
 
+  // Force update legacy titles to fix cached old values
+  const forceLegacyTitleUpdate = async () => {
+    try {
+      const existingTitle = await TitleManager.getTitle('legacy-activities');
+      if (existingTitle && (existingTitle.name === 'My Activities' || !existingTitle.isPredetermined)) {
+        console.log('🔄 Updating legacy title to fix cached values...');
+        
+        const updatedTitle: Title = {
+          ...existingTitle,
+          name: 'Kids Activities',
+          isPredetermined: true, // Mark as predetermined to prevent deletion
+          updatedAt: new Date(),
+        };
+        
+        await TitleManager.saveTitle(updatedTitle);
+        console.log('✅ Legacy title forcefully updated');
+      }
+    } catch (error) {
+      console.error('Error force updating legacy title:', error);
+    }
+  };
+
   const handleTitleSwitch = async (titleId: string) => {
     if (isLoadingTitle) return;
     
@@ -283,7 +345,20 @@ export default function HomeScreen() {
       const title = await TitleManager.getTitle(titleId);
       if (title) {
         setCurrentTitle(title);
-        setActivities(title.items);
+        
+        // Apply optimized count for the category
+        const optimalCount = getOptimalCountForCategory(title.category);
+        const itemsToUse = title.items.slice(0, Math.min(optimalCount, title.items.length));
+        
+        // Convert items to activities and add emojis if missing
+        const activitiesWithEmojis = await Promise.all(itemsToUse.map(async (item, index) => ({
+          id: (index + 1).toString(),
+          name: item.name,
+          color: currentTheme.wheelColors[index % currentTheme.wheelColors.length],
+          emoji: item.emoji || await getEmoji(item.name)
+        })));
+        
+        setActivities(activitiesWithEmojis);
         await AsyncStorage.setItem(STORAGE_KEYS.CURRENT_TITLE_ID, titleId);
         setShowHamburgerMenu(false); // Close menu after switching
       }
@@ -296,6 +371,23 @@ export default function HomeScreen() {
 
   const handleLegacyMigration = async () => {
     try {
+      // Check if legacy title already exists and update it
+      const existingTitle = await TitleManager.getTitle('legacy-activities');
+      if (existingTitle) {
+        // Update existing legacy title to fix name and isPredetermined status
+        const updatedTitle: Title = {
+          ...existingTitle,
+          name: 'Kids Activities',
+          isPredetermined: true, // Mark as predetermined to prevent deletion
+          updatedAt: new Date(),
+        };
+        
+        await TitleManager.saveTitle(updatedTitle);
+        setCurrentTitle(updatedTitle);
+        console.log('✅ Legacy title updated');
+        return;
+      }
+      
       // Check for legacy activities
       const legacyActivities = await AsyncStorage.getItem(STORAGE_KEY);
       if (legacyActivities) {
@@ -304,13 +396,13 @@ export default function HomeScreen() {
         // Create a legacy migration title
         const migrationTitle: Title = {
           id: 'legacy-activities',
-          name: 'My Activities',
-          emoji: '🎯',
-          description: 'Activities from your previous app version',
+          name: 'Kids Activities',
+          emoji: '🧸',
+          description: 'Fun activities for children and families',
           category: TitleCategory.FAMILY,
           items: parsedActivities,
           isCustom: false,
-          isPredetermined: false,
+          isPredetermined: true, // Mark as predetermined to prevent deletion
           createdAt: new Date(),
           updatedAt: new Date(),
           isActive: true,
@@ -396,7 +488,7 @@ export default function HomeScreen() {
       const suggestedActivityName = await getAISuggestedActivity(
         existingActivityNames, 
         declinedSuggestions,
-        currentTitle?.name || 'My Activities',
+        currentTitle?.name || 'Kids Activity',
         currentTitle?.category || 'family',
         currentTitle?.description || 'Random activities'
       );
@@ -487,19 +579,59 @@ export default function HomeScreen() {
   };
 
   const handleReset = () => {
+    // Set optimal reset count based on current title category
+    if (currentTitle) {
+      const optimalCount = getOptimalCountForCategory(currentTitle.category);
+      setResetCount(optimalCount);
+    } else {
+      setResetCount(8); // Default for legacy "Kids Activity"
+    }
     setShowResetConfirmation(true);
   };
 
-  const handleConfirmReset = () => {
-    // Generate new random default activities with current theme colors
-    const newDefaultActivities = generateDefaultActivities(resetCount);
-    const themedActivities = reassignAllColors(newDefaultActivities, currentTheme.wheelColors);
-    setActivities(themedActivities);
-    setShowResetConfirmation(false);
-    // Clear any selected activity
-    setSelectedActivity(null);
-    setPreviousSelectedActivity(null);
-    setNewlyAddedActivityId(null);
+  const handleConfirmReset = async () => {
+    try {
+      let newActivities: Activity[];
+      
+      if (currentTitle && currentTitle.isPredetermined) {
+        // For predetermined titles, reset to their original items
+        // Take a subset based on resetCount or all items if resetCount is larger
+        const itemsToUse = currentTitle.items.slice(0, Math.min(resetCount, currentTitle.items.length));
+        
+        // Add emojis to items that don't have them
+        const activitiesWithEmojis = await Promise.all(itemsToUse.map(async (item, index) => ({
+          id: (index + 1).toString(),
+          name: item.name,
+          color: currentTheme.wheelColors[index % currentTheme.wheelColors.length],
+          emoji: item.emoji || await getEmoji(item.name)
+        })));
+        
+        newActivities = activitiesWithEmojis;
+      } else {
+        // For legacy "Kids Activity" or custom titles, generate random activities
+        const newDefaultActivities = generateDefaultActivities(resetCount);
+        newActivities = reassignAllColors(newDefaultActivities, currentTheme.wheelColors);
+      }
+      
+      setActivities(newActivities);
+      setShowResetConfirmation(false);
+      // Clear any selected activity
+      setSelectedActivity(null);
+      setPreviousSelectedActivity(null);
+      setNewlyAddedActivityId(null);
+      
+      console.log(`✅ Reset completed for "${currentTitle?.name || 'Kids Activity'}" with ${newActivities.length} items`);
+    } catch (error) {
+      console.error('Error during reset:', error);
+      // Fallback to original behavior if something goes wrong
+      const newDefaultActivities = generateDefaultActivities(resetCount);
+      const themedActivities = reassignAllColors(newDefaultActivities, currentTheme.wheelColors);
+      setActivities(themedActivities);
+      setShowResetConfirmation(false);
+      setSelectedActivity(null);
+      setPreviousSelectedActivity(null);
+      setNewlyAddedActivityId(null);
+    }
   };
 
   const handleCancelReset = () => {
@@ -514,8 +646,8 @@ export default function HomeScreen() {
     const newSpinCount = spinCount + 1;
     setSpinCount(newSpinCount);
     
-    // Show interstitial ad every 3 spins
-    if (newSpinCount % 3 === 0) {
+    // Show interstitial ad every 3 spins (only if available)
+    if (newSpinCount % 3 === 0 && showInterstitialAd) {
       console.log(`Showing interstitial ad after ${newSpinCount} spins`);
       await showInterstitialAd();
     }
@@ -576,14 +708,51 @@ export default function HomeScreen() {
     setOpenActivityListExternal(true);
   };
 
+  // Helper function to get optimal count for different title categories
+  const getOptimalCountForCategory = (category: string): number => {
+    switch (category) {
+      case 'food':
+        return 12; // Meals - good variety without overwhelming choice
+      case 'numbers':
+        return 20; // Numbers - decent range for random selection
+      case 'games':
+        return 15; // Games/entertainment - enough variety for fun
+      case 'education':
+        return 10; // Study topics - manageable for focus
+      case 'workplace':
+        return 8; // Work activities - quick decision making
+      case 'family':
+        return 12; // Family activities - good variety for different interests
+      case 'entertainment':
+        return 15; // Movies/shows - enough options for browsing
+      case 'decisions':
+        return 8; // Simple decisions - quick choices
+      case 'custom':
+        return 8; // Custom titles - conservative default
+      default:
+        return 12; // General default
+    }
+  };
+
   const handleSelectTitle = async (title: Title) => {
     try {
       setCurrentTitle(title);
       
-      // IMPORTANT: Apply current theme colors to the title's activities
-      // This ensures the wheel uses the current theme instead of saved colors
-      const activitiesWithCurrentTheme = reassignAllColors(title.items, currentTheme.wheelColors);
-      setActivities(activitiesWithCurrentTheme);
+      // Get optimal count for this category
+      const optimalCount = getOptimalCountForCategory(title.category);
+      
+      // Take only the optimal number of items from the title
+      const itemsToUse = title.items.slice(0, Math.min(optimalCount, title.items.length));
+      
+      // Add emojis to items that don't have them and apply current theme colors
+      const activitiesWithEmojis = await Promise.all(itemsToUse.map(async (item, index) => ({
+        id: (index + 1).toString(),
+        name: item.name,
+        color: currentTheme.wheelColors[index % currentTheme.wheelColors.length],
+        emoji: item.emoji || await getEmoji(item.name)
+      })));
+      
+      setActivities(activitiesWithEmojis);
       
       await AsyncStorage.setItem(STORAGE_KEYS.CURRENT_TITLE_ID, title.id);
       
@@ -591,9 +760,13 @@ export default function HomeScreen() {
       const updatedTitle = { ...title, lastUsed: new Date() };
       await TitleManager.saveTitle(updatedTitle);
       
-      console.log('✅ Title selected:', title.name, 'with current theme colors applied');
+      console.log(`✅ Title selected: "${title.name}" with ${activitiesWithEmojis.length}/${title.items.length} items (optimal for ${title.category})`);
     } catch (error) {
       console.error('Error selecting title:', error);
+      
+      // Fallback to original behavior if something goes wrong
+      const activitiesWithCurrentTheme = reassignAllColors(title.items, currentTheme.wheelColors);
+      setActivities(activitiesWithCurrentTheme);
     }
   };
 
@@ -661,7 +834,7 @@ export default function HomeScreen() {
           const newSuggestion = await getAISuggestedActivity(
             allExisting, 
             declinedSuggestions,
-            currentTitle?.name || 'My Activities',
+            currentTitle?.name || 'Kids Activity',
             currentTitle?.category || 'family',
             currentTitle?.description || 'Random activities'
           );
@@ -714,7 +887,7 @@ export default function HomeScreen() {
                 <View style={styles.titleRow}>
                   <Text style={styles.titleEmoji}>{currentTitle?.emoji || '🎯'}</Text>
                   <ThemedText type="title" style={[styles.dynamicTitle, { color: currentTheme.uiColors.primary }]}>
-                    {currentTitle?.name || 'My Activities'}
+                    {currentTitle?.name || 'Kids Activity'}
                   </ThemedText>
                 </View>
                 <TouchableOpacity onPress={() => setShowTitleDescription(!showTitleDescription)}>
@@ -759,9 +932,6 @@ export default function HomeScreen() {
                     onPreviousActivityChange={handlePreviousActivityChange}
                     newlyAddedActivityId={newlyAddedActivityId}
                     onNewActivityIndicatorComplete={handleNewActivityIndicatorComplete}
-                    onReset={handleReset}
-                    onOpenTheme={handleOpenTheme}
-                    onSaveLoad={handleSaveLoad}
                   />
                 </ErrorBoundary>
               ) : (
@@ -871,8 +1041,12 @@ export default function HomeScreen() {
             activeOpacity={1}
             onPress={() => {}} // Prevent closing when tapping inside popup
           >
-            <Text allowFontScaling={false} style={[styles.popupTitle, { color: currentTheme.uiColors.primary }]}>Reset Activities 🔄</Text>
-            <Text allowFontScaling={false} style={[styles.popupMessage, { color: currentTheme.uiColors.secondary }]}>How many random activities do you want?</Text>
+            <Text allowFontScaling={false} style={[styles.popupTitle, { color: currentTheme.uiColors.primary }]}>Reset Picks 🔄</Text>
+            <Text allowFontScaling={false} style={[styles.popupMessage, { color: currentTheme.uiColors.secondary }]}>
+              {currentTitle && currentTitle.isPredetermined 
+                ? `How many items from "${currentTitle.name}" do you want?`
+                : 'How many random picks do you want?'}
+            </Text>
             <Text allowFontScaling={false} style={[styles.popupMessage, { color: currentTheme.uiColors.secondary, fontSize: 14, textAlign: 'center', marginTop: -5, marginBottom: 15 }]}>(Max 100)</Text>
             <TextInput
               style={[styles.resetCountInput, { 
@@ -899,7 +1073,9 @@ export default function HomeScreen() {
               color: '#d9534f',
               backgroundColor: currentTheme.uiColors.cardBackground,
             }]}>
-              Current activities will be deleted and replaced with {resetCount} random activities.
+              {currentTitle && currentTitle.isPredetermined 
+                ? `Current picks will be replaced with ${resetCount} items from "${currentTitle.name}".`
+                : `Current picks will be deleted and replaced with ${resetCount} random picks.`}
             </Text>
             
             <View style={styles.popupButtonsContainer}>
@@ -939,8 +1115,6 @@ export default function HomeScreen() {
       <HamburgerMenu
         visible={showHamburgerMenu}
         onClose={() => setShowHamburgerMenu(false)}
-        onTitleSelected={handleSelectTitle}
-        currentTitle={currentTitle?.name || ''}
         onNavigateToTitleManagement={handleOpenTitleManagement}
         onNavigateToActivityManagement={handleOpenActivityManagement}
         onNavigateToSettings={() => {/* TODO: Implement */}}

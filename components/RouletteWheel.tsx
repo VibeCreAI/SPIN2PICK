@@ -5,7 +5,6 @@ import { Animated, Dimensions, Easing, Platform, StyleSheet, Text, TouchableOpac
 import Svg, { Circle, G, Path, Text as SvgText } from 'react-native-svg';
 import { useTheme } from '../hooks/useTheme';
 import { playClickSound, playSpinningSound, playSuccessSound, stopSpinningSound } from '../utils/soundUtils';
-import { SaveLoadModal } from './SaveLoadModal';
 import { ThemeButton } from './ThemeButton';
 import { ThemedText } from './ThemedText';
 import { ThemedView } from './ThemedView';
@@ -83,7 +82,6 @@ interface RouletteWheelProps {
   onNewActivityIndicatorComplete?: () => void; // Callback when indicator animation completes
   onReset?: () => void; // Callback for reset button
   onOpenTheme?: () => void; // Callback for theme button
-  onSaveLoad?: (loadedActivities: Activity[]) => void; // Callback for save/load button
 }
 
 export const RouletteWheel: React.FC<RouletteWheelProps> = ({
@@ -97,7 +95,6 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
   onNewActivityIndicatorComplete,
   onReset,
   onOpenTheme,
-  onSaveLoad,
 }) => {
   const { currentTheme } = useTheme();
   
@@ -139,14 +136,11 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
   const newIndicatorAnim = useRef(new Animated.Value(0)).current;
   const newIndicatorPulse = useRef(new Animated.Value(1)).current;
 
-  // Optimized rotation tracking - use ref instead of state to avoid re-renders
+  // Optimize rotation tracking - use ref instead of state to avoid re-renders
   const currentRotationDegrees = useRef(0);
   const lastFrameTime = useRef(0);
   const animationFrameId = useRef<number | null>(null);
   const pulseAnimationRef = useRef<any>(null);
-
-  // State management
-  const [showSaveLoadModal, setShowSaveLoadModal] = useState(false);
 
   // Optimize rotation listener with throttling to reduce flickering
   const updateRotation = useCallback((value: number) => {
@@ -1262,23 +1256,6 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
               </TouchableOpacity>
             )}
 
-            <TouchableOpacity
-              style={[
-                styles.actionButton,
-                { 
-                  backgroundColor: currentTheme.uiColors.accent,
-                  borderColor: currentTheme.uiColors.primary,
-                }
-              ]}
-              onPress={() => setShowSaveLoadModal(true)}
-              activeOpacity={0.8}
-            >
-              <ThemedText style={[
-                styles.actionButtonText,
-                { color: currentTheme.uiColors.buttonText }
-              ]}>💾 Save/Load</ThemedText>
-            </TouchableOpacity>
-
             {onOpenTheme && (
               <ThemeButton onPress={onOpenTheme} />
             )}
@@ -1337,21 +1314,6 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
           © {new Date().getFullYear()} VibeCreAI - All rights reserved
         </ThemedText>
       </ThemedView>
-
-      {/* Save/Load Modal */}
-      {showSaveLoadModal && (
-        <SaveLoadModal
-          visible={showSaveLoadModal}
-          onClose={() => setShowSaveLoadModal(false)}
-          currentActivities={activities}
-          onLoadActivities={(loadedActivities: Activity[]) => {
-            if (onSaveLoad) {
-              onSaveLoad(loadedActivities);
-            }
-            setShowSaveLoadModal(false);
-          }}
-        />
-      )}
 
     </ThemedView>
   );

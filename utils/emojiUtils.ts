@@ -130,7 +130,7 @@ export const getEmoji = async (activityName: string): Promise<string> => {
 export const getAISuggestedActivity = async (
   existingActivities: string[], 
   declinedSuggestions: string[] = [],
-  titleName: string = 'My Activities',
+  titleName: string = 'Kids Activity',
   titleCategory: string = 'family',
   titleDescription: string = 'Random activities'
 ): Promise<string> => {

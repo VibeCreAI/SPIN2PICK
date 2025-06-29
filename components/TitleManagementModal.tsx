@@ -35,6 +35,18 @@ export const TitleManagementModal: React.FC<TitleManagementModalProps> = ({
 }) => {
   const { currentTheme } = useTheme();
   const [savedTitles, setSavedTitles] = useState<Title[]>([]);
+  const [titlesByCategory, setTitlesByCategory] = useState<Record<string, Title[]>>({
+    'family': [],
+    'food': [],
+    'games': [],
+    'decisions': [],
+    'numbers': [],
+    'workplace': [],
+    'education': [],
+    'entertainment': [],
+    'custom': [],
+  });
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(false);
 
   // Get screen width for responsive design - matching SaveLoadModal
@@ -54,6 +66,27 @@ export const TitleManagementModal: React.FC<TitleManagementModalProps> = ({
     try {
       const titles = await TitleManager.getAllTitles();
       setSavedTitles(titles);
+      
+      // Categorize titles
+      const categorized: Record<string, Title[]> = {
+        'family': [],
+        'food': [],
+        'games': [],
+        'decisions': [],
+        'numbers': [],
+        'workplace': [],
+        'education': [],
+        'entertainment': [],
+        'custom': [],
+      };
+      
+      titles.forEach(title => {
+        if (categorized[title.category]) {
+          categorized[title.category].push(title);
+        }
+      });
+      
+      setTitlesByCategory(categorized);
     } catch (error) {
       console.error('Error loading titles:', error);
     } finally {
@@ -89,6 +122,32 @@ export const TitleManagementModal: React.FC<TitleManagementModalProps> = ({
     );
   };
 
+  const toggleCategory = (category: string) => {
+    const newExpanded = new Set(expandedCategories);
+    if (newExpanded.has(category)) {
+      newExpanded.delete(category);
+    } else {
+      newExpanded.add(category);
+    }
+    setExpandedCategories(newExpanded);
+  };
+
+  // Category emoji mapping
+  const getCategoryEmoji = (category: string): string => {
+    const emojiMap: Record<string, string> = {
+      'family': '🏠',
+      'food': '🍽️',
+      'games': '🎮',
+      'decisions': '🤔',
+      'numbers': '🔢',
+      'workplace': '💼',
+      'education': '📚',
+      'entertainment': '🎭',
+      'custom': '⭐'
+    };
+    return emojiMap[category] || '📝';
+  };
+
   const renderTitleCard = (title: Title, isPredetermined = false) => (
     <View key={title.id} style={[
       styles.titleCard,
@@ -117,7 +176,8 @@ export const TitleManagementModal: React.FC<TitleManagementModalProps> = ({
         </View>
       </TouchableOpacity>
       
-      {!isPredetermined && (
+      {/* Only show delete button for custom titles (not predetermined) */}
+      {!title.isPredetermined && (
         <View style={styles.titleActions}>
           <TouchableOpacity 
             style={[styles.deleteButton]}
@@ -185,6 +245,79 @@ export const TitleManagementModal: React.FC<TitleManagementModalProps> = ({
                     {renderTitleCard(currentTitle)}
                   </>
                 )}
+
+                {/* Quick Title Selection by Category */}
+                <Text style={[styles.sectionTitle, { color: currentTheme.uiColors.text }]}>
+                  🎯 Quick Title Selection
+                </Text>
+                {Object.entries(titlesByCategory).map(([category, titles]) => (
+                  <View key={category} style={styles.categorySection}>
+                    <TouchableOpacity
+                      style={[styles.categoryHeader, {
+                        backgroundColor: currentTheme.uiColors.cardBackground,
+                      }]}
+                      onPress={() => toggleCategory(category)}
+                    >
+                      <Text style={[styles.categoryTitle, { color: currentTheme.uiColors.text }]}>
+                        {getCategoryEmoji(category)} {category}
+                      </Text>
+                      <Text style={[styles.categoryCount, {
+                        color: currentTheme.uiColors.text + '80',
+                        backgroundColor: currentTheme.uiColors.primary + '20',
+                      }]}>
+                        {titles.length}
+                      </Text>
+                      <Text style={[styles.expandIcon, { color: currentTheme.uiColors.accent }]}>
+                        {expandedCategories.has(category) ? '−' : '+'}
+                      </Text>
+                    </TouchableOpacity>
+
+                    {expandedCategories.has(category) && (
+                      <View style={styles.titlesList}>
+                        {titles.length === 0 ? (
+                          <View style={styles.emptyCategory}>
+                            <Text style={[styles.emptyCategoryText, { 
+                              color: currentTheme.uiColors.text + '60' 
+                            }]}>
+                              No titles in this category yet
+                            </Text>
+                          </View>
+                        ) : (
+                          titles.map((title) => (
+                            <View key={title.id} style={[styles.titleItem, {
+                              backgroundColor: currentTitle?.id === title.id 
+                                ? currentTheme.uiColors.primary + '15' 
+                                : 'transparent',
+                              borderColor: currentTheme.uiColors.primary + '30',
+                            }]}>
+                              <TouchableOpacity
+                                style={styles.titleContent}
+                                onPress={() => handleSelectTitle(title)}
+                              >
+                                <Text style={styles.titleEmoji}>
+                                  {title.emoji}
+                                </Text>
+                                <Text style={[styles.titleText, { color: currentTheme.uiColors.text }]}>
+                                  {title.name}
+                                </Text>
+                              </TouchableOpacity>
+                              {!title.isPredetermined && (
+                                <TouchableOpacity
+                                  style={styles.deleteCategoryButton}
+                                  onPress={() => handleDeleteTitle(title.id)}
+                                >
+                                  <Text style={styles.deleteCategoryButtonText}>
+                                    Delete
+                                  </Text>
+                                </TouchableOpacity>
+                              )}
+                            </View>
+                          ))
+                        )}
+                      </View>
+                    )}
+                  </View>
+                ))}
 
                 {/* Predetermined Titles Section */}
                 <Text style={[styles.sectionTitle, { color: currentTheme.uiColors.text }]}>
@@ -371,5 +504,75 @@ const styles = StyleSheet.create({
   loadingText: {
     fontSize: 16,
     fontFamily: FONTS.nunito,
+  },
+  categorySection: {
+    marginBottom: 12,
+  },
+  categoryHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+  },
+  categoryTitle: {
+    fontSize: 16,
+    fontFamily: FONTS.nunito,
+    fontWeight: 'bold',
+  },
+  categoryCount: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+  },
+  expandIcon: {
+    fontSize: 16,
+    fontFamily: FONTS.nunito,
+    fontWeight: 'bold',
+  },
+  titlesList: {
+    padding: 12,
+  },
+  emptyCategory: {
+    padding: 12,
+    alignItems: 'center',
+  },
+  emptyCategoryText: {
+    fontSize: 14,
+    fontFamily: FONTS.nunito,
+    textAlign: 'center',
+  },
+  titleItem: {
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+  },
+  titleContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  titleEmoji: {
+    fontSize: 20,
+    marginRight: 8,
+  },
+  titleText: {
+    fontSize: 16,
+    fontFamily: FONTS.nunito,
+  },
+  deleteCategoryButton: {
+    padding: 8,
+    borderWidth: 1,
+    borderColor: '#ff4444',
+    borderRadius: 4,
+    marginLeft: 8,
+  },
+  deleteCategoryButtonText: {
+    color: '#ff4444',
+    fontSize: 14,
+    fontFamily: FONTS.nunito,
+    fontWeight: '600',
   },
 }); 

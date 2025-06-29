@@ -26,7 +26,7 @@ export default async function handler(req, res) {
     declinedSuggestions = [], 
     count = 5, 
     category,
-    titleName = 'My Activities',
+    titleName = 'Kids Activity',
     titleCategory = 'family',
     titleDescription = 'Random activities'
   } = req.body;

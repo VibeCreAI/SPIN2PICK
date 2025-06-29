@@ -101,8 +101,8 @@ export const TitleManagementModal: React.FC<TitleManagementModalProps> = ({
 
   const handleDeleteTitle = async (titleId: string) => {
     Alert.alert(
-      'Delete Title',
-      'Are you sure you want to delete this title? This action cannot be undone.',
+      'Delete Wheel',
+      'Are you sure you want to delete this wheel? This action cannot be undone.',
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -114,7 +114,7 @@ export const TitleManagementModal: React.FC<TitleManagementModalProps> = ({
               await loadSavedTitles();
             } catch (error) {
               console.error('Error deleting title:', error);
-              Alert.alert('Error', 'Failed to delete title');
+              Alert.alert('Error', 'Failed to delete wheel');
             }
           }
         }
@@ -212,7 +212,7 @@ export const TitleManagementModal: React.FC<TitleManagementModalProps> = ({
           {/* Header */}
           <View style={[styles.header, { borderBottomColor: currentTheme.uiColors.secondary + '40' }]}>
             <Text style={[styles.headerTitle, { color: currentTheme.uiColors.primary }]}>
-              Choose a Title
+              Choose a Wheel
             </Text>
             <TouchableOpacity style={styles.closeButton} onPress={onClose}>
               <Text style={[styles.closeButtonText, { color: currentTheme.uiColors.primary }]}>✕</Text>
@@ -225,7 +225,7 @@ export const TitleManagementModal: React.FC<TitleManagementModalProps> = ({
               <View style={styles.loadingContainer}>
                 <ActivityIndicator size="large" color={currentTheme.uiColors.primary} />
                 <Text style={[styles.loadingText, { color: currentTheme.uiColors.secondary }]}>
-                  Loading titles...
+                  Loading wheels...
                 </Text>
               </View>
             ) : (
@@ -240,7 +240,7 @@ export const TitleManagementModal: React.FC<TitleManagementModalProps> = ({
                 {currentTitle && (
                   <>
                     <Text style={[styles.sectionTitle, { color: currentTheme.uiColors.text }]}>
-                      Current Title
+                      Current Wheel
                     </Text>
                     {renderTitleCard(currentTitle)}
                   </>
@@ -248,7 +248,7 @@ export const TitleManagementModal: React.FC<TitleManagementModalProps> = ({
 
                 {/* Quick Title Selection by Category */}
                 <Text style={[styles.sectionTitle, { color: currentTheme.uiColors.text }]}>
-                  🎯 Quick Title Selection
+                  🎯 Quick Wheel Selection
                 </Text>
                 {Object.entries(titlesByCategory).map(([category, titles]) => (
                   <View key={category} style={styles.categorySection}>
@@ -279,7 +279,7 @@ export const TitleManagementModal: React.FC<TitleManagementModalProps> = ({
                             <Text style={[styles.emptyCategoryText, { 
                               color: currentTheme.uiColors.text + '60' 
                             }]}>
-                              No titles in this category yet
+                              No wheels in this category yet
                             </Text>
                           </View>
                         ) : (
@@ -321,25 +321,25 @@ export const TitleManagementModal: React.FC<TitleManagementModalProps> = ({
 
                 {/* Predetermined Titles Section */}
                 <Text style={[styles.sectionTitle, { color: currentTheme.uiColors.text }]}>
-                  Featured Titles
+                  Featured Wheels
                 </Text>
                 {PREDETERMINED_TITLES.map((title) => renderTitleCard(title, true))}
 
-                {/* Custom Titles Section */}
+                {/* Custom Wheels Section */}
                 {savedTitles.length > 0 && (
                   <>
                     <Text style={[styles.sectionTitle, { color: currentTheme.uiColors.text }]}>
-                      Your Custom Titles
+                      Your Custom Wheels
                     </Text>
                     {savedTitles.map((title) => renderTitleCard(title, false))}
                   </>
                 )}
 
-                {/* Empty state for custom titles */}
+                {/* Empty state for custom wheels */}
                 {savedTitles.length === 0 && (
                   <View style={styles.emptyState}>
                     <Text style={[styles.emptyStateText, { color: currentTheme.uiColors.secondary }]}>
-                      No custom titles yet.{'\n'}Create your own using the activities list!
+                      No custom wheels yet.{'\n'}Create your own using the activities list!
                     </Text>
                   </View>
                 )}

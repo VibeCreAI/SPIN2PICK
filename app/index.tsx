@@ -18,7 +18,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Dimensions, KeyboardAvoidingView, LayoutChangeEvent, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, ViewStyle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { installPredeterminedTitles } from '../data/predeterminedTitles';
-import { PASTEL_COLORS, reassignAllColors, type Activity } from '../utils/colorUtils';
+import { PASTEL_COLORS, reassignAllColors, getThemeById, loadCustomTheme, type Activity, type CustomThemeData } from '../utils/colorUtils';
 import { getAISuggestedActivity, getEmoji } from '../utils/emojiUtils';
 import { initSounds, setSoundMuted, unloadSounds } from '../utils/soundUtils';
 import { STORAGE_KEYS, Title, TitleCategory, TitleManager } from '../utils/titleUtils';
@@ -100,7 +100,7 @@ class ErrorBoundary extends React.Component {
 }
 
 export default function HomeScreen() {
-  const { currentTheme } = useTheme();
+  const { currentTheme, setTheme, setCustomTheme, customTheme } = useTheme();
   const [activities, setActivities] = useState<Activity[]>(DEFAULT_ACTIVITIES);
   const [showCelebration, setShowCelebration] = useState(false);
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
@@ -715,9 +715,35 @@ export default function HomeScreen() {
     setNewlyAddedActivityId(null);
   }, []);
 
-  const handleLoadActivities = (loadedActivities: Activity[], title: string) => {
-    const rethemedActivities = reassignAllColors(loadedActivities, currentTheme.wheelColors);
-    setActivities(rethemedActivities);
+  const handleLoadActivities = async (loadedActivities: Activity[], title: string, themeInfo?: { themeId: string; customTheme?: any }) => {
+    // Handle theme restoration if theme info is provided
+    if (themeInfo) {
+      try {
+        if (themeInfo.themeId === 'custom' && themeInfo.customTheme) {
+          // Restore custom theme
+          await setCustomTheme(themeInfo.customTheme);
+        } else {
+          // Restore built-in theme
+          await setTheme(themeInfo.themeId);
+        }
+        // Use the restored theme colors for activities
+        const rethemedActivities = reassignAllColors(loadedActivities, 
+          themeInfo.customTheme ? themeInfo.customTheme.colors : 
+          getThemeById(themeInfo.themeId).wheelColors
+        );
+        setActivities(rethemedActivities);
+      } catch (error) {
+        console.error('Error restoring theme:', error);
+        // Fallback: just apply current theme colors
+        const rethemedActivities = reassignAllColors(loadedActivities, currentTheme.wheelColors);
+        setActivities(rethemedActivities);
+      }
+    } else {
+      // No theme info, use current theme colors
+      const rethemedActivities = reassignAllColors(loadedActivities, currentTheme.wheelColors);
+      setActivities(rethemedActivities);
+    }
+    
     if (currentTitle && title) {
       setCurrentTitle({ ...currentTitle, name: title });
     }
@@ -725,6 +751,20 @@ export default function HomeScreen() {
 
   const handleCloseSaveLoad = () => {
     setShowSaveLoadModal(false);
+  };
+
+  // Helper function to get current custom theme data for saving
+  const getCurrentCustomThemeData = async (): Promise<CustomThemeData | undefined> => {
+    if (currentTheme.id === 'custom') {
+      try {
+        const customThemeData = await loadCustomTheme();
+        return customThemeData || undefined;
+      } catch (error) {
+        console.error('Error loading custom theme data:', error);
+        return undefined;
+      }
+    }
+    return undefined;
   };
 
   const handleOpenTheme = () => {
@@ -1248,6 +1288,8 @@ export default function HomeScreen() {
         currentActivities={activities}
         currentTitle={currentTitle?.name || ''}
         onLoadActivities={handleLoadActivities}
+        currentThemeId={currentTheme.id}
+        getCurrentCustomThemeData={getCurrentCustomThemeData}
       />
       
       {/* Hamburger Menu */}

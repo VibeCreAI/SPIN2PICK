@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Dimensions, Keyboard, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useTheme } from '../hooks/useTheme';
-import { Activity } from '../utils/colorUtils';
+import { Activity, CustomThemeData } from '../utils/colorUtils';
 
 export interface SaveSlot {
   id: string;
@@ -11,6 +11,15 @@ export interface SaveSlot {
   title: string;
   activities: Activity[];
   createdAt: Date;
+  // Theme information
+  themeId: string;
+  customTheme?: CustomThemeData;
+  version?: number; // For migration support (1 = old format, 2 = new format with theme)
+}
+
+interface ThemeInfo {
+  themeId: string;
+  customTheme?: CustomThemeData;
 }
 
 interface SaveLoadModalProps {
@@ -18,12 +27,14 @@ interface SaveLoadModalProps {
   onClose: () => void;
   currentActivities: Activity[];
   currentTitle: string;
-  onLoadActivities: (activities: Activity[], title: string) => void;
+  onLoadActivities: (activities: Activity[], title: string, themeInfo?: ThemeInfo) => void;
+  currentThemeId: string;
+  getCurrentCustomThemeData: () => Promise<CustomThemeData | undefined>;
 }
 
 const SAVE_SLOTS_KEY = 'SPIN2PICK_SAVE_SLOTS';
 const MAX_SAVE_NAME_LENGTH = 15;
-const MAX_SLOTS = 5;
+const MAX_SLOTS = 10;
 
 export const SaveLoadModal: React.FC<SaveLoadModalProps> = ({
   visible,
@@ -31,6 +42,8 @@ export const SaveLoadModal: React.FC<SaveLoadModalProps> = ({
   currentActivities,
   currentTitle,
   onLoadActivities,
+  currentThemeId,
+  getCurrentCustomThemeData,
 }) => {
   const { currentTheme } = useTheme();
   const [saveSlots, setSaveSlots] = useState<(SaveSlot | null)[]>([]);
@@ -69,10 +82,18 @@ export const SaveLoadModal: React.FC<SaveLoadModalProps> = ({
     try {
       const savedSlotsJSON = await AsyncStorage.getItem(SAVE_SLOTS_KEY);
       const savedSlots = savedSlotsJSON ? JSON.parse(savedSlotsJSON) : [];
-      const slotsWithDates = savedSlots.map((slot: SaveSlot) => ({
-        ...slot,
-        createdAt: new Date(slot.createdAt),
-      }));
+      const slotsWithDates = savedSlots.map((slot: any) => {
+        // Migration logic: add theme fields to old saves
+        const migratedSlot: SaveSlot = {
+          ...slot,
+          createdAt: new Date(slot.createdAt),
+          // Add default theme info for old saves (version 1 or missing version)
+          themeId: slot.themeId || 'pastel-dream',
+          customTheme: slot.customTheme || undefined,
+          version: slot.version || 1, // Mark as old format
+        };
+        return migratedSlot;
+      });
       
       const fullSlots = new Array(MAX_SLOTS).fill(null);
       slotsWithDates.forEach((slot: SaveSlot, index: number) => {
@@ -114,12 +135,18 @@ export const SaveLoadModal: React.FC<SaveLoadModalProps> = ({
 
     setIsLoading(true);
     try {
+      // Get current custom theme data if applicable
+      const customThemeData = await getCurrentCustomThemeData();
+      
       const newSlot: SaveSlot = {
         id: Date.now().toString(),
         name: saveName.trim(),
         title: currentTitle,
         activities: currentActivities,
         createdAt: new Date(),
+        themeId: currentThemeId,
+        customTheme: customThemeData,
+        version: 2, // New format with theme support
       };
 
       const updatedSlots = [...saveSlots];
@@ -146,9 +173,14 @@ export const SaveLoadModal: React.FC<SaveLoadModalProps> = ({
     setConfirmationModal({
       visible: true,
       title: 'Load Wheel',
-      message: `Load "${slot.name}"? This will replace your current wheel.`,
+      message: `Load "${slot.name}"? This will replace your current wheel and theme.`,
       onConfirm: () => {
-        onLoadActivities(slot.activities, slot.title);
+        const themeInfo: ThemeInfo | undefined = slot.themeId ? {
+          themeId: slot.themeId,
+          customTheme: slot.customTheme
+        } : undefined;
+        
+        onLoadActivities(slot.activities, slot.title, themeInfo);
         setConfirmationModal({ visible: false, title: '', message: '', onConfirm: () => {} });
         onClose();
       },
@@ -201,6 +233,9 @@ export const SaveLoadModal: React.FC<SaveLoadModalProps> = ({
               <Text allowFontScaling={false} style={[styles.slotName, { color: currentTheme.uiColors.primary }]}>{slot.name}</Text>
               <Text allowFontScaling={false} style={[styles.slotDetails, { color: currentTheme.uiColors.secondary }]}>
                 {`"${slot.title || slot.name}"`} • {slot.activities.length} slices • {new Date(slot.createdAt).toLocaleDateString()}
+                {slot.themeId && (
+                  `\n🎨 Theme: ${slot.customTheme ? slot.customTheme.name : slot.themeId}`
+                )}
               </Text>
             </View>
             <View style={styles.slotActions}>

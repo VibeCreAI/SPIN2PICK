@@ -3,6 +3,9 @@ let isAudioAvailable = false;
 let createAudioPlayer: any = null;
 let audioContextInitialized = false;
 
+// Global mute state - will be updated by the app
+let globalSoundMuted = false;
+
 try {
   const audioModule = require('expo-audio');
   createAudioPlayer = audioModule.createAudioPlayer;
@@ -39,8 +42,16 @@ export const initSounds = async () => {
   }
 };
 
+// Set global mute state
+export const setSoundMuted = (muted: boolean) => {
+  globalSoundMuted = muted;
+  console.log(`🔊 Sound ${muted ? 'muted' : 'unmuted'}`);
+};
+
 // Play click sound
 export const playClickSound = async () => {
+  if (globalSoundMuted) return;
+  
   try {
     if (clickPlayer) {
       clickPlayer.seekTo(0);
@@ -53,6 +64,8 @@ export const playClickSound = async () => {
 
 // Play spinning sound
 export const playSpinningSound = async () => {
+  if (globalSoundMuted) return;
+  
   try {
     if (spinningPlayer) {
       spinningPlayer.seekTo(0);
@@ -89,6 +102,8 @@ export const initializeAudioContext = async () => {
 
 // Play success sound
 export const playSuccessSound = async () => {
+  if (globalSoundMuted) return;
+  
   try {
     // Initialize audio context if not done yet
     if (!audioContextInitialized) {

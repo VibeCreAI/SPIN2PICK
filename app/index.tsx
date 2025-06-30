@@ -20,7 +20,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { installPredeterminedTitles } from '../data/predeterminedTitles';
 import { PASTEL_COLORS, reassignAllColors, type Activity } from '../utils/colorUtils';
 import { getAISuggestedActivity, getEmoji } from '../utils/emojiUtils';
-import { initSounds, unloadSounds } from '../utils/soundUtils';
+import { initSounds, setSoundMuted, unloadSounds } from '../utils/soundUtils';
 import { STORAGE_KEYS, Title, TitleCategory, TitleManager } from '../utils/titleUtils';
 // Conditional import for AdMob - only in development builds, not Expo Go
 let initializeInterstitialAd: (() => void) | null = null;
@@ -63,6 +63,13 @@ const DEFAULT_ACTIVITIES: Activity[] = generateDefaultActivities();
 const STORAGE_KEY = 'SPIN2PICK_ACTIVITIES';
 const SPIN_COUNT_KEY = 'SPIN2PICK_SPIN_COUNT';
 const DECLINED_SUGGESTIONS_KEY = 'SPIN2PICK_DECLINED_SUGGESTIONS';
+const SETTINGS_KEY = 'SPIN2PICK_SETTINGS';
+
+// App settings interface
+interface AppSettings {
+  soundMuted: boolean;
+  language: string; // For future implementation
+}
 
 // Error Boundary Component to prevent black screens
 class ErrorBoundary extends React.Component {
@@ -144,6 +151,12 @@ export default function HomeScreen() {
 
   // New state for activity management modal
   const [showActivityManagementModal, setShowActivityManagementModal] = useState(false);
+  
+  // Settings state
+  const [appSettings, setAppSettings] = useState<AppSettings>({
+    soundMuted: false,
+    language: 'en'
+  });
 
   // Get screen dimensions for responsive design
   const screenData = Dimensions.get('window');
@@ -184,8 +197,13 @@ export default function HomeScreen() {
   useEffect(() => {
     const initialize = async () => {
       try {
-        // Initialize sound effects
+        // Load app settings first
+        const loadedSettings = await loadSettings();
+        setAppSettings(loadedSettings);
+        
+        // Initialize sound effects and set mute state
         await initSounds();
+        setSoundMuted(loadedSettings.soundMuted);
         
         // Initialize AdMob interstitial ads (only if available)
         if (initializeInterstitialAd) {
@@ -774,6 +792,36 @@ export default function HomeScreen() {
     }
   };
 
+  // Settings management functions
+  const loadSettings = async (): Promise<AppSettings> => {
+    try {
+      const settingsJson = await AsyncStorage.getItem(SETTINGS_KEY);
+      if (settingsJson) {
+        return JSON.parse(settingsJson);
+      }
+    } catch (error) {
+      console.error('Error loading settings:', error);
+    }
+    // Return default settings if loading fails
+    return { soundMuted: false, language: 'en' };
+  };
+
+  const saveSettings = async (settings: AppSettings) => {
+    try {
+      await AsyncStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+      setAppSettings(settings);
+    } catch (error) {
+      console.error('Error saving settings:', error);
+    }
+  };
+
+  const toggleSoundMute = async () => {
+    const newSettings = { ...appSettings, soundMuted: !appSettings.soundMuted };
+    await saveSettings(newSettings);
+    // Update the sound utilities mute state
+    setSoundMuted(newSettings.soundMuted);
+  };
+
   const handleSelectTitle = async (title: Title) => {
     try {
       setCurrentTitle(title);
@@ -1185,12 +1233,15 @@ export default function HomeScreen() {
         visible={showHamburgerMenu}
         onClose={() => setShowHamburgerMenu(false)}
         onNavigateToTitleManagement={handleOpenTitleManagement}
+        onNavigateToActivityManagement={handleOpenActivityManagement}
         onNavigateToSettings={() => {/* TODO: Implement */}}
         onNavigateToThemes={() => setShowThemeModal(true)}
         onNavigateToSaveLoad={() => setShowSaveLoadModal(true)}
         onExportData={() => {/* TODO: Implement */}}
+        onToggleSoundMute={toggleSoundMute}
         recentlyUsedTitles={recentlyUsedTitles}
         onSelectTitle={handleSelectTitle}
+        isSoundMuted={appSettings.soundMuted}
       />
       
       {/* Title Management Modal */}
@@ -1226,7 +1277,7 @@ const styles = StyleSheet.create({
   fixedHeader: {
     width: '100%',
     paddingTop: 10,
-    paddingBottom: 15,
+    paddingBottom: 10,
     borderBottomWidth: 1,
     zIndex: 100,
     elevation: 3,
@@ -1239,7 +1290,7 @@ const styles = StyleSheet.create({
   headerContentWrapper: {
     width: '100%',
     maxWidth: 350, // Match the content wrapper width
-    paddingHorizontal: 20,
+    paddingHorizontal: 10,
   },
   container: {
     width: '100%',
@@ -1263,8 +1314,8 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 52,
     textAlign: 'center',
-    marginTop: 30,
-    marginBottom: 0,
+    marginTop: 10,
+    marginBottom: 10,
     fontFamily: FONTS.jua,
   },
   // NEW: Top header styles
@@ -1272,8 +1323,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
+    paddingHorizontal: 0,
+    paddingVertical: 1,
     backgroundColor: 'transparent',
   },
   appTitle: {
@@ -1290,7 +1341,7 @@ const styles = StyleSheet.create({
   // NEW: Dynamic title styles
   dynamicTitleContainer: {
     alignItems: 'center',
-    marginVertical: 10,
+    marginBottom: 10,
     paddingHorizontal: 20,
   },
   titleRow: {

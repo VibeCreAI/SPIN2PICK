@@ -21,12 +21,15 @@ interface HamburgerMenuProps {
     onClose: () => void;
     // Navigation props
     onNavigateToTitleManagement: () => void;
+    onNavigateToActivityManagement: () => void;
     onNavigateToSettings: () => void;
     onNavigateToThemes: () => void;
     onNavigateToSaveLoad: () => void;
     onExportData: () => void;
+    onToggleSoundMute: () => void;
     recentlyUsedTitles: Title[];
     onSelectTitle: (title: Title) => void;
+    isSoundMuted: boolean;
 }
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
@@ -35,12 +38,15 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
     visible,
     onClose,
     onNavigateToTitleManagement,
+    onNavigateToActivityManagement,
     onNavigateToSettings,
     onNavigateToThemes,
     onNavigateToSaveLoad,
     onExportData,
+    onToggleSoundMute,
     recentlyUsedTitles,
     onSelectTitle,
+    isSoundMuted,
 }) => {
     const { currentTheme } = useTheme();
     const slideAnim = useRef(new Animated.Value(screenWidth)).current;
@@ -257,11 +263,11 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
                             <TouchableOpacity
                                 style={styles.navItem}
                                 onPress={() => {
-                                    onNavigateToSaveLoad();
+                                    onNavigateToActivityManagement();
                                     onClose();
                                 }}
                             >
-                                <Text style={styles.navText}>💾 Save/Load Lists</Text>
+                                <Text style={styles.navText}>🍕 Manage Slices</Text>
                             </TouchableOpacity>
                         </View>
 
@@ -280,11 +286,21 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
                             <TouchableOpacity
                                 style={styles.navItem}
                                 onPress={() => {
-                                    onNavigateToSettings();
+                                    onNavigateToSaveLoad();
                                     onClose();
                                 }}
                             >
-                                <Text style={styles.navText}>⚙️ Settings</Text>
+                                <Text style={styles.navText}>💾 Save/Load Lists</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={styles.navItem}
+                                onPress={() => {
+                                    onToggleSoundMute();
+                                }}
+                            >
+                                <Text style={styles.navText}>
+                                    {isSoundMuted ? '🔇 Sound: Muted' : '🔊 Sound: On'}
+                                </Text>
                             </TouchableOpacity>
                         </View>
 

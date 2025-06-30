@@ -117,11 +117,18 @@ export const CustomThemeModal: React.FC<CustomThemeModalProps> = ({
   const screenWidth = Dimensions.get('window').width;
   const screenHeight = Dimensions.get('window').height;
   
-  // 🌐 Improved responsive modal dimensions with increased vertical space
+  // 🌐 Improved responsive modal dimensions with consistent gap
   const getModalDimensions = () => {
     if (Platform.OS === 'web') {
-      // Simplified web dimensions - consistent behavior like mobile
-      return { width: 500, height: '85vh' as any, maxWidth: '95vw' as any, borderRadius: 16 };
+      // Maintain consistent gap by limiting maximum height
+      const maxHeight = screenHeight - 100; // Always leave 100px total gap (50px top + 50px bottom)
+      return { 
+        width: 500, 
+        height: '85vh' as any, 
+        maxHeight: maxHeight,
+        maxWidth: '95vw' as any, 
+        borderRadius: 16 
+      };
     } else {
       // Mobile responsive with better bottom spacing
       return screenWidth < 500 

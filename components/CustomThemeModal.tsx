@@ -79,7 +79,7 @@ export const CustomThemeModal: React.FC<CustomThemeModalProps> = ({
     return '#f8f9fa'; // Default light background
   });
   const [backgroundColorInput, setBackgroundColorInput] = useState<string>(() => {
-    if (currentTheme.backgroundColor) {
+    if (currentTheme.id === 'custom' && currentTheme.backgroundColor) {
       return currentTheme.backgroundColor;
     }
     return '#f8f9fa';

@@ -191,7 +191,23 @@ export default function HomeScreen() {
       setActivities(rethemedActivities);
       console.log('🎨 Updated activity colors for theme:', currentTheme.displayName);
     }
-  }, [currentTheme.id, currentTheme.wheelColors, currentTheme.backgroundColor, currentTheme.uiColors.text]); // Run when theme ID, wheel colors, background color, or text color change
+  }, [currentTheme.id, currentTheme.wheelColors]); // Run when theme changes
+  
+  // Ensure activities get theme colors after initial load
+  useEffect(() => {
+    if (activities.length > 0 && !isLoading) {
+      // Double-check theme colors are applied after any activity changes
+      const hasCorrectColors = activities.every((activity, index) => 
+        activity.color === currentTheme.wheelColors[index % currentTheme.wheelColors.length]
+      );
+      
+      if (!hasCorrectColors) {
+        console.log('🔧 Fixing activity colors to match current theme');
+        const rethemedActivities = reassignAllColors(activities, currentTheme.wheelColors);
+        setActivities(rethemedActivities);
+      }
+    }
+  }, [activities.length, isLoading, currentTheme.wheelColors]); // Run when activities are loaded or theme changes
 
   // Load saved activities and initialize sounds when app starts
   useEffect(() => {
@@ -438,18 +454,24 @@ export default function HomeScreen() {
         await AsyncStorage.setItem(STORAGE_KEYS.CURRENT_TITLE_ID, 'legacy-activities');
         
         setCurrentTitle(migrationTitle);
-        setActivities(migrationTitle.items);
+        // Apply theme colors to migrated activities
+        const themedActivities = reassignAllColors(migrationTitle.items, currentTheme.wheelColors);
+        setActivities(themedActivities);
         
         console.log('✅ Legacy data migrated to title system');
       } else {
         // No legacy data, set default state
         setCurrentTitle(null);
-        setActivities(DEFAULT_ACTIVITIES);
+        // Apply theme colors to default activities
+        const themedDefaultActivities = reassignAllColors(DEFAULT_ACTIVITIES, currentTheme.wheelColors);
+        setActivities(themedDefaultActivities);
       }
     } catch (error) {
       console.error('Error during legacy migration:', error);
       setCurrentTitle(null);
-      setActivities(DEFAULT_ACTIVITIES);
+      // Apply theme colors to default activities even in error case
+      const themedDefaultActivities = reassignAllColors(DEFAULT_ACTIVITIES, currentTheme.wheelColors);
+      setActivities(themedDefaultActivities);
     }
   };
 

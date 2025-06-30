@@ -531,7 +531,331 @@ const choreItems = createItems([
 // 21. 🧸 Kids Activities - comprehensive children's activity list (49 items)
 const kidsActivityItems = createItemsFromPairs(getKidsActivities());
 
-// Define the 21 predetermined titles
+// ========================================
+// NEW WHEELS TO FILL GAPS AND ENRICH CATEGORIES
+// ========================================
+
+// 22. 🤔 Yes or No Decisions - binary choice answers (60 items)
+const yesNoDecisionItems = createItems([
+  // Positive Yes Answers (20 items)
+  'Yes, go for it!', 'Absolutely yes!', 'Yes, do it now!', 'Yes, trust yourself!', 'Yes, take the chance!',
+  'Yes, you\'ve got this!', 'Yes, follow your heart!', 'Yes, be brave!', 'Yes, it\'s time!', 'Yes, make it happen!',
+  'Yes, believe in yourself!', 'Yes, take the leap!', 'Yes, you deserve it!', 'Yes, seize the moment!', 'Yes, why not?',
+  'Yes, life is short!', 'Yes, you\'ll regret not trying!', 'Yes, trust your instincts!', 'Yes, be bold!', 'Yes, embrace change!',
+  
+  // Positive No Answers (20 items)
+  'No, not right now', 'No, trust your gut', 'No, wait for better timing', 'No, you know better', 'No, stay strong',
+  'No, stick to your values', 'No, protect your peace', 'No, save your energy', 'No, you deserve better', 'No, be patient',
+  'No, focus on priorities', 'No, listen to your heart', 'No, respect your boundaries', 'No, stay true to yourself', 'No, not worth it',
+  'No, you\'re better than this', 'No, choose wisely', 'No, maintain your standards', 'No, think long-term', 'No, preserve your wellbeing',
+  
+  // Conditional/Thoughtful Answers (20 items)
+  'Yes, but think it through first', 'No, but revisit later', 'Yes, if you\'re truly ready', 'No, unless circumstances change',
+  'Yes, with proper preparation', 'No, but keep it as a goal', 'Yes, if it aligns with your values', 'No, but stay open-minded',
+  'Yes, after careful consideration', 'No, but don\'t close the door', 'Yes, if the timing feels right', 'No, but learn from this moment',
+  'Yes, if you can handle the consequences', 'No, but appreciate the opportunity', 'Yes, if it brings you joy', 'No, but trust the process',
+  'Yes, if it helps you grow', 'No, but something better awaits', 'Yes, if you\'re following your passion', 'No, but you\'re on the right path'
+]);
+
+// 23. 🎭 Life Choices - major life decisions and directions (70 items)
+const lifeChoiceItems = createItems([
+  // Career & Education (20 items)
+  'Change careers completely', 'Go back to school for higher degree', 'Start your own business', 'Take a sabbatical year',
+  'Learn a completely new skill', 'Move abroad for work', 'Freelance full-time', 'Take early retirement',
+  'Switch to remote work', 'Pursue your passion career', 'Get professional certification', 'Join a startup',
+  'Become a digital nomad', 'Take a leadership role', 'Mentor others in your field', 'Write a book about your expertise',
+  'Speak at conferences', 'Build a personal brand', 'Create online courses', 'Consult in your field',
+  
+  // Relationships & Family (15 items)
+  'Get married', 'Have children', 'Move in with partner', 'End a long relationship', 'Reconnect with family',
+  'Make new friends', 'Join a community group', 'Start dating again', 'Adopt a child', 'Get divorced',
+  'Plan a big wedding', 'Elope instead', 'Have another child', 'Move closer to family', 'Set relationship boundaries',
+  
+  // Living & Location (15 items)
+  'Move to a different country', 'Buy your first home', 'Downsize your living space', 'Live in a tiny house',
+  'Move to the countryside', 'Live in a big city', 'Rent instead of buying', 'Live near the ocean',
+  'Move to the mountains', 'Live in a different climate', 'Buy a vacation home', 'Live minimally',
+  'Create a home office', 'Get roommates', 'Live alone for the first time',
+  
+  // Lifestyle & Personal Growth (20 items)
+  'Adopt a completely healthy lifestyle', 'Travel the world for a year', 'Learn a new language fluently', 'Overcome your biggest fear',
+  'Quit social media entirely', 'Start a daily meditation practice', 'Run a marathon', 'Learn to cook professionally',
+  'Take up extreme sports', 'Become environmentally conscious', 'Practice minimalism', 'Start journaling daily',
+  'Learn a musical instrument', 'Take up photography seriously', 'Start a creative hobby', 'Volunteer regularly',
+  'Mentor someone younger', 'Write your life story', 'Create art regularly', 'Practice gratitude daily'
+]);
+
+// 24. 🌅 What Should I Do Today? - daily activity and mood-based decisions (65 items)
+const todayActivityItems = createItems([
+  // Energetic Mood (15 items)
+  'Go for a run', 'Clean the entire house', 'Reorganize a room', 'Try a new workout', 'Dance to music',
+  'Take a long walk', 'Do a challenging puzzle', 'Learn something completely new', 'Call old friends', 'Cook an elaborate meal',
+  'Start a project', 'Go on an adventure', 'Explore a new place', 'Play sports', 'Do outdoor activities',
+  
+  // Relaxed Mood (15 items)
+  'Read a good book', 'Take a warm bath', 'Watch a movie marathon', 'Do gentle yoga', 'Listen to podcasts',
+  'Take a nap', 'Sit in nature', 'Do breathing exercises', 'Write in a journal', 'Drink tea mindfully',
+  'Look through old photos', 'Do light stretching', 'Listen to calming music', 'Practice meditation', 'Cloud watching',
+  
+  // Creative Mood (15 items)
+  'Paint or draw something', 'Write poetry or stories', 'Try a new recipe', 'Make music', 'Create photo art',
+  'Design something', 'Write letters', 'Start a craft project', 'Decorate your space', 'Make a vision board',
+  'Try photography', 'Write in a creative journal', 'Make a playlist', 'Create videos', 'Try origami',
+  
+  // Social Mood (10 items)
+  'Plan a gathering', 'Call family members', 'Text friends you miss', 'Join online communities', 'Help a neighbor',
+  'Volunteer somewhere', 'Attend local events', 'Make new friends', 'Plan a surprise for someone', 'Share your skills',
+  
+  // Productive Mood (10 items)
+  'Organize digital files', 'Plan your week', 'Learn a new skill online', 'Update your resume', 'Research investments',
+  'Plan future travels', 'Set new goals', 'Review your finances', 'Declutter belongings', 'Prepare healthy meals'
+]);
+
+// 25. 💰 Should I Buy This? - actual purchase decisions (60 items)
+const purchaseDecisionItems = createItems([
+  // Buy It Decisions (20 items)
+  'Yes, buy it now!', 'Go for it, you deserve it!', 'Buy it, life is short!', 'Purchase it, you\'ll love it!', 'Yes, treat yourself!',
+  'Buy it, you\'ve been wanting this!', 'Go ahead, it\'s worth it!', 'Yes, make the purchase!', 'Buy it, you earned it!', 'Go for it, don\'t hesitate!',
+  'Yes, add it to cart!', 'Buy it, perfect timing!', 'Purchase it, you need this!', 'Yes, investment in yourself!', 'Buy it, great choice!',
+  'Go for it, no regrets!', 'Yes, splurge a little!', 'Buy it, you\'ll use it often!', 'Purchase it, high quality!', 'Yes, buy the premium version!',
+  
+  // Don\'t Buy Decisions (20 items)
+  'No, save your money', 'Don\'t buy it, not worth it', 'Skip it, you don\'t need it', 'No, invest that money instead', 'Don\'t purchase, bad timing',
+  'No, you have enough already', 'Skip it, find a free alternative', 'Don\'t buy, wait for a sale', 'No, stick to your budget', 'Skip it, not essential',
+  'Don\'t buy, you\'ll regret it', 'No, focus on needs first', 'Skip it, too expensive', 'Don\'t purchase, low quality', 'No, you won\'t use it',
+  'Skip it, impulse purchase', 'Don\'t buy, clutters space', 'No, better options exist', 'Skip it, save for something bigger', 'Don\'t buy, not your style',
+  
+  // Alternative/Smart Shopping Decisions (20 items)
+  'Buy it used instead', 'Wait for Black Friday sale', 'Look for a discount code first', 'Buy the basic version', 'Wait one month, then decide',
+  'Ask for it as a gift', 'Rent it instead of buying', 'Buy from a local store', 'Get the eco-friendly version', 'Try the free trial first',
+  'Buy it in a smaller size', 'Look for bundle deals', 'Wait for next paycheck', 'Buy the store brand version', 'Get it secondhand online',
+  'Compare prices first', 'Buy it during end-of-season', 'Look for refurbished options', 'Buy it with cashback rewards', 'Wait for better reviews'
+]);
+
+// 26. 🏖️ Weekend Plans - weekend activity and outing decisions (70 items)
+const weekendPlanItems = createItems([
+  // Outdoor Adventures (20 items)
+  'Go hiking', 'Visit a beach', 'Have a picnic', 'Go camping', 'Take nature photos',
+  'Visit a farmers market', 'Go to a park', 'Try outdoor yoga', 'Go for a bike ride', 'Visit botanical gardens',
+  'Go stargazing', 'Try geocaching', 'Visit a lake', 'Go rock climbing', 'Take a scenic drive',
+  'Go fishing', 'Visit a zoo', 'Try disc golf', 'Go to outdoor concert', 'Have a barbecue',
+  
+  // Cultural Activities (15 items)
+  'Visit a museum', 'Go to art galleries', 'Attend a theater show', 'See live music', 'Visit historical sites',
+  'Attend cultural festivals', 'Take a guided tour', 'Visit a library', 'Go to poetry reading', 'Attend lectures',
+  'Visit cultural centers', 'See a ballet or opera', 'Attend art classes', 'Visit craft fairs', 'Go to book readings',
+  
+  // Social Activities (15 items)
+  'Host a dinner party', 'Have a game night', 'Organize potluck', 'Plan a group outing', 'Visit friends',
+  'Attend networking events', 'Join clubs or groups', 'Go to meetups', 'Plan family gatherings', 'Host movie night',
+  'Organize outdoor games', 'Plan a road trip', 'Visit relatives', 'Attend parties', 'Join volunteer activities',
+  
+  // Relaxation & Self-Care (10 items)
+  'Spa day at home', 'Read in a cozy spot', 'Take long baths', 'Practice meditation', 'Do gentle exercise',
+  'Have lazy morning', 'Watch favorite movies', 'Listen to music', 'Do creative hobbies', 'Nap in the afternoon',
+  
+  // Learning & Growth (10 items)
+  'Take online courses', 'Learn new skills', 'Practice hobbies', 'Read educational books', 'Watch documentaries',
+  'Attend workshops', 'Practice languages', 'Research interests', 'Plan future goals', 'Reflect and journal'
+]);
+
+// 27. 🍪 Snack Attack - quick snacks and light bites (65 items)
+const snackItems = createItems([
+  // Sweet Snacks (20 items)
+  'Chocolate chip cookies', 'Fresh berries', 'Apple slices with peanut butter', 'Yogurt with honey', 'Dark chocolate squares',
+  'Banana with almond butter', 'Granola bars', 'Dried fruit mix', 'Smoothie bowl', 'Energy balls',
+  'Ice cream', 'Fruit popsicles', 'Chocolate covered strawberries', 'Muffins', 'Donuts',
+  'Cake pops', 'Macarons', 'Candy', 'Marshmallows', 'Fudge',
+  
+  // Savory Snacks (20 items)
+  'Cheese and crackers', 'Hummus with vegetables', 'Mixed nuts', 'Popcorn', 'Pretzels',
+  'Chips and guacamole', 'Olives', 'Pickles', 'Jerky', 'Trail mix',
+  'Deviled eggs', 'Stuffed olives', 'Cheese cubes', 'Salami and cheese', 'Veggie chips',
+  'Rice cakes', 'Edamame', 'Roasted chickpeas', 'Sunflower seeds', 'Beef jerky',
+  
+  // Healthy Options (15 items)
+  'Carrot sticks', 'Celery with almond butter', 'Cucumber slices', 'Bell pepper strips', 'Cherry tomatoes',
+  'Kale chips', 'Apple slices', 'Orange segments', 'Grapes', 'Blueberries',
+  'Whole grain crackers', 'Greek yogurt', 'Hard boiled eggs', 'Avocado toast', 'Green smoothie',
+  
+  // Comfort Snacks (10 items)
+  'Mac and cheese bites', 'Mini pizzas', 'Grilled cheese triangles', 'Chicken nuggets', 'Mozzarella sticks',
+  'Onion rings', 'Nachos', 'Quesadilla', 'Sliders', 'Hot wings'
+]);
+
+// 28. 🍽️ Dinner Ideas - evening meal suggestions (75 items)
+const dinnerItems = createItems([
+  // Quick Weeknight Meals (20 items)
+  'Spaghetti with marinara', 'Grilled chicken breast', 'Stir-fried vegetables', 'Taco Tuesday', 'Baked salmon',
+  'Chicken quesadillas', 'Fried rice', 'Pasta primavera', 'Grilled cheese and soup', 'Chicken stir-fry',
+  'Fish tacos', 'Beef and broccoli', 'Chicken fajitas', 'Shrimp scampi', 'Veggie burgers',
+  'Pork chops', 'Chicken teriyaki', 'Beef tacos', 'Turkey meatballs', 'Baked cod',
+  
+  // Comfort Food (15 items)
+  'Homemade pizza', 'Chicken pot pie', 'Meatloaf with mashed potatoes', 'Beef stew', 'Fried chicken',
+  'Shepherd\'s pie', 'Lasagna', 'Chili with cornbread', 'Pot roast', 'Mac and cheese',
+  'Chicken and dumplings', 'Meatball subs', 'Sloppy joes', 'Fish and chips', 'Barbecue ribs',
+  
+  // International Cuisine (20 items)
+  'Thai curry', 'Japanese teriyaki', 'Italian risotto', 'Mexican enchiladas', 'Indian butter chicken',
+  'Chinese sweet and sour', 'Greek gyros', 'Korean bulgogi', 'Spanish paella', 'French coq au vin',
+  'German schnitzel', 'Lebanese kebabs', 'Moroccan tagine', 'Vietnamese pho', 'Brazilian feijoada',
+  'Russian borscht', 'Ethiopian injera', 'Peruvian ceviche', 'Turkish dolmas', 'Jamaican jerk chicken',
+  
+  // Healthy Options (20 items)
+  'Quinoa bowls', 'Grilled vegetable medley', 'Lentil curry', 'Baked sweet potato', 'Cauliflower rice bowl',
+  'Zucchini noodles', 'Greek salad with chicken', 'Buddha bowl', 'Stuffed bell peppers', 'Grilled portobello',
+  'Chickpea curry', 'Roasted vegetables', 'Salmon with asparagus', 'Turkey lettuce wraps', 'Vegetable soup',
+  'Black bean bowls', 'Stuffed zucchini', 'Eggplant parmesan', 'Tofu stir-fry', 'Mediterranean bowl'
+]);
+
+// 29. 🥞 Breakfast Options - morning meal ideas (60 items)
+const breakfastItems = createItems([
+  // Quick Options (15 items)
+  'Toast with jam', 'Cereal with milk', 'Yogurt with granola', 'Banana and peanut butter', 'Energy bar',
+  'Smoothie', 'Instant oatmeal', 'Bagel with cream cheese', 'Hard boiled eggs', 'Greek yogurt',
+  'Protein shake', 'Muffin', 'Fruit cup', 'Granola bar', 'Coffee and pastry',
+  
+  // Classic Breakfast (15 items)
+  'Pancakes with syrup', 'French toast', 'Waffles with berries', 'Eggs Benedict', 'Full English breakfast',
+  'Bacon and eggs', 'Sausage and pancakes', 'Breakfast burrito', 'Eggs and toast', 'Hash browns',
+  'Breakfast sandwich', 'Omelet', 'Scrambled eggs', 'Fried eggs', 'Breakfast pizza',
+  
+  // Healthy Options (15 items)
+  'Overnight oats', 'Chia pudding', 'Acai bowl', 'Green smoothie', 'Avocado toast',
+  'Quinoa breakfast bowl', 'Steel cut oats', 'Fresh fruit salad', 'Veggie omelet', 'Whole grain toast',
+  'Protein smoothie bowl', 'Egg white scramble', 'Turkey sausage', 'Cottage cheese with fruit', 'Homemade granola',
+  
+  // International Breakfast (15 items)
+  'Japanese tamagoyaki', 'Mexican huevos rancheros', 'Italian cornetto', 'French croissant', 'German pretzel',
+  'Chinese congee', 'Indian idli', 'Turkish simit', 'British beans on toast', 'Spanish churros',
+  'Korean kimchi fried rice', 'Middle Eastern shakshuka', 'Australian Vegemite toast', 'Russian blini', 'Scandinavian smorgasbord'
+]);
+
+// 30. 🎲 Dice Games - traditional dice combinations (55 items)
+const diceGameItems = createItems([
+  // Standard Dice Rolls (10 items)
+  'Roll 1d6', 'Roll 2d6', 'Roll 3d6', 'Roll 1d20', 'Roll 1d12',
+  'Roll 1d10', 'Roll 1d8', 'Roll 1d4', 'Roll percentile (d100)', 'Roll 4d6 drop lowest',
+  
+  // Game-Specific Rolls (15 items)
+  'Yahtzee roll (5d6)', 'Farkle roll (6d6)', 'Craps roll (2d6)', 'Backgammon roll (2d6)', 'Monopoly roll (2d6)',
+  'Risk battle (3d6 vs 2d6)', 'D&D ability score (4d6 drop lowest)', 'Advantage roll (2d20 take higher)', 'Disadvantage roll (2d20 take lower)', 'Exploding dice',
+  'Savage Worlds roll', 'FATE dice roll', 'Shadowrun roll (multiple d6)', 'White Wolf roll (d10 pool)', 'Burning Wheel roll',
+  
+  // Fun Dice Challenges (15 items)
+  'Lucky number challenge', 'High roller contest', 'Consecutive rolls', 'Even numbers only', 'Odd numbers only',
+  'Roll your age', 'Roll under challenge', 'Double or nothing', 'Progressive jackpot', 'Dice poker hand',
+  'Sum equals 21', 'All dice same number', 'Ascending order roll', 'Prime numbers only', 'Roll a perfect pattern',
+  
+  // Creative Dice Uses (15 items)
+  'Story element (1-6)', 'Character trait (1-8)', 'Plot twist (1-10)', 'Random direction (1-4)', 'Time of day (1-12)',
+  'Weather roll (1-6)', 'Emotion check (1-8)', 'Difficulty level (1-5)', 'NPC personality (1-10)', 'Quest objective (1-12)',
+  'Random encounter (1-20)', 'Treasure type (1-8)', 'Skill challenge (1-6)', 'Mystery element (1-10)', 'Adventure hook (1-12)'
+]);
+
+// 31. 🍀 Lucky Numbers - personal numbers and special occasions (65 items)
+const luckyNumberItems = createItems([
+  // Single Lucky Numbers (15 items)
+  '7 (Classic Lucky)', '3 (Magic Number)', '8 (Infinity)', '9 (Completion)', '13 (Unlucky turned Lucky)',
+  '21 (Coming of Age)', '11 (Master Number)', '22 (Master Builder)', '33 (Master Teacher)', '1 (New Beginnings)',
+  '5 (Adventure)', '6 (Harmony)', '4 (Stability)', '2 (Partnership)', '0 (Infinite Potential)',
+  
+  // Lottery Number Sets (15 items)
+  'Quick Pick 6 numbers', 'Birth date combo', 'Anniversary numbers', 'Age-based selection', 'Address numbers',
+  'Phone number digits', 'Social Security digits', 'License plate numbers', 'Clock time numbers', 'Temperature numbers',
+  'Random 1-49 set', 'Fibonacci sequence', 'Prime number set', 'Perfect squares', 'Even numbers only',
+  
+  // Special Occasion Numbers (15 items)
+  'Wedding date numbers', 'Birthday numbers', 'Graduation year', 'First job year', 'Moving date',
+  'Pet\'s birthday', 'Parents\' anniversary', 'First date numbers', 'Holiday dates', 'Achievement dates',
+  'Lucky streak start', 'Competition numbers', 'Travel booking numbers', 'House purchase date', 'New car numbers',
+  
+  // Cultural Lucky Numbers (10 items)
+  '8 (Chinese Prosperity)', '4 (Japanese Unlucky)', '7 (Western Lucky)', '3 (Celtic Sacred)', '9 (Norse Sacred)',
+  '5 (Chinese Elements)', '12 (Zodiac Complete)', '108 (Buddhist Sacred)', '18 (Hebrew Life)', '40 (Biblical Significance)',
+  
+  // Number Combinations (10 items)
+  'Triple digits (111, 222, etc.)', 'Mirror numbers (121, 131)', 'Sequential (123, 456)', 'Palindromes (191, 252)',
+  'Sum equals lucky number', 'Product equals target', 'Difference patterns', 'Geometric progressions', 'Arithmetic series', 'Random cosmic combo'
+]);
+
+// 32. 🤝 Team Building Activities - office bonding ideas (60 items)
+const teamBuildingItems = createItems([
+  // Icebreaker Activities (15 items)
+  'Two Truths and a Lie', 'Human Bingo', 'Speed Networking', 'Name That Colleague', 'Desert Island Items',
+  'Personality Test Sharing', 'Photo Scavenger Hunt', 'Would You Rather', 'Story Chain Building', 'Common Ground Finding',
+  'Trivia About Colleagues', 'Bucket List Sharing', 'Skills Exchange', 'Childhood Photo Guessing', 'Office Olympics',
+  
+  // Problem-Solving Challenges (15 items)
+  'Escape Room Challenge', 'Puzzle Competitions', 'Brain Teaser Sessions', 'Innovation Workshop', 'Design Thinking Exercise',
+  'Case Study Solutions', 'Resource Allocation Game', 'Strategy Planning Session', 'Process Improvement Challenge', 'Creative Problem Solving',
+  'Build a Tower Challenge', 'Marshmallow Challenge', 'Paper Airplane Contest', 'Invention Workshop', 'Future Visioning',
+  
+  // Communication Activities (15 items)
+  'Presentation Skills Workshop', 'Active Listening Games', 'Storytelling Circle', 'Feedback Practice', 'Conflict Resolution Role-Play',
+  'Negotiation Simulations', 'Cross-Department Shadowing', 'Mentoring Circles', 'Knowledge Sharing Sessions', 'Best Practices Exchange',
+  'Communication Style Assessment', 'Team Charter Creation', 'Goal Alignment Session', 'Values Definition Workshop', 'Vision Board Creation',
+  
+  // Fun Social Activities (15 items)
+  'Cooking Competition', 'Office Talent Show', 'Game Tournament', 'Movie Marathon', 'Potluck Lunch',
+  'Book Club Meeting', 'Sports Day', 'Karaoke Session', 'Art and Craft Workshop', 'Photography Contest',
+  'Themed Dress-Up Day', 'Office Decorating Contest', 'Volunteer Day', 'Cultural Food Festival', 'Holiday Celebrations'
+]);
+
+// 33. 🎤 Meeting Icebreakers - professional conversation starters (55 items)
+const meetingIcebreakerItems = createItems([
+  // Quick Check-ins (15 items)
+  'One word to describe your week', 'Current energy level (1-10)', 'Weather in your world today', 'Best thing since last meeting',
+  'One thing you\'re grateful for', 'Current mood emoji', 'Coffee or tea preference today', 'Weekend highlight in 10 seconds',
+  'One word for how you\'re feeling', 'Productivity level today', 'Motivation meter reading', 'Stress level check',
+  'Excitement level for today', 'Current brain fuel', 'Energy source today',
+  
+  // Professional Development (10 items)
+  'Skill you\'re currently learning', 'Recent professional win', 'Goal you\'re working toward', 'Book or podcast recommendation',
+  'Industry trend you\'re watching', 'Tool that\'s helping you lately', 'Recent learning experience', 'Networking connection made',
+  'Conference or webinar attended', 'Professional challenge overcome',
+  
+  // Creative Questions (15 items)
+  'If this project were a movie genre', 'Superpower needed for this meeting', 'Animal that represents your workstyle',
+  'Color that matches your current mood', 'Song title for your morning', 'Fictional character as team member',
+  'Time period you\'d work in', 'Dream collaboration partner', 'Invention needed for your job', 'Magic wand solution',
+  'Perfect work environment', 'Celebrity CEO choice', 'Work theme song', 'Ideal teammate quality', 'Innovation you wish existed',
+  
+  // Team Connection (15 items)
+  'Something you appreciate about a colleague', 'Team strength to celebrate', 'Collaboration success story', 'Help you could offer someone',
+  'Support you need today', 'Team tradition to start', 'Shared goal excitement', 'Cross-department connection made',
+  'Knowledge you could share', 'Mentoring moment experienced', 'Team achievement to highlight', 'Partnership opportunity',
+  'Skill someone taught you', 'Team value in action', 'Collective win to celebrate'
+]);
+
+// 34. 🎮 Video Game Genres - gaming mood picker (65 items)
+const videoGameGenreItems = createItems([
+  // Action & Adventure (15 items)
+  'First-Person Shooter', 'Third-Person Action', 'Platformer', 'Beat \'em Up', 'Hack and Slash',
+  'Open World Adventure', 'Stealth Action', 'Survival Action', 'Battle Royale', 'Fighting Games',
+  'Racing Games', 'Sports Games', 'Arcade Action', 'Run and Gun', 'Action RPG',
+  
+  // Strategy & Simulation (15 items)
+  'Real-Time Strategy', 'Turn-Based Strategy', 'City Builder', 'Life Simulation', 'Management Simulation',
+  'Business Simulation', 'Flight Simulator', 'Farming Simulator', 'Construction Simulator', 'Political Strategy',
+  'War Strategy', 'Economic Strategy', 'Tower Defense', 'God Games', 'Civilization Builder',
+  
+  // RPG & Story-Driven (15 items)
+  'Japanese RPG', 'Western RPG', 'Action RPG', 'Tactical RPG', 'MMORPG',
+  'Visual Novel', 'Interactive Fiction', 'Story-Rich Adventure', 'Choice-Based Games', 'Narrative Adventure',
+  'Character-Driven RPG', 'Fantasy RPG', 'Sci-Fi RPG', 'Post-Apocalyptic RPG', 'Historical RPG',
+  
+  // Casual & Puzzle (10 items)
+  'Match-3 Puzzle', 'Logic Puzzles', 'Hidden Object', 'Time Management', 'Casual Strategy',
+  'Mobile Casual', 'Word Games', 'Trivia Games', 'Brain Training', 'Relaxing Games',
+  
+  // Multiplayer & Social (10 items)
+  'Cooperative Multiplayer', 'Competitive Multiplayer', 'Party Games', 'Online Multiplayer', 'Local Multiplayer',
+  'Team-Based Games', 'Social Deduction', 'Massive Multiplayer', 'Split-Screen Games', 'Cross-Platform Games'
+]);
+
+// Define the 34 predetermined titles (21 original + 13 new)
 export const PREDETERMINED_TITLES: Title[] = [
   {
     id: 'kids-activities',
@@ -820,6 +1144,202 @@ export const PREDETERMINED_TITLES: Title[] = [
     description: 'Household task distribution for kitchen, bathroom, living, and outdoor areas',
     category: TitleCategory.FAMILY,
     items: choreItems,
+    isCustom: false,
+    isPredetermined: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    isActive: true,
+    spinCount: 0
+  },
+  
+  // ========================================
+  // NEW WHEELS ADDED TO FILL GAPS AND ENRICH CATEGORIES
+  // ========================================
+  
+  // DECISIONS Category - Fill the empty category (5 new wheels)
+  {
+    id: 'yes-no-decisions',
+    name: 'Yes or No Decisions',
+    emoji: '🤔',
+    description: 'Get clear Yes or No answers for any decision you\'re facing',
+    category: TitleCategory.DECISIONS,
+    items: yesNoDecisionItems,
+    isCustom: false,
+    isPredetermined: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    isActive: true,
+    spinCount: 0
+  },
+  {
+    id: 'life-choices',
+    name: 'Life Choices',
+    emoji: '🎭',
+    description: 'Major life decisions and directions for personal growth',
+    category: TitleCategory.DECISIONS,
+    items: lifeChoiceItems,
+    isCustom: false,
+    isPredetermined: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    isActive: true,
+    spinCount: 0
+  },
+  {
+    id: 'what-should-i-do-today',
+    name: 'What Should I Do Today?',
+    emoji: '🌅',
+    description: 'Daily activity and mood-based decisions for any time of day',
+    category: TitleCategory.DECISIONS,
+    items: todayActivityItems,
+    isCustom: false,
+    isPredetermined: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    isActive: true,
+    spinCount: 0
+  },
+  {
+    id: 'should-i-buy-this',
+    name: 'Should I Buy This?',
+    emoji: '💰',
+    description: 'Get definitive buy, don\'t buy, or alternative purchase decisions',
+    category: TitleCategory.DECISIONS,
+    items: purchaseDecisionItems,
+    isCustom: false,
+    isPredetermined: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    isActive: true,
+    spinCount: 0
+  },
+  {
+    id: 'weekend-plans',
+    name: 'Weekend Plans',
+    emoji: '🏖️',
+    description: 'Weekend activity and outing decisions for relaxation and fun',
+    category: TitleCategory.DECISIONS,
+    items: weekendPlanItems,
+    isCustom: false,
+    isPredetermined: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    isActive: true,
+    spinCount: 0
+  },
+
+  // FOOD Category - Expand with more meal options (3 new wheels)
+  {
+    id: 'snack-attack',
+    name: 'Snack Attack',
+    emoji: '🍪',
+    description: 'Quick snacks and light bites for any craving or time of day',
+    category: TitleCategory.FOOD,
+    items: snackItems,
+    isCustom: false,
+    isPredetermined: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    isActive: true,
+    spinCount: 0
+  },
+  {
+    id: 'dinner-ideas',
+    name: 'Dinner Ideas',
+    emoji: '🍽️',
+    description: 'Evening meal suggestions from quick weeknight to special occasion dinners',
+    category: TitleCategory.FOOD,
+    items: dinnerItems,
+    isCustom: false,
+    isPredetermined: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    isActive: true,
+    spinCount: 0
+  },
+  {
+    id: 'breakfast-options',
+    name: 'Breakfast Options',
+    emoji: '🥞',
+    description: 'Morning meal ideas from quick grab-and-go to leisurely weekend brunches',
+    category: TitleCategory.FOOD,
+    items: breakfastItems,
+    isCustom: false,
+    isPredetermined: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    isActive: true,
+    spinCount: 0
+  },
+
+  // NUMBERS Category - Expand with gaming and luck (2 new wheels)
+  {
+    id: 'dice-games',
+    name: 'Dice Games',
+    emoji: '🎲',
+    description: 'Traditional dice combinations and gaming rolls for tabletop fun',
+    category: TitleCategory.NUMBERS,
+    items: diceGameItems,
+    isCustom: false,
+    isPredetermined: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    isActive: true,
+    spinCount: 0
+  },
+  {
+    id: 'lucky-numbers',
+    name: 'Lucky Numbers',
+    emoji: '🍀',
+    description: 'Personal lucky numbers and special occasion number selections',
+    category: TitleCategory.NUMBERS,
+    items: luckyNumberItems,
+    isCustom: false,
+    isPredetermined: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    isActive: true,
+    spinCount: 0
+  },
+
+  // WORKPLACE Category - Expand with team activities (2 new wheels)
+  {
+    id: 'team-building-activities',
+    name: 'Team Building Activities',
+    emoji: '🤝',
+    description: 'Office bonding and collaboration ideas for stronger workplace relationships',
+    category: TitleCategory.WORKPLACE,
+    items: teamBuildingItems,
+    isCustom: false,
+    isPredetermined: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    isActive: true,
+    spinCount: 0
+  },
+  {
+    id: 'meeting-icebreakers',
+    name: 'Meeting Icebreakers',
+    emoji: '🎤',
+    description: 'Professional conversation starters and check-ins for productive meetings',
+    category: TitleCategory.WORKPLACE,
+    items: meetingIcebreakerItems,
+    isCustom: false,
+    isPredetermined: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    isActive: true,
+    spinCount: 0
+  },
+
+  // GAMES Category - Add modern gaming option (1 new wheel)
+  {
+    id: 'video-game-genres',
+    name: 'Video Game Genres',
+    emoji: '🎮',
+    description: 'Gaming mood picker for choosing what type of video game to play',
+    category: TitleCategory.GAMES,
+    items: videoGameGenreItems,
     isCustom: false,
     isPredetermined: true,
     createdAt: new Date(),

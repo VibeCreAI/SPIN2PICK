@@ -942,7 +942,7 @@ export const CustomThemeModal: React.FC<CustomThemeModalProps> = ({
                   styles.footerButtonText,
                   { color: currentTheme.uiColors.buttonText }
                 ]}>
-                  Save & Apply
+                  Save & Apply ✨
                 </Text>
               </TouchableOpacity>
             </View>

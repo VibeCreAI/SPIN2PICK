@@ -5,9 +5,9 @@ import { FONTS } from '@/app/_layout';
 import { ActivityInput } from '@/components/ActivityInput';
 import { AdBanner } from '@/components/AdBanner';
 import { Celebration } from '@/components/Celebration';
+import { FirstTimeWelcomeModal } from '@/components/FirstTimeWelcomeModal';
 import { HamburgerMenu } from '@/components/HamburgerMenu';
 import { RouletteWheel } from '@/components/RouletteWheel';
-import { FirstTimeWelcomeModal } from '@/components/FirstTimeWelcomeModal';
 import { SaveLoadModal } from '@/components/SaveLoadModal';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemeSelectionModal } from '@/components/ThemeSelectionModal';
@@ -19,7 +19,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Dimensions, KeyboardAvoidingView, LayoutChangeEvent, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, ViewStyle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { installPredeterminedTitles } from '../data/predeterminedTitles';
-import { PASTEL_COLORS, reassignAllColors, getThemeById, loadCustomTheme, type Activity, type CustomThemeData } from '../utils/colorUtils';
+import { getThemeById, loadCustomTheme, PASTEL_COLORS, reassignAllColors, type Activity, type CustomThemeData } from '../utils/colorUtils';
 import { getAISuggestedActivity, getEmoji } from '../utils/emojiUtils';
 import { initSounds, setSoundMuted, unloadSounds } from '../utils/soundUtils';
 import { STORAGE_KEYS, Title, TitleCategory, TitleManager } from '../utils/titleUtils';
@@ -1387,11 +1387,11 @@ export default function HomeScreen() {
             activeOpacity={1}
             onPress={() => {}} // Prevent closing when tapping inside popup
           >
-            <Text allowFontScaling={false} style={[styles.popupTitle, { color: currentTheme.uiColors.primary }]}>Reset Picks 🔄</Text>
+            <Text allowFontScaling={false} style={[styles.popupTitle, { color: currentTheme.uiColors.primary }]}>🔄Reset Wheel</Text>
             <Text allowFontScaling={false} style={[styles.popupMessage, { color: currentTheme.uiColors.secondary }]}>
               {currentTitle && currentTitle.isPredetermined 
-                ? `How many items from "${currentTitle.name}" do you want?`
-                : 'How many random picks do you want?'}
+                ? `How many random slices from "${currentTitle.name}"?`
+                : 'How many random slices do you want?'}
             </Text>
             <Text allowFontScaling={false} style={[styles.popupMessage, { color: currentTheme.uiColors.secondary, fontSize: 14, textAlign: 'center', marginTop: -5, marginBottom: 15 }]}>
               (Max {getMaxItemsForCurrentWheel()} for this wheel)
@@ -1423,8 +1423,8 @@ export default function HomeScreen() {
               backgroundColor: currentTheme.uiColors.cardBackground,
             }]}>
               {currentTitle && currentTitle.isPredetermined 
-                ? `Current picks will be replaced with ${resetCount} items from "${currentTitle.name}".`
-                : `Current picks will be deleted and replaced with ${resetCount} random picks.`}
+                ? `Current wheel will be replaced with ${resetCount} slices from "${currentTitle.name}".`
+                : `Current wheel will be deleted and replaced with ${resetCount} random slices.`}
             </Text>
             
             <View style={styles.popupButtonsContainer}>

@@ -363,7 +363,7 @@ export const SaveLoadModal: React.FC<SaveLoadModalProps> = ({
         <View style={[styles.modalContainer, { backgroundColor: currentTheme.uiColors.modalBackground, width: containerWidth }]}>
           {/* Header */}
           <View style={[styles.header, { borderBottomColor: currentTheme.uiColors.secondary }]}>
-            <Text allowFontScaling={false} style={[styles.title, { color: currentTheme.uiColors.text }]}>Save & Load</Text>
+            <Text allowFontScaling={false} style={[styles.title, { color: currentTheme.uiColors.primary }]}>💾 Save & Load</Text>
           </View>
 
           {/* Content Container with proper scroll handling */}

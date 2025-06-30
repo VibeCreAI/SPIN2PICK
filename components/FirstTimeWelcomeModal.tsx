@@ -259,9 +259,9 @@ export const FirstTimeWelcomeModal: React.FC<FirstTimeWelcomeModalProps> = ({
           <View style={[styles.header, { borderBottomColor: currentTheme.uiColors.secondary }]}>
             <Text 
               allowFontScaling={false}
-              style={[styles.title, { color: currentTheme.uiColors.text }]}
+              style={[styles.title, { color: currentTheme.uiColors.primary }]}
             >
-              Welcome! Choose Your First Wheel 🎉
+              🎉 Welcome! Choose Your First Wheel
             </Text>
             <Text 
               allowFontScaling={false}

@@ -257,11 +257,8 @@ export const TitleManagementModal: React.FC<TitleManagementModalProps> = ({
           {/* Header */}
           <View style={[styles.header, { borderBottomColor: currentTheme.uiColors.secondary + '40' }]}>
             <Text style={[styles.headerTitle, { color: currentTheme.uiColors.primary }]}>
-              Choose a Wheel
+              🎯 Manage Wheels
             </Text>
-            <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-              <Text style={[styles.closeButtonText, { color: currentTheme.uiColors.primary }]}>✕</Text>
-            </TouchableOpacity>
           </View>
 
           {/* Content wrapper with flex: 1 */}
@@ -390,11 +387,14 @@ export const TitleManagementModal: React.FC<TitleManagementModalProps> = ({
           {/* Footer outside ScrollView */}
           <View style={[styles.footer, { borderTopColor: currentTheme.uiColors.secondary + '40' }]}>
             <TouchableOpacity 
-              style={[styles.closeFooterButton, { backgroundColor: currentTheme.uiColors.secondary + '40' }]}
+              style={[styles.closeFooterButton, { 
+                backgroundColor: currentTheme.uiColors.accent,
+                borderColor: currentTheme.uiColors.primary,
+              }]}
               onPress={onClose}
             >
-              <Text style={[styles.closeFooterButtonText, { color: currentTheme.uiColors.text }]}>
-                Close
+              <Text style={[styles.closeFooterButtonText, { color: currentTheme.uiColors.buttonText }]}>
+                Done ✨
               </Text>
             </TouchableOpacity>
           </View>
@@ -422,11 +422,9 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 16,
+    alignItems: 'center',
     borderBottomWidth: 1,
   },
   headerTitle: {
@@ -521,19 +519,28 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   footer: {
-    paddingHorizontal: 20,
-    paddingVertical: 16,
+    padding: 16,
+    alignItems: 'center',
     borderTopWidth: 1,
+    borderTopColor: '#00000010',
   },
   closeFooterButton: {
-    paddingVertical: 16,
-    borderRadius: 12,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 25,
+    borderWidth: 2,
+    minWidth: 120,
     alignItems: 'center',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
   },
   closeFooterButtonText: {
     fontSize: 16,
-    fontFamily: FONTS.nunito,
     fontWeight: 'bold',
+    fontFamily: FONTS.nunito,
   },
   loadingContainer: {
     flex: 1,

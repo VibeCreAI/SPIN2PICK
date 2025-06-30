@@ -1,15 +1,15 @@
 import { FONTS } from '@/app/_layout';
 import React, { useEffect, useState } from 'react';
 import {
-    Dimensions,
-    Modal,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View
+  Dimensions,
+  Modal,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import { useTheme } from '../hooks/useTheme';
 import { Activity } from '../utils/colorUtils';
@@ -705,7 +705,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   title: {
-    fontSize: 20,
+    fontSize: 24,
     fontFamily: FONTS.jua,
     fontWeight: 'bold',
     textAlign: 'center',
@@ -725,7 +725,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   tabButtonText: {
-    fontSize: 12,
+    fontSize: 14,
     fontFamily: FONTS.jua,
     fontWeight: 'bold',
     textAlign: 'center',
@@ -737,7 +737,7 @@ const styles = StyleSheet.create({
     maxHeight: Platform.OS === 'web' ? 400 : 500,
   },
   tabDescription: {
-    fontSize: 14,
+    fontSize: 16,
     fontFamily: FONTS.nunito,
     textAlign: 'center',
     marginBottom: 16,
@@ -1019,7 +1019,7 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
   },
   closeButtonText: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
     fontFamily: FONTS.jua,
   },

@@ -118,7 +118,7 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
         },
         headerTitle: {
             fontSize: 24,
-            fontFamily: FONTS.nunito,
+            fontFamily: FONTS.jua,
             fontWeight: 'bold',
             color: currentTheme.uiColors.buttonText,
             textAlign: 'center',
@@ -150,7 +150,7 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
         },
         sectionTitle: {
             fontSize: 18,
-            fontFamily: FONTS.nunito,
+            fontFamily: FONTS.jua,
             fontWeight: 'bold',
             color: currentTheme.uiColors.primary,
             marginBottom: 12,
@@ -178,7 +178,7 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
         },
         menuItemText: {
             fontSize: 16,
-            fontFamily: FONTS.nunito,
+            fontFamily: FONTS.jua,
             color: currentTheme.uiColors.text,
             flex: 1,
         },
@@ -201,7 +201,7 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
         },
         navText: {
             fontSize: 16,
-            fontFamily: FONTS.nunito,
+            fontFamily: FONTS.jua,
             color: currentTheme.uiColors.text,
         },
     });
@@ -267,7 +267,7 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
                                     onClose();
                                 }}
                             >
-                                <Text style={styles.navText}>🍕 Manage Slices</Text>
+                                <Text style={styles.navText}>📃 Manage Slices</Text>
                             </TouchableOpacity>
                         </View>
 

@@ -103,7 +103,7 @@ class ErrorBoundary extends React.Component {
 
 export default function HomeScreen() {
   const { currentTheme, setTheme, setCustomTheme, customTheme } = useTheme();
-  const [activities, setActivities] = useState<Activity[]>(DEFAULT_ACTIVITIES);
+  const [activities, setActivities] = useState<Activity[]>([]);
   const [showCelebration, setShowCelebration] = useState(false);
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
   const [previousSelectedActivity, setPreviousSelectedActivity] = useState<Activity | null>(null);
@@ -240,10 +240,16 @@ export default function HomeScreen() {
           // For first-time users, just install predetermined titles but don't load a default
           await installPredeterminedTitles();
           setShowFirstTimeWelcome(true);
+          setActivities([]); // Keep activities empty until user selects
           console.log('👋 First-time user detected, showing welcome modal');
         } else {
           // For returning users, initialize title system normally (handles legacy migration)
           await initializeTitleSystem();
+          // If no activities were loaded by title system, use default activities
+          if (activities.length === 0) {
+            const themedDefaultActivities = reassignAllColors(DEFAULT_ACTIVITIES, currentTheme.wheelColors);
+            setActivities(themedDefaultActivities);
+          }
         }
         
         // Load saved spin count
@@ -1204,19 +1210,30 @@ export default function HomeScreen() {
                               <ThemedText style={[styles.subtitle, { color: currentTheme.uiColors.secondary }]}>✨ for AI suggestions, 📃 to manage more!</ThemedText>
 
               {containerWidth > 0 ? (
-                <ErrorBoundary>
-                  <RouletteWheel
-                    activities={activities}
-                    onActivitySelect={handleActivitySelect}
-                    onActivityDelete={handleDeleteActivity}
-                    onPreviousActivityChange={handlePreviousActivityChange}
-                    parentWidth={containerWidth}
-                    selectedActivity={selectedActivity}
-                    newlyAddedActivityId={newlyAddedActivityId}
-                    onNewActivityIndicatorComplete={handleNewActivityIndicatorComplete}
-                    onReset={() => setShowResetConfirmation(true)}
-                  />
-                </ErrorBoundary>
+                isFirstTimeUser && activities.length === 0 ? (
+                  <View style={styles.firstTimeWelcomeContainer}>
+                    <ThemedText style={[styles.firstTimeWelcomeText, { color: currentTheme.uiColors.text }]}>
+                      Welcome to Spin2Pick! 🎉
+                    </ThemedText>
+                    <ThemedText style={[styles.firstTimeWelcomeSubtext, { color: currentTheme.uiColors.secondary }]}>
+                      Choose your first wheel to get started
+                    </ThemedText>
+                  </View>
+                ) : (
+                  <ErrorBoundary>
+                    <RouletteWheel
+                      activities={activities}
+                      onActivitySelect={handleActivitySelect}
+                      onActivityDelete={handleDeleteActivity}
+                      onPreviousActivityChange={handlePreviousActivityChange}
+                      parentWidth={containerWidth}
+                      selectedActivity={selectedActivity}
+                      newlyAddedActivityId={newlyAddedActivityId}
+                      onNewActivityIndicatorComplete={handleNewActivityIndicatorComplete}
+                      onReset={() => setShowResetConfirmation(true)}
+                    />
+                  </ErrorBoundary>
+                )
               ) : (
                 <ThemedText style={{textAlign: 'center', marginVertical: 20, color: currentTheme.uiColors.text}}>Loading wheel...</ThemedText>
               )}
@@ -1252,21 +1269,21 @@ export default function HomeScreen() {
               {/* NEW: Dynamic title header */}
               <View style={styles.dynamicTitleContainer}>
                 <View style={styles.titleRow}>
-                  <Text style={styles.titleEmoji}>{currentTitle?.emoji || '🎯'}</Text>
+                  <Text style={styles.titleEmoji}>{currentTitle?.emoji || (isFirstTimeUser ? '🎉' : '🎯')}</Text>
                   <ThemedText 
                     type="title" 
                     style={[
                       styles.dynamicTitle, 
                       { 
                         color: currentTheme.uiColors.primary,
-                        fontSize: getDynamicFontSize(currentTitle?.name || 'Kids Activity')
+                        fontSize: getDynamicFontSize(currentTitle?.name || (isFirstTimeUser ? 'Choose Your Wheel' : 'Kids Activity'))
                       }
                     ]}
                     numberOfLines={1}
                     adjustsFontSizeToFit={true}
                     minimumFontScale={0.7}
                   >
-                    {currentTitle?.name || 'Kids Activity'}
+                    {currentTitle?.name || (isFirstTimeUser ? 'Choose Your Wheel' : 'Kids Activity')}
                   </ThemedText>
                 </View>
                 <TouchableOpacity onPress={() => setShowTitleDescription(!showTitleDescription)}>
@@ -1700,5 +1717,23 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     width: '100%',
     marginBottom: 10,
+  },
+  firstTimeWelcomeContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 60,
+    paddingHorizontal: 40,
+  },
+  firstTimeWelcomeText: {
+    fontSize: 24,
+    fontFamily: FONTS.jua,
+    textAlign: 'center',
+    marginBottom: 12,
+  },
+  firstTimeWelcomeSubtext: {
+    fontSize: 16,
+    fontFamily: FONTS.nunito,
+    textAlign: 'center',
+    lineHeight: 22,
   },
 }); 

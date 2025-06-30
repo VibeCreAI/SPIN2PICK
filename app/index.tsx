@@ -347,12 +347,34 @@ export default function HomeScreen() {
         }
       }
       
-      // Fallback to migration or default title
+      // No current title found, try to load default "Kids Activities" or handle legacy migration
+      console.log('🔄 No current title found, loading default Kids Activities...');
       await handleLegacyMigration();
     } catch (error) {
       console.error('Error initializing title system:', error);
-      // Fallback to default activities
-      setCurrentTitle(null);
+      
+      // Try to load Kids Activities as fallback
+      try {
+        const kidsActivitiesTitle = await TitleManager.getTitle('kids-activities');
+        if (kidsActivitiesTitle) {
+          setCurrentTitle(kidsActivitiesTitle);
+          await AsyncStorage.setItem(STORAGE_KEYS.CURRENT_TITLE_ID, 'kids-activities');
+          
+          const themedActivities = reassignAllColors(kidsActivitiesTitle.items, currentTheme.wheelColors);
+          setActivities(themedActivities);
+          console.log('✅ Loaded Kids Activities as error fallback');
+        } else {
+          setCurrentTitle(null);
+          const themedDefaultActivities = reassignAllColors(DEFAULT_ACTIVITIES, currentTheme.wheelColors);
+          setActivities(themedDefaultActivities);
+          console.log('⚠️ Using legacy fallback activities');
+        }
+      } catch (fallbackError) {
+        console.error('Error loading Kids Activities fallback:', fallbackError);
+        setCurrentTitle(null);
+        const themedDefaultActivities = reassignAllColors(DEFAULT_ACTIVITIES, currentTheme.wheelColors);
+        setActivities(themedDefaultActivities);
+      }
     }
   };
 
@@ -460,18 +482,54 @@ export default function HomeScreen() {
         
         console.log('✅ Legacy data migrated to title system');
       } else {
-        // No legacy data, set default state
-        setCurrentTitle(null);
-        // Apply theme colors to default activities
-        const themedDefaultActivities = reassignAllColors(DEFAULT_ACTIVITIES, currentTheme.wheelColors);
-        setActivities(themedDefaultActivities);
+        // No legacy data, load default "Kids Activities" title
+        try {
+          const kidsActivitiesTitle = await TitleManager.getTitle('kids-activities');
+          if (kidsActivitiesTitle) {
+            setCurrentTitle(kidsActivitiesTitle);
+            await AsyncStorage.setItem(STORAGE_KEYS.CURRENT_TITLE_ID, 'kids-activities');
+            
+            // Apply theme colors to kids activities
+            const themedActivities = reassignAllColors(kidsActivitiesTitle.items, currentTheme.wheelColors);
+            setActivities(themedActivities);
+            console.log('✅ Loaded default Kids Activities title');
+          } else {
+            // Fallback to legacy default activities if Kids Activities not found
+            setCurrentTitle(null);
+            const themedDefaultActivities = reassignAllColors(DEFAULT_ACTIVITIES, currentTheme.wheelColors);
+            setActivities(themedDefaultActivities);
+            console.log('⚠️ Kids Activities not found, using legacy fallback');
+          }
+        } catch (error) {
+          console.error('Error loading Kids Activities title:', error);
+          // Fallback to legacy default activities
+          setCurrentTitle(null);
+          const themedDefaultActivities = reassignAllColors(DEFAULT_ACTIVITIES, currentTheme.wheelColors);
+          setActivities(themedDefaultActivities);
+        }
       }
     } catch (error) {
       console.error('Error during legacy migration:', error);
-      setCurrentTitle(null);
-      // Apply theme colors to default activities even in error case
-      const themedDefaultActivities = reassignAllColors(DEFAULT_ACTIVITIES, currentTheme.wheelColors);
-      setActivities(themedDefaultActivities);
+      
+      // Try to load Kids Activities as fallback
+      try {
+        const kidsActivitiesTitle = await TitleManager.getTitle('kids-activities');
+        if (kidsActivitiesTitle) {
+          setCurrentTitle(kidsActivitiesTitle);
+          const themedActivities = reassignAllColors(kidsActivitiesTitle.items, currentTheme.wheelColors);
+          setActivities(themedActivities);
+          console.log('✅ Loaded Kids Activities as error fallback');
+        } else {
+          setCurrentTitle(null);
+          const themedDefaultActivities = reassignAllColors(DEFAULT_ACTIVITIES, currentTheme.wheelColors);
+          setActivities(themedDefaultActivities);
+        }
+      } catch (fallbackError) {
+        console.error('Error loading Kids Activities fallback:', fallbackError);
+        setCurrentTitle(null);
+        const themedDefaultActivities = reassignAllColors(DEFAULT_ACTIVITIES, currentTheme.wheelColors);
+        setActivities(themedDefaultActivities);
+      }
     }
   };
 

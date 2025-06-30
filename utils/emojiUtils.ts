@@ -212,7 +212,7 @@ export const getAISuggestedActivity = async (
 /**
  * Enhanced fallback activity suggestions with matching emojis - organized by category for diversity
  */
-const FALLBACK_ACTIVITY_PAIRS = [
+export const FALLBACK_ACTIVITY_PAIRS = [
   // Creative & Arts
   { name: 'Draw Pictures', emoji: '🎨' },
   { name: 'Paint Rocks', emoji: '🖌️' },

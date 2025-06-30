@@ -1,6 +1,14 @@
 import { PASTEL_COLORS } from '../utils/colorUtils';
 import { Item, Title, TitleCategory, TitleManager } from '../utils/titleUtils';
 
+// Import the comprehensive kids activities list
+import { FALLBACK_ACTIVITY_PAIRS } from '../utils/emojiUtils';
+
+const getKidsActivities = (): { name: string; emoji: string }[] => {
+  // Use first 49 activities for optimal wheel performance and consistency
+  return FALLBACK_ACTIVITY_PAIRS.slice(0, 49);
+};
+
 // Helper function to create items with colors
 const createItems = (names: string[], startIndex: number = 0): Item[] => {
   return names.map((name, index) => ({
@@ -8,6 +16,16 @@ const createItems = (names: string[], startIndex: number = 0): Item[] => {
     name,
     color: PASTEL_COLORS[(startIndex + index) % PASTEL_COLORS.length],
     emoji: '' // Will be populated by emoji utils if needed
+  }));
+};
+
+// Helper function to create items from activity pairs (with emojis)
+const createItemsFromPairs = (pairs: { name: string; emoji: string }[], startIndex: number = 0): Item[] => {
+  return pairs.map((pair, index) => ({
+    id: `item-${startIndex + index + 1}`,
+    name: pair.name,
+    color: PASTEL_COLORS[(startIndex + index) % PASTEL_COLORS.length],
+    emoji: pair.emoji
   }));
 };
 
@@ -510,8 +528,25 @@ const choreItems = createItems([
   'Inspect Plumbing', 'Check for Leaks', 'Maintain HVAC', 'Caulk Windows', 'Touch Up Paint'
 ]);
 
-// Define the 20 predetermined titles
+// 21. 🧸 Kids Activities - comprehensive children's activity list (49 items)
+const kidsActivityItems = createItemsFromPairs(getKidsActivities());
+
+// Define the 21 predetermined titles
 export const PREDETERMINED_TITLES: Title[] = [
+  {
+    id: 'kids-activities',
+    name: 'Kids Activities',
+    emoji: '🧸',
+    description: 'Fun activities for children and families - creative, active, and imaginative play',
+    category: TitleCategory.FAMILY,
+    items: kidsActivityItems,
+    isCustom: false,
+    isPredetermined: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    isActive: true,
+    spinCount: 0
+  },
   {
     id: 'whats-for-lunch',
     name: "What's for Lunch?",

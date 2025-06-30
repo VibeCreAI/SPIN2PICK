@@ -7,6 +7,7 @@ import { AdBanner } from '@/components/AdBanner';
 import { Celebration } from '@/components/Celebration';
 import { HamburgerMenu } from '@/components/HamburgerMenu';
 import { RouletteWheel } from '@/components/RouletteWheel';
+import { FirstTimeWelcomeModal } from '@/components/FirstTimeWelcomeModal';
 import { SaveLoadModal } from '@/components/SaveLoadModal';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemeSelectionModal } from '@/components/ThemeSelectionModal';
@@ -64,6 +65,7 @@ const STORAGE_KEY = 'SPIN2PICK_ACTIVITIES';
 const SPIN_COUNT_KEY = 'SPIN2PICK_SPIN_COUNT';
 const DECLINED_SUGGESTIONS_KEY = 'SPIN2PICK_DECLINED_SUGGESTIONS';
 const SETTINGS_KEY = 'SPIN2PICK_SETTINGS';
+const FIRST_TIME_USER_KEY = 'SPIN2PICK_FIRST_TIME_COMPLETED';
 
 // App settings interface
 interface AppSettings {
@@ -149,6 +151,10 @@ export default function HomeScreen() {
   // New state for recently used titles
   const [recentlyUsedTitles, setRecentlyUsedTitles] = useState<Title[]>([]);
 
+  // New state for first-time user welcome modal
+  const [showFirstTimeWelcome, setShowFirstTimeWelcome] = useState(false);
+  const [isFirstTimeUser, setIsFirstTimeUser] = useState(false);
+
   // New state for activity management modal
   const [showActivityManagementModal, setShowActivityManagementModal] = useState(false);
   
@@ -226,8 +232,19 @@ export default function HomeScreen() {
           initializeInterstitialAd();
         }
         
-        // Initialize title system (handles legacy migration)
-        await initializeTitleSystem();
+        // Check if this is a first-time user first
+        const isFirstTime = await checkFirstTimeUser();
+        setIsFirstTimeUser(isFirstTime);
+        
+        if (isFirstTime) {
+          // For first-time users, just install predetermined titles but don't load a default
+          await installPredeterminedTitles();
+          setShowFirstTimeWelcome(true);
+          console.log('👋 First-time user detected, showing welcome modal');
+        } else {
+          // For returning users, initialize title system normally (handles legacy migration)
+          await initializeTitleSystem();
+        }
         
         // Load saved spin count
         const savedSpinCount = await AsyncStorage.getItem(SPIN_COUNT_KEY);
@@ -831,6 +848,65 @@ export default function HomeScreen() {
     setShowSaveLoadModal(false);
   };
 
+  // First-time user handlers
+  const checkFirstTimeUser = async (): Promise<boolean> => {
+    try {
+      const hasCompletedFirstTime = await AsyncStorage.getItem(FIRST_TIME_USER_KEY);
+      const hasCurrentTitle = await AsyncStorage.getItem(STORAGE_KEYS.CURRENT_TITLE_ID);
+      const hasLegacyData = await AsyncStorage.getItem(STORAGE_KEY);
+      
+      // User is first-time if they haven't completed onboarding AND don't have existing data
+      return !hasCompletedFirstTime && !hasCurrentTitle && !hasLegacyData;
+    } catch (error) {
+      console.error('Error checking first-time user status:', error);
+      return false;
+    }
+  };
+
+  const handleFirstTimeWelcomeClose = () => {
+    setShowFirstTimeWelcome(false);
+  };
+
+  const handleFirstTimeTitleSelect = async (title: Title) => {
+    try {
+      // Set the selected title as current
+      setCurrentTitle(title);
+      await AsyncStorage.setItem(STORAGE_KEYS.CURRENT_TITLE_ID, title.id);
+      
+      // Apply optimal count and theme colors to the selected title
+      const optimalCount = getOptimalCountForCategory(title.category);
+      const itemsToUse = title.items.slice(0, Math.min(optimalCount, title.items.length));
+      
+      const activitiesWithEmojis = await Promise.all(itemsToUse.map(async (item, index) => ({
+        id: (index + 1).toString(),
+        name: item.name,
+        color: currentTheme.wheelColors[index % currentTheme.wheelColors.length],
+        emoji: item.emoji || await getEmoji(item.name)
+      })));
+      
+      setActivities(activitiesWithEmojis);
+      
+      // Mark first-time experience as completed
+      await AsyncStorage.setItem(FIRST_TIME_USER_KEY, 'true');
+      setIsFirstTimeUser(false);
+      setShowFirstTimeWelcome(false);
+      
+      console.log(`✅ First-time user selected: ${title.name}`);
+    } catch (error) {
+      console.error('Error handling first-time title selection:', error);
+      
+      // Fallback to Kids Activities on error
+      const kidsActivitiesTitle = await TitleManager.getTitle('kids-activities');
+      if (kidsActivitiesTitle) {
+        setCurrentTitle(kidsActivitiesTitle);
+        const themedActivities = reassignAllColors(kidsActivitiesTitle.items, currentTheme.wheelColors);
+        setActivities(themedActivities);
+      }
+      
+      setShowFirstTimeWelcome(false);
+    }
+  };
+
   // Helper function to get current custom theme data for saving
   const getCurrentCustomThemeData = async (): Promise<CustomThemeData | undefined> => {
     if (currentTheme.id === 'custom') {
@@ -1393,6 +1469,13 @@ export default function HomeScreen() {
         onClose={handleCloseTitleManagement}
         onSelectTitle={handleSelectTitle}
         currentTitle={currentTitle}
+      />
+
+      {/* First Time Welcome Modal */}
+      <FirstTimeWelcomeModal
+        visible={showFirstTimeWelcome}
+        onClose={handleFirstTimeWelcomeClose}
+        onSelectTitle={handleFirstTimeTitleSelect}
       />
     </SafeAreaView>
   );

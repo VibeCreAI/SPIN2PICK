@@ -2,21 +2,21 @@ import { FONTS } from '@/app/_layout';
 import Constants from 'expo-constants';
 import React, { useEffect, useState } from 'react';
 import {
-    ActivityIndicator,
-    Alert,
-    Dimensions,
-    Modal,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View
+  ActivityIndicator,
+  Alert,
+  Dimensions,
+  Modal,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useTheme } from '../hooks/useTheme';
-import { CustomThemeData, DEFAULT_CUSTOM_COLORS, generateRandomColors, generateRandomBackgroundColor, getStyleBackground } from '../utils/colorUtils';
+import { CustomThemeData, DEFAULT_CUSTOM_COLORS, generateRandomBackgroundColor, generateRandomColors, getStyleBackground } from '../utils/colorUtils';
 import ColorPicker from './ColorPicker';
 
 /**
@@ -118,20 +118,13 @@ export const CustomThemeModal: React.FC<CustomThemeModalProps> = ({
   // 🌐 Improved responsive modal dimensions with increased vertical space
   const getModalDimensions = () => {
     if (Platform.OS === 'web') {
-      if (screenWidth <= 400) {
-        return { width: '100vw' as any, height: '100vh' as any, borderRadius: 0 };
-      } else if (screenWidth <= 480) {
-        return { width: '98vw' as any, height: '98vh' as any, maxWidth: 480, borderRadius: 8 };
-      } else if (screenWidth <= 768) {
-        return { width: '90vw' as any, height: '92vh' as any, maxWidth: 600, borderRadius: 12 };
-      } else {
-        return { width: 500, height: '88vh' as any, borderRadius: 16 };
-      }
+      // Simplified web dimensions - consistent behavior like mobile
+      return { width: 500, height: '85vh' as any, maxWidth: '95vw' as any, borderRadius: 16 };
     } else {
-      // Mobile responsive with increased height
+      // Mobile responsive with better bottom spacing
       return screenWidth < 500 
-        ? { width: '98%', height: '98%', minHeight: Math.min(screenHeight * 0.85, 700), borderRadius: 12 }
-        : { width: 500, height: '95%', minHeight: 700, borderRadius: 16 };
+        ? { width: '95%', height: '95%', maxHeight: screenHeight - 60, minHeight: Math.min(screenHeight * 0.9, 650), borderRadius: 12 }
+        : { width: 500, height: '95%', maxHeight: screenHeight - 60, minHeight: 750, borderRadius: 16 };
     }
   };
 
@@ -1074,15 +1067,17 @@ const styles = StyleSheet.create({
   footer: {
     flexDirection: 'row',
     padding: 16,
+    paddingBottom: 24, // Extra bottom padding for all platforms
     gap: 12,
     borderTopWidth: 1,
     borderTopColor: '#00000010',
   },
   footerButton: {
     flex: 1,
-    paddingVertical: 12,
+    paddingVertical: Platform.OS === 'web' ? 12 : 16, // Larger touch target on mobile platforms
     borderRadius: 8,
     alignItems: 'center',
+    minHeight: 44, // Recommended minimum touch target for all platforms
   },
   footerButtonText: {
     fontSize: 16,

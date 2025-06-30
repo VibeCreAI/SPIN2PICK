@@ -9,6 +9,7 @@ export interface SaveSlot {
   id: string;
   name: string;
   title: string;
+  titleEmoji?: string; // Add title emoji support
   activities: Activity[];
   createdAt: Date;
   // Theme information
@@ -27,7 +28,8 @@ interface SaveLoadModalProps {
   onClose: () => void;
   currentActivities: Activity[];
   currentTitle: string;
-  onLoadActivities: (activities: Activity[], title: string, themeInfo?: ThemeInfo) => void;
+  currentTitleEmoji?: string;
+  onLoadActivities: (activities: Activity[], title: string, titleEmoji?: string, themeInfo?: ThemeInfo) => void;
   currentThemeId: string;
   getCurrentCustomThemeData: () => Promise<CustomThemeData | undefined>;
 }
@@ -41,6 +43,7 @@ export const SaveLoadModal: React.FC<SaveLoadModalProps> = ({
   onClose,
   currentActivities,
   currentTitle,
+  currentTitleEmoji,
   onLoadActivities,
   currentThemeId,
   getCurrentCustomThemeData,
@@ -142,6 +145,7 @@ export const SaveLoadModal: React.FC<SaveLoadModalProps> = ({
         id: Date.now().toString(),
         name: saveName.trim(),
         title: currentTitle,
+        titleEmoji: currentTitleEmoji,
         activities: currentActivities,
         createdAt: new Date(),
         themeId: currentThemeId,
@@ -180,7 +184,7 @@ export const SaveLoadModal: React.FC<SaveLoadModalProps> = ({
           customTheme: slot.customTheme
         } : undefined;
         
-        onLoadActivities(slot.activities, slot.title, themeInfo);
+        onLoadActivities(slot.activities, slot.title, slot.titleEmoji, themeInfo);
         setConfirmationModal({ visible: false, title: '', message: '', onConfirm: () => {} });
         onClose();
       },

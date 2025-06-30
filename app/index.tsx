@@ -715,7 +715,7 @@ export default function HomeScreen() {
     setNewlyAddedActivityId(null);
   }, []);
 
-  const handleLoadActivities = async (loadedActivities: Activity[], title: string, themeInfo?: { themeId: string; customTheme?: any }) => {
+  const handleLoadActivities = async (loadedActivities: Activity[], title: string, titleEmoji?: string, themeInfo?: { themeId: string; customTheme?: any }) => {
     // Handle theme restoration if theme info is provided
     if (themeInfo) {
       try {
@@ -745,7 +745,27 @@ export default function HomeScreen() {
     }
     
     if (currentTitle && title) {
-      setCurrentTitle({ ...currentTitle, name: title });
+      setCurrentTitle({ 
+        ...currentTitle, 
+        name: title,
+        emoji: titleEmoji || currentTitle.emoji // Use saved emoji or fallback to current
+      });
+    } else if (title) {
+      // If no current title but we have title data, create a basic title object
+      setCurrentTitle({
+        id: 'loaded-title',
+        name: title,
+        emoji: titleEmoji || '🎯', // Use saved emoji or default
+        description: 'Loaded from save slot',
+        category: 'custom',
+        items: loadedActivities,
+        isCustom: true,
+        isPredetermined: false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        isActive: true,
+        spinCount: 0
+      });
     }
   };
 
@@ -1287,6 +1307,7 @@ export default function HomeScreen() {
         onClose={handleCloseSaveLoad}
         currentActivities={activities}
         currentTitle={currentTitle?.name || ''}
+        currentTitleEmoji={currentTitle?.emoji}
         onLoadActivities={handleLoadActivities}
         currentThemeId={currentTheme.id}
         getCurrentCustomThemeData={getCurrentCustomThemeData}

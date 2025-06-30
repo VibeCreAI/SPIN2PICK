@@ -3,16 +3,16 @@ import { Title } from '@/utils/titleUtils';
 import { BlurView } from 'expo-blur';
 import React, { useEffect, useRef } from 'react';
 import {
-  Animated,
-  Dimensions,
-  Modal,
-  Platform,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View
+    Animated,
+    Dimensions,
+    Modal,
+    Platform,
+    ScrollView,
+    StatusBar,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
 } from 'react-native';
 import { useTheme } from '../hooks/useTheme';
 
@@ -290,7 +290,7 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
                                     onClose();
                                 }}
                             >
-                                <Text style={styles.navText}>💾 Save/Load Lists</Text>
+                                <Text style={styles.navText}>💾 Save/Load</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
                                 style={styles.navItem}

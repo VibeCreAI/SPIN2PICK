@@ -757,7 +757,7 @@ export default function HomeScreen() {
         name: title,
         emoji: titleEmoji || '🎯', // Use saved emoji or default
         description: 'Loaded from save slot',
-        category: 'custom',
+        category: TitleCategory.CUSTOM,
         items: loadedActivities,
         isCustom: true,
         isPredetermined: false,

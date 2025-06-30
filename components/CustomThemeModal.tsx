@@ -47,9 +47,9 @@ export const CustomThemeModal: React.FC<CustomThemeModalProps> = ({
 }) => {
   const { currentTheme, setCustomTheme } = useTheme();
   
-  // Initialize with current custom theme if active, otherwise use defaults
+  // Initialize with current theme colors (custom or built-in) as starting point
   const getInitialColors = () => {
-    if (currentTheme.id === 'custom' && currentTheme.wheelColors) {
+    if (currentTheme.wheelColors && currentTheme.wheelColors.length > 0) {
       return [...currentTheme.wheelColors];
     }
     return [...DEFAULT_CUSTOM_COLORS];
@@ -59,6 +59,10 @@ export const CustomThemeModal: React.FC<CustomThemeModalProps> = ({
     if (currentTheme.id === 'custom' && currentTheme.displayName) {
       return currentTheme.displayName;
     }
+    // Start with current theme name if it's a built-in theme
+    if (currentTheme.displayName && currentTheme.id !== 'custom') {
+      return `Custom ${currentTheme.displayName}`;
+    }
     return 'My Custom Theme';
   };
   
@@ -67,15 +71,15 @@ export const CustomThemeModal: React.FC<CustomThemeModalProps> = ({
   const [selectedColorIndex, setSelectedColorIndex] = useState(0);
   const [colorInput, setColorInput] = useState(getInitialColors()[0] || '#FF6B6B');
   
-  // Background color state management
+  // Background color state management - start with current theme's background
   const [backgroundColor, setBackgroundColor] = useState<string>(() => {
-    if (currentTheme.id === 'custom' && currentTheme.backgroundColor) {
+    if (currentTheme.backgroundColor) {
       return currentTheme.backgroundColor;
     }
     return '#f8f9fa'; // Default light background
   });
   const [backgroundColorInput, setBackgroundColorInput] = useState<string>(() => {
-    if (currentTheme.id === 'custom' && currentTheme.backgroundColor) {
+    if (currentTheme.backgroundColor) {
       return currentTheme.backgroundColor;
     }
     return '#f8f9fa';
@@ -87,9 +91,7 @@ export const CustomThemeModal: React.FC<CustomThemeModalProps> = ({
     if (visible) {
       const initialColors = getInitialColors();
       const initialName = getInitialThemeName();
-      const initialBackground = (currentTheme.id === 'custom' && currentTheme.backgroundColor) 
-        ? currentTheme.backgroundColor 
-        : '#f8f9fa';
+      const initialBackground = currentTheme.backgroundColor || '#f8f9fa';
       
       setColors(initialColors);
       setThemeName(initialName);

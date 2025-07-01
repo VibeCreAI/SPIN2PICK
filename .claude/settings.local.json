@@ -15,7 +15,9 @@
       "Bash(npx tsc:*)",
       "Bash(grep:*)",
       "Bash(true)",
-      "Bash(rg:*)"
+      "Bash(rg:*)",
+      "Bash(node:*)",
+      "Bash(npm --version)"
     ],
     "deny": []
   }

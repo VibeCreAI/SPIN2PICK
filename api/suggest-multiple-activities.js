@@ -1,4 +1,4 @@
-// Vercel serverless function for bulk AI activity suggestions
+// Vercel serverless function for bulk AI option suggestions
 export default async function handler(req, res) {
   // 🌐 CORS headers for cross-origin requests (development)
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -26,13 +26,13 @@ export default async function handler(req, res) {
     declinedSuggestions = [], 
     count = 5, 
     category,
-    titleName = 'Kids Activity',
+    titleName = 'Kids Options',
     titleCategory = 'family',
-    titleDescription = 'Random activities'
+    titleDescription = 'Random options'
   } = req.body;
 
   if (!Array.isArray(existingActivities)) {
-    return res.status(400).json({ error: 'Existing activities must be an array' });
+    return res.status(400).json({ error: 'Existing options must be an array' });
   }
 
   if (!Array.isArray(declinedSuggestions)) {
@@ -44,9 +44,9 @@ export default async function handler(req, res) {
   }
 
   try {
-    const activitiesList = existingActivities.length > 0 
+    const optionsList = existingActivities.length > 0 
       ? existingActivities.join(', ') 
-      : 'No activities yet';
+      : 'No options yet';
 
     const declinedList = declinedSuggestions.length > 0 
       ? declinedSuggestions.join(', ') 
@@ -64,13 +64,13 @@ GUIDELINES:
 - Range from simple to elaborate options
 - Examples: "Thai Green Curry", "Grilled Sandwich", "Smoothie Bowl", "Fish Tacos"`,
 
-        games: `You are a game expert suggesting fun activities and games. Focus on party games, sports, challenges, and entertainment.
+        games: `You are a game expert suggesting fun options and games. Focus on party games, sports, challenges, and entertainment.
         
 GUIDELINES:
 - Suggest engaging games for various group sizes and ages
 - Include party games, sports, puzzles, challenges, and competitions
 - Consider indoor/outdoor options and required materials
-- Range from quick games to longer activities
+- Range from quick games to longer options
 - Examples: "Scavenger Hunt", "Word Association", "Frisbee", "Card Games"`,
 
         numbers: `You are providing random numbers for various purposes. Focus on numerical selections for games, decisions, or randomization.
@@ -91,31 +91,31 @@ GUIDELINES:
 - Range from mainstream to niche discoveries
 - Examples: "Action Movie", "Jazz Music", "Mystery Novel", "Documentary"`,
 
-        education: `You are an educational expert suggesting learning topics and activities. Focus on knowledge, skills, and personal development.
+        education: `You are an educational expert suggesting learning topics and options. Focus on knowledge, skills, and personal development.
         
 GUIDELINES:
-- Suggest educational topics and learning activities
+- Suggest educational topics and learning options
 - Include academic subjects, practical skills, and creative pursuits
 - Consider different learning styles and difficulty levels
 - Range from basic to advanced topics
 - Examples: "Spanish Language", "Photography", "Critical Thinking", "Science Experiment"`,
 
-        workplace: `You are a workplace wellness expert suggesting professional break activities. Focus on office-appropriate stress relief and productivity.
+        workplace: `You are a workplace wellness expert suggesting professional break options. Focus on office-appropriate stress relief and productivity.
         
 GUIDELINES:
-- Suggest professional, office-appropriate activities
+- Suggest professional, office-appropriate options
 - Include stress relief, networking, and skill development options
 - Consider different time constraints (5-30 minutes)
-- Focus on activities that refresh and energize
+- Focus on options that refresh and energize
 - Examples: "Quick Walk", "Desk Yoga", "Team Coffee", "Brain Games"`,
 
-        family: `You are a family activity expert suggesting engaging activities for all ages. Focus on bonding, fun, and shared experiences.
+        family: `You are a family option expert suggesting engaging options for all ages. Focus on bonding, fun, and shared experiences.
         
 GUIDELINES:
-- Suggest activities suitable for families and groups
+- Suggest options suitable for families and groups
 - Include indoor/outdoor options and various skill levels
 - Consider bonding, learning, and entertainment value
-- Range from quiet to active activities
+- Range from quiet to active options
 - Examples: "Board Game Night", "Nature Walk", "Cooking Together", "Craft Project"`,
 
         custom: `You are a versatile suggestion expert. Based on the title "${titleName}" and description "${description}", provide relevant suggestions.
@@ -145,7 +145,7 @@ OUTPUT FORMAT:
 
     const systemPrompt = generateSystemPrompt(titleCategory, titleName, titleDescription);
 
-    const userPrompt = `Current items: ${activitiesList}
+    const userPrompt = `Current items: ${optionsList}
 Previously declined suggestions: ${declinedList}
 
 Generate ${count} appropriate items that:
@@ -201,32 +201,32 @@ Return exactly ${count} items in this format:
 
     const data = await response.json();
     
-    // Parse the response to extract activity names
-    let activities = [];
+    // Parse the response to extract option names
+    let options = [];
     if (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) {
       const content = data.choices[0].message.content.trim();
       
-      // Extract activities from numbered list format
+      // Extract options from numbered list format
       const lines = content.split('\n');
-      activities = lines
+      options = lines
         .map(line => line.trim())
         .filter(line => /^\d+\./.test(line)) // Only lines that start with number and dot
         .map(line => line.replace(/^\d+\.\s*/, '').trim()) // Remove number and dot
-        .filter(activity => activity.length > 0 && activity.length <= 50) // Valid length
+        .filter(option => option.length > 0 && option.length <= 50) // Valid length
         .slice(0, count); // Ensure we don't exceed requested count
     }
 
     // Fallback if parsing fails - return the raw response
-    if (activities.length === 0) {
-      activities = [data.choices?.[0]?.message?.content?.trim() || 'Play Games'];
+    if (options.length === 0) {
+      options = [data.choices?.[0]?.message?.content?.trim() || 'Choose Option'];
     }
 
-    // Return the processed activities
+    // Return the processed options
     res.status(200).json({
       ...data,
-      extractedActivities: activities,
+      extractedOptions: options,
       requestedCount: count,
-      actualCount: activities.length
+      actualCount: options.length
     });
     
   } catch (error) {

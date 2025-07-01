@@ -1,4 +1,4 @@
-// Vercel serverless function for AI activity suggestions
+// Vercel serverless function for AI option suggestions
 export default async function handler(req, res) {
   // 🌐 CORS headers for cross-origin requests (development)
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -24,14 +24,14 @@ export default async function handler(req, res) {
   const { 
     existingActivities, 
     declinedSuggestions = [], 
-    titleName = 'Kids Activity',
+    titleName = 'Kids Options',
     titleCategory = 'family',
-    titleDescription = 'Random activities',
+    titleDescription = 'Random options',
     isRetry = false
   } = req.body;
 
   if (!Array.isArray(existingActivities)) {
-    return res.status(400).json({ error: 'Existing activities must be an array' });
+    return res.status(400).json({ error: 'Existing options must be an array' });
   }
 
   if (!Array.isArray(declinedSuggestions)) {
@@ -39,130 +39,311 @@ export default async function handler(req, res) {
   }
 
   try {
-    const activitiesList = existingActivities.length > 0 
+    const optionsList = existingActivities.length > 0 
       ? existingActivities.join(', ') 
-      : 'No activities yet';
+      : 'No options yet';
 
     const declinedList = declinedSuggestions.length > 0 
       ? declinedSuggestions.join(', ') 
       : 'None declined yet';
 
-    // Generate context-aware prompt based on title category
-    const generateSystemPrompt = (category, titleName, description) => {
+    // Enhanced context analysis and pattern detection
+    const analyzeExistingOptions = (options) => {
+      if (!options || options.length === 0) {
+        return {
+          isEmpty: true,
+          patterns: [],
+          avgLength: 0,
+          complexity: 'unknown',
+          themes: [],
+          demographics: 'general'
+        };
+      }
+
+      const patterns = {
+        avgLength: options.reduce((sum, opt) => sum + opt.length, 0) / options.length,
+        hasNumbers: options.some(opt => /\d/.test(opt)),
+        hasEmojis: options.some(opt => /[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{1F700}-\u{1F77F}]|[\u{1F780}-\u{1F7FF}]|[\u{1F800}-\u{1F8FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/u.test(opt)),
+        complexity: options.length > 5 ? 'detailed' : options.length > 2 ? 'moderate' : 'simple',
+        commonWords: options.join(' ').toLowerCase().split(' ').reduce((acc, word) => {
+          if (word.length > 3) acc[word] = (acc[word] || 0) + 1;
+          return acc;
+        }, {}),
+        optionTypes: {
+          physical: options.some(opt => /run|jump|play|sport|exercise|walk|dance|swim/i.test(opt)),
+          creative: options.some(opt => /draw|paint|craft|art|music|sing|create|build/i.test(opt)),
+          social: options.some(opt => /together|friend|family|group|party|chat|talk/i.test(opt)),
+          indoor: options.some(opt => /indoor|home|inside|room|kitchen|living/i.test(opt)),
+          outdoor: options.some(opt => /outdoor|outside|park|garden|nature|beach|hiking/i.test(opt)),
+          educational: options.some(opt => /learn|study|read|book|school|teach|practice/i.test(opt))
+        }
+      };
+
+      return {
+        isEmpty: false,
+        patterns,
+        avgLength: patterns.avgLength,
+        complexity: patterns.complexity,
+        themes: Object.entries(patterns.optionTypes).filter(([_, value]) => value).map(([key, _]) => key),
+        demographics: patterns.optionTypes.family ? 'family' : patterns.optionTypes.educational ? 'educational' : 'general'
+      };
+    };
+
+    // Enhanced context-aware prompt generation
+    const generateSystemPrompt = (category, titleName, description, optionAnalysis) => {
+      const baseInstructions = `You are an expert option suggestion assistant. Your goal is to provide contextually relevant, diverse, and engaging suggestions.`;
+
       const categoryPrompts = {
-        food: `You are a culinary expert suggesting delicious food options. Focus on meals, snacks, cuisines, and food experiences.
+        food: `${baseInstructions} Focus on culinary experiences ranging from simple snacks to elaborate meals.
         
-GUIDELINES:
-- Suggest appetizing food options from different cuisines and meal types
-- Include quick snacks, full meals, beverages, and desserts
-- Consider dietary preferences, cooking methods, and occasions
-- Range from simple to elaborate options
-- Examples: "Thai Green Curry", "Grilled Sandwich", "Smoothie Bowl", "Fish Tacos"`,
+EXPERTISE AREAS:
+- International cuisines and regional specialties
+- Dietary accommodations (vegetarian, gluten-free, quick prep)
+- Occasion-based suggestions (breakfast, lunch, dinner, snacks, desserts)
+- Cooking methods and complexity levels
+- Seasonal and fresh ingredient focus
 
-        games: `You are a game expert suggesting fun activities and games. Focus on party games, sports, challenges, and entertainment.
-        
-GUIDELINES:
-- Suggest engaging games for various group sizes and ages
-- Include party games, sports, puzzles, challenges, and competitions
-- Consider indoor/outdoor options and required materials
-- Range from quick games to longer activities
-- Examples: "Scavenger Hunt", "Word Association", "Frisbee", "Card Games"`,
+QUALITY STANDARDS:
+- Prioritize accessible, recognizable food options
+- Balance familiar favorites with discovery opportunities  
+- Consider preparation time and skill requirements
+- Include both homemade and dining options`,
 
-        numbers: `You are providing random numbers for various purposes. Focus on numerical selections for games, decisions, or randomization.
+        games: `${baseInstructions} Focus on entertainment, games, and recreational options for various settings and group sizes.
         
-GUIDELINES:
-- Suggest numbers appropriate for the context
-- Consider ranges, sequences, and special number formats
-- Include lottery numbers, game numbers, or decision numbers
-- Keep numbers practical and useful
-- Examples: "42", "7", "100", "Lucky Number 13"`,
+EXPERTISE AREAS:
+- Party games and social options
+- Sports and physical games (indoor/outdoor)
+- Board games, card games, and puzzles
+- Digital and traditional games
+- Team building and group options
+- Solo entertainment options
 
-        entertainment: `You are an entertainment expert suggesting movies, books, music, and media. Focus on discovery and enjoyment.
-        
-GUIDELINES:
-- Suggest diverse entertainment options across genres and formats
-- Include classic and modern options
-- Consider different moods, occasions, and preferences
-- Range from mainstream to niche discoveries
-- Examples: "Action Movie", "Jazz Music", "Mystery Novel", "Documentary"`,
+QUALITY STANDARDS:
+- Consider required materials and setup complexity
+- Balance active and passive options
+- Include options for different skill levels and ages
+- Suggest both competitive and cooperative formats`,
 
-        education: `You are an educational expert suggesting learning topics and activities. Focus on knowledge, skills, and personal development.
+        numbers: `${baseInstructions} Focus on numerical selections for games, decisions, randomization, and mathematical contexts.
         
-GUIDELINES:
-- Suggest educational topics and learning activities
-- Include academic subjects, practical skills, and creative pursuits
-- Consider different learning styles and difficulty levels
-- Range from basic to advanced topics
-- Examples: "Spanish Language", "Photography", "Critical Thinking", "Science Experiment"`,
+EXPERTISE AREAS:
+- Gaming numbers (dice, lottery, bingo)
+- Decision-making aids (rankings, quantities)
+- Mathematical sequences and patterns
+- Lucky numbers and cultural significance
+- Practical number applications
 
-        workplace: `You are a workplace wellness expert suggesting professional break activities. Focus on office-appropriate stress relief and productivity.
-        
-GUIDELINES:
-- Suggest professional, office-appropriate activities
-- Include stress relief, networking, and skill development options
-- Consider different time constraints (5-30 minutes)
-- Focus on activities that refresh and energize
-- Examples: "Quick Walk", "Desk Yoga", "Team Coffee", "Brain Games"`,
+QUALITY STANDARDS:
+- Provide numbers appropriate for the stated context
+- Consider cultural and psychological number preferences
+- Include both simple and complex numerical formats
+- Balance randomness with meaningful selections`,
 
-        family: `You are a family activity expert suggesting engaging activities for all ages. Focus on bonding, fun, and shared experiences.
+        entertainment: `${baseInstructions} Focus on media consumption, cultural experiences, and leisure activities.
         
-GUIDELINES:
-- Suggest activities suitable for families and groups
-- Include indoor/outdoor options and various skill levels
-- Consider bonding, learning, and entertainment value
-- Range from quiet to active activities
-- Examples: "Board Game Night", "Nature Walk", "Cooking Together", "Craft Project"`,
+EXPERTISE AREAS:
+- Movies, TV shows, documentaries across genres
+- Music discovery (artists, genres, playlists)
+- Books, podcasts, and digital content
+- Live entertainment and cultural events
+- Streaming platforms and content curation
 
-        custom: `You are a versatile suggestion expert. Based on the title "${titleName}" and description "${description}", provide relevant suggestions.
+QUALITY STANDARDS:
+- Balance mainstream and niche recommendations
+- Consider different moods and occasions
+- Include both active and passive entertainment
+- Suggest discovery opportunities alongside familiar options`,
+
+        education: `${baseInstructions} Focus on learning opportunities, skill development, and intellectual growth.
         
-GUIDELINES:
-- Analyze the title and description to understand the context
-- Suggest items that fit the specific theme or purpose
-- Be creative but practical within the given context
-- Consider the variety and usefulness of suggestions
-- Examples will vary based on the specific title context`
+EXPERTISE AREAS:
+- Academic subjects and curricula
+- Practical life skills and hobbies
+- Professional development and certifications
+- Creative and artistic learning
+- Technology and digital literacy
+- Language learning and cultural studies
+
+QUALITY STANDARDS:
+- Provide clear learning objectives and outcomes
+- Consider different learning styles and preferences
+- Balance theoretical knowledge with practical application
+- Include both structured and self-directed learning options`,
+
+        workplace: `${baseInstructions} Focus on professional development, workplace wellness, and productivity enhancement.
+        
+EXPERTISE AREAS:
+- Stress relief and mental health breaks
+- Team building and networking activities
+- Skill development and career growth
+- Office-appropriate physical activities
+- Professional social interactions
+- Quick productivity boosters
+
+QUALITY STANDARDS:
+- Ensure all suggestions are workplace-appropriate
+- Consider time constraints (5-30 minute activities)
+- Balance individual and group activities
+- Focus on activities that refresh and energize`,
+
+        family: `${baseInstructions} Focus on multi-generational activities that promote bonding, fun, and shared experiences.
+        
+EXPERTISE AREAS:
+- Age-inclusive activities for diverse family groups
+- Educational and entertaining combinations
+- Indoor and outdoor family adventures
+- Creative projects and collaborative activities
+- Seasonal and holiday-themed suggestions
+- Budget-friendly and accessible options
+
+QUALITY STANDARDS:
+- Ensure activities work for different age groups
+- Balance active and quiet activities
+- Consider varying attention spans and interests
+- Promote positive family interactions and memories`,
+
+        custom: `${baseInstructions} Based on the specific context "${titleName}" and description "${description}", provide highly relevant suggestions.
+        
+ANALYSIS APPROACH:
+1. Parse the title for key themes, demographics, and intent
+2. Extract context clues from the description
+3. Infer appropriate activity types and complexity levels
+4. Consider the specific use case and target audience
+
+QUALITY STANDARDS:
+- Maintain strict relevance to the stated theme
+- Demonstrate understanding of the specific context
+- Provide creative yet practical suggestions
+- Ensure suggestions align with the intended purpose`
       };
 
       const basePrompt = categoryPrompts[category] || categoryPrompts.custom;
       
+      // Add pattern analysis insights
+      let patternInsights = '';
+      if (!optionAnalysis.isEmpty) {
+        const themes = optionAnalysis.themes.join(', ');
+        patternInsights = `
+EXISTING OPTION ANALYSIS:
+- Current collection has ${optionAnalysis.patterns ? Object.keys(optionAnalysis.patterns.commonWords || {}).length : 0} options
+- Average length: ${Math.round(optionAnalysis.avgLength || 0)} characters
+- Complexity level: ${optionAnalysis.complexity}
+- Detected themes: ${themes || 'general'}
+- Pattern consistency: Match the established style and complexity level`;
+      } else {
+        patternInsights = `
+EMPTY WHEEL CONTEXT:
+- This is a fresh start - no existing options to reference
+- Use title and description to infer appropriate suggestions
+- Establish a consistent style and theme for future additions
+- Consider the target demographic and intended use case`;
+      }
+
       return `${basePrompt}
 
 CONTEXT: "${titleName}" - ${description}
+${patternInsights}
+
+SUGGESTION STRATEGY:
+1. ANALYZE: Study the existing patterns and context thoroughly
+2. DIFFERENTIATE: Ensure complete uniqueness from existing and declined items
+3. CONTEXTUALIZE: Match the established theme and style perfectly
+4. VALIDATE: Confirm relevance, appropriateness, and practical value
 
 OUTPUT FORMAT:
 - Return ONLY the suggestion (1-4 words maximum)
-- Keep it under 25 characters
-- Make it clear and actionable
-- NO explanations, quotes, or extra text
-- Match the style and theme of existing items`;
+- Keep it under 25 characters total
+- Make it clear, actionable, and memorable
+- NO explanations, quotes, or extra formatting
+- Match the style and complexity of existing items`;
     };
 
-    const systemPrompt = generateSystemPrompt(titleCategory, titleName, titleDescription);
+    // Analyze existing options for pattern recognition
+    const optionAnalysis = analyzeExistingOptions(existingActivities);
+    const systemPrompt = generateSystemPrompt(titleCategory, titleName, titleDescription, optionAnalysis);
 
-    const basePrompt = `Current items: ${activitiesList}
-Previously declined suggestions: ${declinedList}
+    // Enhanced semantic similarity checking for declined suggestions
+    const createSemanticExclusions = (declinedList) => {
+      if (declinedList.length === 0) return 'None declined yet';
+      
+      const exclusions = declinedSuggestions.map(item => {
+        const variations = [];
+        const words = item.toLowerCase().split(' ');
+        
+        // Add common variations and synonyms
+        words.forEach(word => {
+          const synonyms = {
+            'soccer': ['football', 'kick ball'],
+            'football': ['soccer', 'american football'],
+            'movie': ['film', 'cinema', 'video'],
+            'read': ['reading', 'book'],
+            'cook': ['cooking', 'chef', 'kitchen'],
+            'game': ['games', 'gaming', 'play'],
+            'music': ['song', 'singing', 'audio'],
+            'walk': ['walking', 'stroll', 'hike'],
+            'draw': ['drawing', 'sketch', 'art']
+          };
+          
+          if (synonyms[word]) {
+            variations.push(...synonyms[word]);
+          }
+        });
+        
+        return variations.length > 0 ? `${item} (avoid variations: ${variations.join(', ')})` : item;
+      });
+      
+      return exclusions.join('; ');
+    };
 
-Suggest ONE appropriate item that:
-1. Is different from ALL existing items
-2. Is NOT any of the previously declined suggestions  
-3. Fits perfectly with the theme "${titleName}"
-4. Matches the context: ${titleDescription}
-5. Is practical and easily understood
+    const enhancedDeclinedList = createSemanticExclusions(declinedSuggestions);
 
-Analyze the existing items to understand the pattern and suggest something that fits the same style and category. Provide variety - if existing items follow a certain pattern, maintain consistency while adding diversity.
+    // Enhanced multi-step reasoning prompt
+    const basePrompt = `STEP 1 - CONTEXT ANALYSIS:
+Current wheel contents: ${optionsList}
+Previously declined suggestions: ${enhancedDeclinedList}
+Title context: "${titleName}" (Category: ${titleCategory})
+Description: ${titleDescription}
 
-IMPORTANT: Do not suggest any item from the declined list even if it fits the theme.`;
+STEP 2 - PATTERN RECOGNITION:
+${optionAnalysis.isEmpty ? 
+  `- Empty wheel: Focus on establishing strong thematic foundation
+   - Infer demographics and preferences from title/description
+   - Create gateway option that opens possibilities for future additions` :
+  `- Existing option count: ${existingActivities.length}
+   - Pattern themes detected: ${optionAnalysis.themes.join(', ') || 'general'}
+   - Complexity level: ${optionAnalysis.complexity}
+   - Average length: ${Math.round(optionAnalysis.avgLength)} characters
+   - Style consistency: Match established patterns`}
 
-    // Enhanced prompt for retry attempts
+STEP 3 - EXCLUSION VALIDATION:
+- Verify NO similarity to existing items (including partial matches)
+- Verify NO similarity to declined suggestions (including synonyms/variations)
+- Check for semantic duplicates, not just exact text matches
+
+STEP 4 - SUGGESTION GENERATION:
+Generate ONE suggestion that:
+1. FITS PERFECTLY within the established theme and category
+2. MAINTAINS CONSISTENCY with existing activity patterns and style
+3. PROVIDES MEANINGFUL DIVERSITY without breaking theme coherence
+4. OFFERS PRACTICAL VALUE and clear actionability
+5. RESPECTS ALL exclusions (existing + declined + variations)
+6. BALANCES FAMILIARITY with discovery potential`;
+
+    // Enhanced retry logic with pattern learning
     const retryEnhancement = isRetry ? `
 
-🔄 RETRY ATTEMPT: Previous suggestions failed validation. Please be extra careful to:
-- Avoid ALL items listed in "Current items" above
-- Avoid ALL items listed in "Previously declined suggestions" above  
-- Suggest something completely different and unique
-- Double-check that your suggestion is not a duplicate or variation of existing items` : '';
+🔄 CRITICAL RETRY - Previous attempts failed validation:
+- ANALYZE failures: Review what was rejected and why
+- AVOID ALL PATTERNS that led to previous rejections
+- INCREASE DIVERGENCE from both existing and declined items
+- DOUBLE-CHECK exclusions before finalizing suggestion
+- PRIORITIZE uniqueness while maintaining thematic relevance
+- Consider less obvious but highly relevant suggestions` : '';
 
-    const userPrompt = basePrompt + retryEnhancement + '\n\nSuggestion only:';
+    const userPrompt = basePrompt + retryEnhancement + `
+
+FINAL OUTPUT: Return ONLY the option name (no explanations, formatting, or extra text):`;
 
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
@@ -184,8 +365,8 @@ IMPORTANT: Do not suggest any item from the declined list even if it fits the th
             content: userPrompt
           }
         ],
-        max_tokens: 50, // Reduced since we only need activity name
-        temperature: 0.5 // Balanced for practical, recognizable suggestions
+        max_tokens: 75, // Increased for enhanced prompt processing
+        temperature: 0.6 // Slightly higher for creativity while maintaining relevance
       })
     });
 

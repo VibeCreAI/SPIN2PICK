@@ -13,6 +13,7 @@ import {
     Dimensions,
     Modal,
     Platform,
+    Pressable,
     ScrollView,
     StyleSheet,
     TouchableOpacity,
@@ -77,6 +78,8 @@ export const TitleManagementModal: React.FC<TitleManagementModalProps> = ({
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(false);
   const [showCustomWheelModal, setShowCustomWheelModal] = useState(false);
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+  const [titleToDelete, setTitleToDelete] = useState<Title | null>(null);
 
   // Get screen width for responsive design - matching SaveLoadModal
   const screenWidth = Dimensions.get('window').width;
@@ -149,27 +152,43 @@ export const TitleManagementModal: React.FC<TitleManagementModalProps> = ({
     onClose();
   };
 
-  const handleDeleteTitle = async (titleId: string) => {
-    Alert.alert(
-      'Delete Wheel',
-      'Are you sure you want to delete this wheel? This action cannot be undone.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await TitleManager.deleteTitle(titleId);
-              await loadSavedTitles();
-            } catch (error) {
-              console.error('Error deleting title:', error);
-              Alert.alert('Error', 'Failed to delete wheel');
-            }
-          }
-        }
-      ]
-    );
+  const handleDeleteTitle = (title: Title) => {
+    console.log('🗑️ Delete button clicked for title:', title.name, 'ID:', title.id);
+    
+    // Check if this is the current wheel (shouldn't happen with UI changes, but safety check)
+    if (currentTitle?.id === title.id) {
+      console.log('🗑️ Cannot delete current wheel');
+      return;
+    }
+    
+    // Show custom confirmation modal
+    setTitleToDelete(title);
+    setShowDeleteConfirmation(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!titleToDelete) return;
+    
+    try {
+      console.log('🗑️ User confirmed, attempting to delete title:', titleToDelete.id);
+      const success = await TitleManager.deleteTitle(titleToDelete.id);
+      console.log('🗑️ Delete result:', success);
+      if (success) {
+        console.log('🗑️ Title deleted successfully, reloading titles...');
+        await loadSavedTitles();
+      }
+    } catch (error) {
+      console.error('Error deleting title:', error);
+    } finally {
+      setShowDeleteConfirmation(false);
+      setTitleToDelete(null);
+    }
+  };
+
+  const handleCancelDelete = () => {
+    console.log('🗑️ User cancelled deletion');
+    setShowDeleteConfirmation(false);
+    setTitleToDelete(null);
   };
 
   const handleCreateCustomWheel = (title: string, description: string, category: TitleCategory) => {
@@ -233,12 +252,12 @@ export const TitleManagementModal: React.FC<TitleManagementModalProps> = ({
         </View>
       </TouchableOpacity>
       
-      {/* Only show delete button for custom titles (not predetermined) */}
-      {(!title.isPredetermined || title.isCustomUserCreated) && (
+      {/* Only show delete button for custom titles (not predetermined and not current) */}
+      {(!title.isPredetermined || title.isCustomUserCreated) && (currentTitle?.id !== title.id) && (
         <View style={styles.titleActions}>
           <TouchableOpacity 
             style={[styles.deleteButton]}
-            onPress={() => handleDeleteTitle(title.id)}
+            onPress={() => handleDeleteTitle(title)}
           >
             <Text style={styles.deleteButtonText}>Delete</Text>
           </TouchableOpacity>
@@ -365,7 +384,10 @@ export const TitleManagementModal: React.FC<TitleManagementModalProps> = ({
                             </Text>
                           </View>
                         ) : (
-                          titles.map((title) => (
+                          titles.map((title) => {
+                            const shouldShowDelete = (!title.isPredetermined || title.isCustomUserCreated) && (currentTitle?.id !== title.id);
+                            console.log(`🗑️ Title "${title.name}": shouldShowDelete=${shouldShowDelete}, isPredetermined=${title.isPredetermined}, isCustomUserCreated=${title.isCustomUserCreated}, isCurrent=${currentTitle?.id === title.id}`);
+                            return (
                             <View key={title.id} style={[styles.titleItem, {
                               backgroundColor: currentTitle?.id === title.id 
                                 ? currentTheme.uiColors.primary + '15' 
@@ -375,6 +397,7 @@ export const TitleManagementModal: React.FC<TitleManagementModalProps> = ({
                               <TouchableOpacity
                                 style={styles.titleContent}
                                 onPress={() => handleSelectTitle(title)}
+                                activeOpacity={0.7}
                               >
                                 <Text style={styles.titleEmoji}>
                                   {title.emoji}
@@ -383,18 +406,32 @@ export const TitleManagementModal: React.FC<TitleManagementModalProps> = ({
                                   {title.name}
                                 </Text>
                               </TouchableOpacity>
-                              {(!title.isPredetermined || title.isCustomUserCreated) && (
-                                <TouchableOpacity
-                                  style={styles.deleteCategoryButton}
-                                  onPress={() => handleDeleteTitle(title.id)}
-                                >
-                                  <Text style={styles.deleteCategoryButtonText}>
-                                    Delete
-                                  </Text>
-                                </TouchableOpacity>
+                              {shouldShowDelete && (
+                                <View style={styles.deleteButtonContainer}>
+                                  <TouchableOpacity
+                                    style={styles.deleteCategoryButton}
+                                    onPress={() => {
+                                      console.log('🗑️ Delete button pressed for:', title.name, 'ID:', title.id);
+                                      console.log('🗑️ Title properties:', {
+                                        isPredetermined: title.isPredetermined,
+                                        isCustomUserCreated: title.isCustomUserCreated,
+                                        isCustom: title.isCustom,
+                                        isCurrent: currentTitle?.id === title.id
+                                      });
+                                      handleDeleteTitle(title);
+                                    }}
+                                    activeOpacity={0.7}
+                                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                                  >
+                                    <Text style={styles.deleteCategoryButtonText}>
+                                      🗑️
+                                    </Text>
+                                  </TouchableOpacity>
+                                </View>
                               )}
                             </View>
-                          ))
+                          );
+                          })
                         )}
                       </View>
                     )}
@@ -447,6 +484,61 @@ export const TitleManagementModal: React.FC<TitleManagementModalProps> = ({
         onClose={() => setShowCustomWheelModal(false)}
         onCreateWheel={handleCreateCustomWheel}
       />
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirmation && titleToDelete && (
+        <Modal
+          visible={showDeleteConfirmation}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={handleCancelDelete}
+        >
+          <TouchableOpacity 
+            style={styles.deleteModalOverlay}
+            activeOpacity={1}
+            onPress={handleCancelDelete}
+          >
+            <TouchableOpacity 
+              style={[styles.deleteModalContainer, { 
+                backgroundColor: currentTheme.uiColors.modalBackground,
+                borderColor: currentTheme.uiColors.primary,
+              }]} 
+              activeOpacity={1}
+              onPress={() => {}} // Prevent closing when tapping inside
+            >
+              <Text style={[styles.deleteModalTitle, { color: currentTheme.uiColors.primary }]}>
+                🗑️ Delete Wheel
+              </Text>
+              <Text style={[styles.deleteModalMessage, { color: currentTheme.uiColors.text }]}>
+                Are you sure you want to delete "{titleToDelete.name}"?
+              </Text>
+              <Text style={[styles.deleteModalWarning, { color: currentTheme.uiColors.secondary }]}>
+                This action cannot be undone.
+              </Text>
+              
+              <View style={styles.deleteModalButtons}>
+                <TouchableOpacity 
+                  style={[styles.deleteModalCancelButton, { backgroundColor: currentTheme.uiColors.secondary }]} 
+                  onPress={handleCancelDelete}
+                >
+                  <Text style={[styles.deleteModalCancelText, { color: currentTheme.uiColors.buttonText }]}>
+                    Cancel
+                  </Text>
+                </TouchableOpacity>
+                
+                <TouchableOpacity 
+                  style={styles.deleteModalConfirmButton} 
+                  onPress={handleConfirmDelete}
+                >
+                  <Text style={styles.deleteModalConfirmText}>
+                    Delete
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </TouchableOpacity>
+          </TouchableOpacity>
+        </Modal>
+      )}
     </Modal>
   );
 };
@@ -643,10 +735,14 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ccc',
     borderRadius: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   titleContent: {
     flexDirection: 'row',
     alignItems: 'center',
+    flex: 1,
   },
   titleEmoji: {
     fontSize: 20,
@@ -656,18 +752,22 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: FONTS.nunito,
   },
+  deleteButtonContainer: {
+    padding: 4,
+  },
   deleteCategoryButton: {
     padding: 8,
     borderWidth: 1,
     borderColor: '#ff4444',
-    borderRadius: 4,
-    marginLeft: 8,
+    borderRadius: 20,
+    backgroundColor: '#ff444410',
+    minWidth: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   deleteCategoryButtonText: {
-    color: '#ff4444',
-    fontSize: 14,
-    fontFamily: FONTS.nunito,
-    fontWeight: '600',
+    fontSize: 16,
+    textAlign: 'center',
   },
   // Custom Wheel Creation Styles
   customWheelSection: {
@@ -709,5 +809,74 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontFamily: FONTS.jua,
     fontWeight: 'bold',
+  },
+  // Delete Confirmation Modal Styles
+  deleteModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  deleteModalContainer: {
+    borderRadius: 16,
+    padding: 24,
+    borderWidth: 2,
+    maxWidth: 400,
+    width: '100%',
+    elevation: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+  },
+  deleteModalTitle: {
+    fontSize: 20,
+    fontFamily: FONTS.jua,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  deleteModalMessage: {
+    fontSize: 16,
+    fontFamily: FONTS.nunito,
+    textAlign: 'center',
+    marginBottom: 8,
+    lineHeight: 22,
+  },
+  deleteModalWarning: {
+    fontSize: 14,
+    fontFamily: FONTS.nunito,
+    textAlign: 'center',
+    marginBottom: 24,
+    fontStyle: 'italic',
+  },
+  deleteModalButtons: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  deleteModalCancelButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  deleteModalCancelText: {
+    fontSize: 16,
+    fontFamily: FONTS.nunito,
+    fontWeight: 'bold',
+  },
+  deleteModalConfirmButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 8,
+    backgroundColor: '#ff4444',
+    alignItems: 'center',
+  },
+  deleteModalConfirmText: {
+    fontSize: 16,
+    fontFamily: FONTS.nunito,
+    fontWeight: 'bold',
+    color: 'white',
   },
 }); 

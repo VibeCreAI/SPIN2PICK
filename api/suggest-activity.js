@@ -26,7 +26,8 @@ export default async function handler(req, res) {
     declinedSuggestions = [], 
     titleName = 'Kids Activity',
     titleCategory = 'family',
-    titleDescription = 'Random activities'
+    titleDescription = 'Random activities',
+    isRetry = false
   } = req.body;
 
   if (!Array.isArray(existingActivities)) {
@@ -138,7 +139,7 @@ OUTPUT FORMAT:
 
     const systemPrompt = generateSystemPrompt(titleCategory, titleName, titleDescription);
 
-    const userPrompt = `Current items: ${activitiesList}
+    const basePrompt = `Current items: ${activitiesList}
 Previously declined suggestions: ${declinedList}
 
 Suggest ONE appropriate item that:
@@ -150,9 +151,18 @@ Suggest ONE appropriate item that:
 
 Analyze the existing items to understand the pattern and suggest something that fits the same style and category. Provide variety - if existing items follow a certain pattern, maintain consistency while adding diversity.
 
-IMPORTANT: Do not suggest any item from the declined list even if it fits the theme.
+IMPORTANT: Do not suggest any item from the declined list even if it fits the theme.`;
 
-Suggestion only:`;
+    // Enhanced prompt for retry attempts
+    const retryEnhancement = isRetry ? `
+
+🔄 RETRY ATTEMPT: Previous suggestions failed validation. Please be extra careful to:
+- Avoid ALL items listed in "Current items" above
+- Avoid ALL items listed in "Previously declined suggestions" above  
+- Suggest something completely different and unique
+- Double-check that your suggestion is not a duplicate or variation of existing items` : '';
+
+    const userPrompt = basePrompt + retryEnhancement + '\n\nSuggestion only:';
 
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",

@@ -134,79 +134,115 @@ export const getAISuggestedActivity = async (
   titleCategory: string = 'family',
   titleDescription: string = 'Random activities'
 ): Promise<string> => {
-  try {
-    const baseUrl = getApiBaseUrl();
-    const requestBody = { 
-      existingActivities, 
-      declinedSuggestions,
-      titleName,
-      titleCategory,
-      titleDescription
-    };
-    
-    const response = await fetch(`${baseUrl}/api/suggest-activity`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(requestBody)
-    });
+  const maxRetries = 2; // Allow up to 3 total attempts (initial + 2 retries)
+  let retryDeclinedSuggestions = [...declinedSuggestions]; // Copy to avoid mutating original
+  
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      const baseUrl = getApiBaseUrl();
+      const requestBody = { 
+        existingActivities, 
+        declinedSuggestions: retryDeclinedSuggestions,
+        titleName,
+        titleCategory,
+        titleDescription,
+        isRetry: attempt > 0 // Flag for potential server-side improvements
+      };
+      
+      const response = await fetch(`${baseUrl}/api/suggest-activity`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody)
+      });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('❌ AI API Error:', response.status, response.statusText, errorText);
-      return getRandomFallbackActivity([...existingActivities, ...declinedSuggestions]);
-    }
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`❌ AI API Error (attempt ${attempt + 1}/${maxRetries + 1}):`, response.status, response.statusText, errorText);
+        if (attempt === maxRetries) {
+          return getRandomFallbackActivity([...existingActivities, ...retryDeclinedSuggestions]);
+        }
+        continue;
+      }
 
-    const data = await response.json();
-    
-    // Check if response has expected structure
-    if (!data.choices || !Array.isArray(data.choices) || data.choices.length === 0) {
-      console.error('❌ Invalid AI response structure - no choices array');
-      return getRandomFallbackActivity([...existingActivities, ...declinedSuggestions]);
-    }
-    
-    const choice = data.choices[0];
-    if (!choice.message || !choice.message.content) {
-      console.error('❌ Invalid AI choice structure - no message.content');
-      return getRandomFallbackActivity([...existingActivities, ...declinedSuggestions]);
-    }
-    
-    let rawResponse = choice.message.content;
-    
-    // More comprehensive cleaning
-    let suggestedActivity = rawResponse
-      .trim()
-      .replace(/^["'`]|["'`]$/g, '') // Remove quotes and backticks
-      .replace(/^\.|\.$/g, '') // Remove leading/trailing periods
-      .replace(/^-\s*/, '') // Remove leading dashes
-      .replace(/^\d+\.\s*/, '') // Remove numbered list format
-      .split('\n')[0] // Take only first line
-      .split('.')[0] // Take only first sentence
-      .split(',')[0] // Take only first part before comma
-      .trim();
+      const data = await response.json();
+      
+      // Check if response has expected structure
+      if (!data.choices || !Array.isArray(data.choices) || data.choices.length === 0) {
+        console.error(`❌ Invalid AI response structure - no choices array (attempt ${attempt + 1}/${maxRetries + 1})`);
+        if (attempt === maxRetries) {
+          return getRandomFallbackActivity([...existingActivities, ...retryDeclinedSuggestions]);
+        }
+        continue;
+      }
+      
+      const choice = data.choices[0];
+      if (!choice.message || !choice.message.content) {
+        console.error(`❌ Invalid AI choice structure - no message.content (attempt ${attempt + 1}/${maxRetries + 1})`);
+        if (attempt === maxRetries) {
+          return getRandomFallbackActivity([...existingActivities, ...retryDeclinedSuggestions]);
+        }
+        continue;
+      }
+      
+      let rawResponse = choice.message.content;
+      
+      // More comprehensive cleaning
+      let suggestedActivity = rawResponse
+        .trim()
+        .replace(/^["'`]|["'`]$/g, '') // Remove quotes and backticks
+        .replace(/^\.|\.$/g, '') // Remove leading/trailing periods
+        .replace(/^-\s*/, '') // Remove leading dashes
+        .replace(/^\d+\.\s*/, '') // Remove numbered list format
+        .split('\n')[0] // Take only first line
+        .split('.')[0] // Take only first sentence
+        .split(',')[0] // Take only first part before comma
+        .trim();
 
-    // Very permissive validation - only reject truly invalid responses
-    if (/^[\s]*$/.test(suggestedActivity) || /[^\w\s&'.,!-]/.test(suggestedActivity)) {
-      console.error('❌ AI suggestion validation failed: invalid characters or empty');
-      return getRandomFallbackActivity([...existingActivities, ...declinedSuggestions]);
-    }
+      // Very permissive validation - only reject truly invalid responses
+      if (/^[\s]*$/.test(suggestedActivity) || /[^\w\s&'.,!-]/.test(suggestedActivity)) {
+        console.error(`❌ AI suggestion validation failed: invalid characters or empty (attempt ${attempt + 1}/${maxRetries + 1})`);
+        if (attempt === maxRetries) {
+          return getRandomFallbackActivity([...existingActivities, ...retryDeclinedSuggestions]);
+        }
+        continue;
+      }
 
-    if (existingActivities.includes(suggestedActivity)) {
-      console.error('❌ AI suggested duplicate activity:', suggestedActivity);
-      return getRandomFallbackActivity([...existingActivities, ...declinedSuggestions]);
-    }
+      if (existingActivities.includes(suggestedActivity)) {
+        console.error(`❌ AI suggested duplicate activity: "${suggestedActivity}" (attempt ${attempt + 1}/${maxRetries + 1})`);
+        if (attempt === maxRetries) {
+          return getRandomFallbackActivity([...existingActivities, ...retryDeclinedSuggestions]);
+        }
+        // Add duplicate to declined list for next retry
+        retryDeclinedSuggestions.push(suggestedActivity);
+        continue;
+      }
 
-    if (declinedSuggestions.includes(suggestedActivity)) {
-      console.error('❌ AI suggested previously declined activity:', suggestedActivity);
-      return getRandomFallbackActivity([...existingActivities, ...declinedSuggestions]);
+      if (retryDeclinedSuggestions.includes(suggestedActivity)) {
+        console.error(`❌ AI suggested previously declined activity: "${suggestedActivity}" (attempt ${attempt + 1}/${maxRetries + 1})`);
+        if (attempt === maxRetries) {
+          return getRandomFallbackActivity([...existingActivities, ...retryDeclinedSuggestions]);
+        }
+        continue;
+      }
+      
+      // Success! Return the valid suggestion
+      if (attempt > 0) {
+        console.log(`✅ AI suggestion successful on retry attempt ${attempt + 1}: "${suggestedActivity}"`);
+      }
+      return suggestedActivity;
+      
+    } catch (error: unknown) {
+      console.error(`❌ AI suggestion failed (attempt ${attempt + 1}/${maxRetries + 1}):`, error instanceof Error ? error.message : String(error));
+      if (attempt === maxRetries) {
+        return getRandomFallbackActivity([...existingActivities, ...retryDeclinedSuggestions]);
+      }
     }
-    return suggestedActivity;
-    
-  } catch (error: unknown) {
-    console.error('❌ AI suggestion failed:', error instanceof Error ? error.message : String(error));
-    return getRandomFallbackActivity([...existingActivities, ...declinedSuggestions]);
   }
+  
+  // This should never be reached, but just in case
+  return getRandomFallbackActivity([...existingActivities, ...retryDeclinedSuggestions]);
 };
 
 /**

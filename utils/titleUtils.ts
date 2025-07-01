@@ -45,6 +45,7 @@ export interface Title {
   items: Item[];
   isCustom: boolean;
   isPredetermined: boolean;
+  isCustomUserCreated?: boolean; // New flag for user-created custom wheels
   createdAt: Date;
   updatedAt: Date;
   isActive: boolean;

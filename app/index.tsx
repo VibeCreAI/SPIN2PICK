@@ -735,8 +735,13 @@ export default function HomeScreen() {
         })));
         
         newActivities = activitiesWithEmojis;
+      } else if (currentTitle && currentTitle.isCustomUserCreated) {
+        // For custom user-created wheels, only allow reducing the current activities
+        // Take subset of current activities (no fallback data)
+        const currentActivitiesWithTheme = activities.slice(0, Math.min(resetCount, activities.length));
+        newActivities = reassignAllColors(currentActivitiesWithTheme, currentTheme.wheelColors);
       } else {
-        // For legacy "Kids Activity" or custom titles, generate random activities
+        // For legacy "Kids Activity" or other custom titles, generate random activities
         const newDefaultActivities = generateDefaultActivities(resetCount);
         newActivities = reassignAllColors(newDefaultActivities, currentTheme.wheelColors);
       }
@@ -993,7 +998,11 @@ export default function HomeScreen() {
 
   // Helper function to get maximum items available for current wheel
   const getMaxItemsForCurrentWheel = (): number => {
-    if (currentTitle && currentTitle.items) {
+    if (currentTitle && currentTitle.isCustomUserCreated) {
+      // For custom user-created wheels, max is current activities count
+      return activities.length;
+    } else if (currentTitle && currentTitle.items) {
+      // For predetermined wheels, max is total items in the title
       return currentTitle.items.length;
     }
     // Fallback to 100 for legacy or undefined cases
@@ -1077,6 +1086,41 @@ export default function HomeScreen() {
       // Fallback to original behavior if something goes wrong
       const activitiesWithCurrentTheme = reassignAllColors(title.items, currentTheme.wheelColors);
       setActivities(activitiesWithCurrentTheme);
+    }
+  };
+
+  // Custom Wheel Creation Handler
+  const handleCreateCustomWheel = async (title: string, description: string, category: TitleCategory) => {
+    try {
+      const newWheel: Title = {
+        id: `custom-${Date.now()}`,
+        name: title,
+        emoji: '⭐', // Always use star emoji for custom wheels
+        description: description,
+        category: TitleCategory.CUSTOM, // Force all custom wheels to use CUSTOM category
+        items: [], // Start empty - user will populate with AI or manual input
+        isCustom: true,
+        isCustomUserCreated: true, // New flag for user-created wheels
+        isPredetermined: false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        isActive: true,
+        spinCount: 0
+      };
+      
+      // Save the new wheel to storage
+      await TitleManager.saveTitle(newWheel);
+      
+      // Set as current title
+      setCurrentTitle(newWheel);
+      setActivities([]); // Start with empty activities
+      
+      // Store current title ID
+      await AsyncStorage.setItem(STORAGE_KEYS.CURRENT_TITLE_ID, newWheel.id);
+      
+      console.log(`✅ Custom wheel created: "${title}" in ${category} category`);
+    } catch (error) {
+      console.error('Error creating custom wheel:', error);
     }
   };
 
@@ -1391,6 +1435,8 @@ export default function HomeScreen() {
             <Text allowFontScaling={false} style={[styles.popupMessage, { color: currentTheme.uiColors.secondary }]}>
               {currentTitle && currentTitle.isPredetermined 
                 ? `How many random slices from "${currentTitle.name}"?`
+                : currentTitle && currentTitle.isCustomUserCreated
+                ? `How many slices to keep? (reducing from ${activities.length})`
                 : 'How many random slices do you want?'}
             </Text>
             <Text allowFontScaling={false} style={[styles.popupMessage, { color: currentTheme.uiColors.secondary, fontSize: 14, textAlign: 'center', marginTop: -5, marginBottom: 15 }]}>
@@ -1424,6 +1470,8 @@ export default function HomeScreen() {
             }]}>
               {currentTitle && currentTitle.isPredetermined 
                 ? `Current wheel will be replaced with ${resetCount} slices from "${currentTitle.name}".`
+                : currentTitle && currentTitle.isCustomUserCreated
+                ? `Only the first ${resetCount} slices will be kept. Other slices will be removed.`
                 : `Current wheel will be deleted and replaced with ${resetCount} random slices.`}
             </Text>
             
@@ -1486,6 +1534,7 @@ export default function HomeScreen() {
         onClose={handleCloseTitleManagement}
         onSelectTitle={handleSelectTitle}
         currentTitle={currentTitle}
+        onCreateCustomWheel={handleCreateCustomWheel}
       />
 
       {/* First Time Welcome Modal */}

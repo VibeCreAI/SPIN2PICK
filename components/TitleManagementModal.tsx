@@ -3,7 +3,8 @@ import { PREDETERMINED_TITLES } from '@/data/predeterminedTitles';
 import { useTheme } from '@/hooks/useTheme';
 import {
     Title,
-    TitleManager
+    TitleManager,
+    TitleCategory
 } from '@/utils/titleUtils';
 import React, { useEffect, useState } from 'react';
 import {
@@ -18,6 +19,7 @@ import {
     View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { CustomWheelCreationModal } from './CustomWheelCreationModal';
 import { Text } from './Text';
 
 interface TitleManagementModalProps {
@@ -25,6 +27,7 @@ interface TitleManagementModalProps {
   onClose: () => void;
   onSelectTitle: (title: Title) => void;
   currentTitle?: Title | null;
+  onCreateCustomWheel?: (title: string, description: string, category: TitleCategory) => void;
 }
 
 // Helper function to remove duplicate titles
@@ -55,11 +58,13 @@ export const TitleManagementModal: React.FC<TitleManagementModalProps> = ({
   visible,
   onClose,
   onSelectTitle,
-  currentTitle
+  currentTitle,
+  onCreateCustomWheel
 }) => {
   const { currentTheme } = useTheme();
   const [savedTitles, setSavedTitles] = useState<Title[]>([]);
   const [titlesByCategory, setTitlesByCategory] = useState<Record<string, Title[]>>({
+    'custom': [], // Move custom to first position
     'family': [],
     'food': [],
     'games': [],
@@ -68,10 +73,10 @@ export const TitleManagementModal: React.FC<TitleManagementModalProps> = ({
     'workplace': [],
     'education': [],
     'entertainment': [],
-    'custom': [],
   });
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(false);
+  const [showCustomWheelModal, setShowCustomWheelModal] = useState(false);
 
   // Get screen width for responsive design - matching SaveLoadModal
   const screenWidth = Dimensions.get('window').width;
@@ -114,6 +119,7 @@ export const TitleManagementModal: React.FC<TitleManagementModalProps> = ({
       
       // Categorize titles (only show predetermined titles in categories, not in Featured section)
       const categorized: Record<string, Title[]> = {
+        'custom': [], // Move custom to first position
         'family': [],
         'food': [],
         'games': [],
@@ -122,7 +128,6 @@ export const TitleManagementModal: React.FC<TitleManagementModalProps> = ({
         'workplace': [],
         'education': [],
         'entertainment': [],
-        'custom': [],
       };
       
       filteredTitles.forEach(title => {
@@ -165,6 +170,13 @@ export const TitleManagementModal: React.FC<TitleManagementModalProps> = ({
         }
       ]
     );
+  };
+
+  const handleCreateCustomWheel = (title: string, description: string, category: TitleCategory) => {
+    if (onCreateCustomWheel) {
+      onCreateCustomWheel(title, description, category);
+      onClose(); // Close this modal after creating
+    }
   };
 
   const toggleCategory = (category: string) => {
@@ -222,7 +234,7 @@ export const TitleManagementModal: React.FC<TitleManagementModalProps> = ({
       </TouchableOpacity>
       
       {/* Only show delete button for custom titles (not predetermined) */}
-      {!title.isPredetermined && (
+      {(!title.isPredetermined || title.isCustomUserCreated) && (
         <View style={styles.titleActions}>
           <TouchableOpacity 
             style={[styles.deleteButton]}
@@ -288,6 +300,34 @@ export const TitleManagementModal: React.FC<TitleManagementModalProps> = ({
                   </>
                 )}
 
+                {/* Create Custom Wheel Section */}
+                <View style={styles.customWheelSection}>
+                  <TouchableOpacity
+                    style={[styles.createCustomWheelButton, {
+                      backgroundColor: currentTheme.uiColors.accent,
+                      borderColor: currentTheme.uiColors.primary,
+                    }]}
+                    onPress={() => setShowCustomWheelModal(true)}
+                  >
+                    <View style={styles.createCustomWheelContent}>
+                      <Text style={[styles.createCustomWheelIcon]}>
+                        🎨
+                      </Text>
+                      <View style={styles.createCustomWheelTextContainer}>
+                        <Text style={[styles.createCustomWheelTitle, { color: currentTheme.uiColors.buttonText }]}>
+                          Create Custom Wheel
+                        </Text>
+                        <Text style={[styles.createCustomWheelSubtitle, { color: currentTheme.uiColors.buttonText + 'CC' }]}>
+                          AI-powered suggestions for your unique ideas
+                        </Text>
+                      </View>
+                      <Text style={[styles.createCustomWheelArrow, { color: currentTheme.uiColors.buttonText }]}>
+                        →
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                </View>
+
                 {/* Quick Title Selection by Category */}
                 <Text style={[styles.sectionTitle, { color: currentTheme.uiColors.text }]}>
                   🎯 Quick Wheel Selection
@@ -343,7 +383,7 @@ export const TitleManagementModal: React.FC<TitleManagementModalProps> = ({
                                   {title.name}
                                 </Text>
                               </TouchableOpacity>
-                              {!title.isPredetermined && (
+                              {(!title.isPredetermined || title.isCustomUserCreated) && (
                                 <TouchableOpacity
                                   style={styles.deleteCategoryButton}
                                   onPress={() => handleDeleteTitle(title.id)}
@@ -400,6 +440,13 @@ export const TitleManagementModal: React.FC<TitleManagementModalProps> = ({
           </View>
         </View>
       </SafeAreaView>
+
+      {/* Custom Wheel Creation Modal */}
+      <CustomWheelCreationModal
+        visible={showCustomWheelModal}
+        onClose={() => setShowCustomWheelModal(false)}
+        onCreateWheel={handleCreateCustomWheel}
+      />
     </Modal>
   );
 };
@@ -621,5 +668,46 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: FONTS.nunito,
     fontWeight: '600',
+  },
+  // Custom Wheel Creation Styles
+  customWheelSection: {
+    marginBottom: 24,
+  },
+  createCustomWheelButton: {
+    borderRadius: 16,
+    borderWidth: 2,
+    padding: 16,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  createCustomWheelContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  createCustomWheelIcon: {
+    fontSize: 32,
+    marginRight: 16,
+  },
+  createCustomWheelTextContainer: {
+    flex: 1,
+  },
+  createCustomWheelTitle: {
+    fontSize: 18,
+    fontFamily: FONTS.jua,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  createCustomWheelSubtitle: {
+    fontSize: 14,
+    fontFamily: FONTS.nunito,
+    lineHeight: 18,
+  },
+  createCustomWheelArrow: {
+    fontSize: 20,
+    fontFamily: FONTS.jua,
+    fontWeight: 'bold',
   },
 }); 

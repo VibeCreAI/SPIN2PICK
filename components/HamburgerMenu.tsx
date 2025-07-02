@@ -26,6 +26,7 @@ interface HamburgerMenuProps {
     onNavigateToThemes: () => void;
     onNavigateToSaveLoad: () => void;
     onExportData: () => void;
+    onOpenPrivacyPolicy: () => void;
     onToggleSoundMute: () => void;
     recentlyUsedTitles: Title[];
     onSelectTitle: (title: Title) => void;
@@ -43,6 +44,7 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
     onNavigateToThemes,
     onNavigateToSaveLoad,
     onExportData,
+    onOpenPrivacyPolicy,
     onToggleSoundMute,
     recentlyUsedTitles,
     onSelectTitle,
@@ -204,6 +206,25 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
             fontFamily: FONTS.jua,
             color: currentTheme.uiColors.text,
         },
+        disabledNavItem: {
+            paddingVertical: 14,
+            paddingHorizontal: 16,
+            marginVertical: 2,
+            backgroundColor: currentTheme.uiColors.cardBackground,
+            borderRadius: 12,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 1 },
+            shadowOpacity: 0.05,
+            shadowRadius: 2,
+            elevation: 2,
+            opacity: 0.5,
+        },
+        disabledNavText: {
+            fontSize: 16,
+            fontFamily: FONTS.jua,
+            color: currentTheme.uiColors.text,
+            opacity: 0.6,
+        },
     });
 
     if (!visible) return null;
@@ -308,13 +329,27 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
                         <View style={styles.navigationSection}>
                             <Text style={styles.sectionTitle}>Data</Text>
                             <TouchableOpacity
+                                style={styles.disabledNavItem}
+                                disabled={true}
+                                onPress={() => {
+                                    // Disabled - will be "Share with Friend" feature later
+                                }}
+                            >
+                                <Text style={styles.disabledNavText}>📤 Export Data (Coming Soon)</Text>
+                            </TouchableOpacity>
+                        </View>
+
+                        {/* Legal Section */}
+                        <View style={styles.navigationSection}>
+                            <Text style={styles.sectionTitle}>Legal</Text>
+                            <TouchableOpacity
                                 style={styles.navItem}
                                 onPress={() => {
-                                    onExportData();
+                                    onOpenPrivacyPolicy();
                                     onClose();
                                 }}
                             >
-                                <Text style={styles.navText}>📤 Export Data</Text>
+                                <Text style={styles.navText}>🔒 Privacy Policy</Text>
                             </TouchableOpacity>
                         </View>
 

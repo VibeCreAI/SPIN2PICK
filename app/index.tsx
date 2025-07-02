@@ -16,7 +16,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useCallback, useEffect, useState } from 'react';
-import { Dimensions, KeyboardAvoidingView, LayoutChangeEvent, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, ViewStyle } from 'react-native';
+import { Alert, Dimensions, KeyboardAvoidingView, LayoutChangeEvent, Linking, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, ViewStyle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { installPredeterminedTitles } from '../data/predeterminedTitles';
 import { getThemeById, loadCustomTheme, PASTEL_COLORS, reassignAllColors, type Activity, type CustomThemeData } from '../utils/colorUtils';
@@ -1080,6 +1080,29 @@ export default function HomeScreen() {
     setSoundMuted(newSettings.soundMuted);
   };
 
+  const handleOpenPrivacyPolicy = async () => {
+    const privacyPolicyUrl = 'https://sites.google.com/view/spin2pick-privacy-policy/home';
+    try {
+      const supported = await Linking.canOpenURL(privacyPolicyUrl);
+      if (supported) {
+        await Linking.openURL(privacyPolicyUrl);
+      } else {
+        Alert.alert(
+          'Cannot Open Link',
+          'Unable to open the privacy policy link. Please visit: ' + privacyPolicyUrl,
+          [{ text: 'OK', style: 'default' }]
+        );
+      }
+    } catch (error) {
+      console.error('Error opening privacy policy URL:', error);
+      Alert.alert(
+        'Error',
+        'Unable to open the privacy policy. Please try again later.',
+        [{ text: 'OK', style: 'default' }]
+      );
+    }
+  };
+
   const handleSelectTitle = async (title: Title) => {
     try {
       setCurrentTitle(title);
@@ -1556,7 +1579,8 @@ export default function HomeScreen() {
         onNavigateToSettings={() => {/* TODO: Implement */}}
         onNavigateToThemes={() => setShowThemeModal(true)}
         onNavigateToSaveLoad={() => setShowSaveLoadModal(true)}
-        onExportData={() => {/* TODO: Implement */}}
+        onExportData={() => {/* Disabled - will be "Share with Friend" feature later */}}
+        onOpenPrivacyPolicy={handleOpenPrivacyPolicy}
         onToggleSoundMute={toggleSoundMute}
         recentlyUsedTitles={recentlyUsedTitles}
         onSelectTitle={handleSelectTitle}

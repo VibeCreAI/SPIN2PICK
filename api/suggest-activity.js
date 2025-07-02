@@ -44,15 +44,49 @@ export default async function handler(req, res) {
       return options.length > 0 ? options.join(', ') : 'None';
     };
 
-    // Ultra-constrained prompt for better results
+    // Helper to analyze existing activities for better context
+    const analyzeExistingActivities = (activities) => {
+      if (activities.length === 0) return '';
+      
+      // Categorize activities to understand the pattern
+      const categories = {
+        physical: ['run', 'walk', 'swim', 'bike', 'dance', 'yoga', 'exercise', 'sport', 'play', 'jump'],
+        creative: ['draw', 'paint', 'write', 'craft', 'art', 'music', 'sing', 'create', 'design', 'build'],
+        social: ['friend', 'family', 'party', 'call', 'visit', 'meet', 'chat', 'dinner', 'lunch'],
+        indoor: ['read', 'cook', 'clean', 'organize', 'watch', 'game', 'puzzle', 'study', 'work'],
+        outdoor: ['garden', 'hike', 'camp', 'fish', 'park', 'beach', 'nature', 'explore', 'walk']
+      };
+      
+      const activityText = activities.join(' ').toLowerCase();
+      const foundCategories = [];
+      
+      for (const [category, keywords] of Object.entries(categories)) {
+        if (keywords.some(keyword => activityText.includes(keyword))) {
+          foundCategories.push(category);
+        }
+      }
+      
+      if (foundCategories.length > 0) {
+        return `\\nCurrent activities seem to focus on: ${foundCategories.join(', ')}. Consider suggesting something complementary or from a different category for variety.`;
+      }
+      
+      return '';
+    };
+
+    const contextualHint = analyzeExistingActivities(existingActivities);
+
+    // Enhanced context-aware prompt for better results
     const userPrompt = `Generate ONE single option for a ${titleName} wheel.
+
+CONTEXT: This wheel currently has ${existingActivities.length} activities: [${formatOptionsList(existingActivities)}]${contextualHint}
 
 RULES:
 1. Respond with ONLY the option name, nothing else
 2. Keep it 1-5 words maximum  
 3. Make it relevant to: ${titleDescription}
-4. Do NOT include any of these existing options: [${formatOptionsList(existingActivities)}]
-5. Do NOT include any of these rejected options: [${formatOptionsList(declinedSuggestions)}]
+4. Consider what's already on the wheel and suggest something that adds variety
+5. Do NOT include any of these existing options: [${formatOptionsList(existingActivities)}]
+6. Do NOT include any of these rejected options: [${formatOptionsList(declinedSuggestions)}]
 
 Examples of good responses:
 - "Swimming"
@@ -60,7 +94,7 @@ Examples of good responses:
 - "Cook Dinner" 
 - "Movie Night"
 
-Generate ONE option now:`;
+Generate ONE complementary option now:`;
 
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",

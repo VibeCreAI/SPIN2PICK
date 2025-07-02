@@ -36,6 +36,8 @@ interface ActivityInputProps {
   // External control for opening the activity list modal
   externalOpenActivityList?: boolean;
   onExternalOpenHandled?: () => void;
+  // Error handling callback
+  onShowError?: (title: string, message: string) => void;
 }
 
 export const ActivityInput: React.FC<ActivityInputProps> = ({
@@ -58,6 +60,7 @@ export const ActivityInput: React.FC<ActivityInputProps> = ({
   onClearBulkSuggestions,
   externalOpenActivityList = false,
   onExternalOpenHandled,
+  onShowError,
 }) => {
   const { currentTheme } = useTheme();
   const [inputText, setInputText] = useState('');
@@ -107,7 +110,7 @@ export const ActivityInput: React.FC<ActivityInputProps> = ({
       );
       
       if (isDuplicate) {
-        alert('This activity already exists!');
+        onShowError?.('Duplicate Activity', 'This activity already exists!');
         return;
       }
       

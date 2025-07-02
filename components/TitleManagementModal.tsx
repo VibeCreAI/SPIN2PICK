@@ -301,9 +301,9 @@ export const TitleManagementModal: React.FC<TitleManagementModalProps> = ({
             ) : (
               <ScrollView 
                 style={styles.scrollContainer}
-                contentContainerStyle={styles.scrollContent}
+                contentContainerStyle={[styles.scrollContent, { flexGrow: 1, minHeight: '100%' }]}
                 showsVerticalScrollIndicator={false}
-                keyboardShouldPersistTaps="handled"
+                keyboardShouldPersistTaps="always"
                 nestedScrollEnabled={Platform.OS === 'android'}
               >
                 {/* Current Title Section */}

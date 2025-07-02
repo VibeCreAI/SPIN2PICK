@@ -1,26 +1,18 @@
 import React from 'react';
 import { Platform, StyleSheet, Text, View } from 'react-native';
-import { getAdUnitIds, isAdMobAvailable } from '../utils/adMobUtils';
+import { BannerAd, getAdUnitIds, isAdMobAvailable } from '../utils/adMobUtils';
 
-// Conditional import for AdMob components
-let BannerAd: any = null;
+// Import BannerAdSize from react-native-google-mobile-ads if available
 let BannerAdSize: any = null;
 
-// Always disable AdMob for Expo Go compatibility
-console.log('AdMob disabled for Expo Go compatibility');
-
-// Check if we're in Expo Go first
-let isExpoGo = true; // Force to true for now
 try {
-  const Constants = require('expo-constants');
-  isExpoGo = Constants.appOwnership === 'expo' || true; // Always true for now
-} catch (e) {
-  // Constants not available, assume Expo Go
-  isExpoGo = true;
+  if (isAdMobAvailable()) {
+    const adMobPackage = require('react-native-google-mobile-ads');
+    BannerAdSize = adMobPackage.BannerAdSize;
+  }
+} catch (error) {
+  console.log('BannerAdSize not available:', error);
 }
-
-// Never load AdMob modules for now
-console.log('AdMob modules disabled - using placeholder mode');
 
 interface AdBannerProps {
   size?: any; // Using any since BannerAdSize might not be available
@@ -34,7 +26,7 @@ export const AdBanner: React.FC<AdBannerProps> = ({
     return null;
   }
 
-  // If AdMob is not available (Expo Go), show a placeholder
+  // If AdMob is not available (Expo Go or development), show a placeholder
   if (!isAdMobAvailable() || !BannerAd) {
     return (
       <View style={styles.container}>

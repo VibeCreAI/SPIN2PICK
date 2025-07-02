@@ -57,11 +57,12 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
       animationType="fade"
       onRequestClose={onClose}
     >
-      <TouchableOpacity 
-        style={styles.modalOverlay}
-        activeOpacity={1}
-        onPress={onClose}
-      >
+      <View style={styles.modalOverlay}>
+        <TouchableOpacity 
+          style={styles.modalBackdrop}
+          activeOpacity={1}
+          onPress={onClose}
+        />
         <View 
           style={[
             styles.modalContainer, 
@@ -71,8 +72,6 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
               borderColor: currentTheme.uiColors.primary,
             }
           ]}
-          onStartShouldSetResponder={() => true}
-          onResponderGrant={() => {}}
         >
           {/* Header */}
           <View style={styles.header}>
@@ -94,101 +93,104 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
             </ThemedText>
           </View>
 
-          {/* Theme Grid */}
-          {isLoading ? (
-            <View style={styles.loadingContainer}>
-              <ThemedText style={[styles.loadingText, { color: currentTheme.uiColors.secondary }]}>
-                Loading themes...
-              </ThemedText>
-            </View>
-          ) : availableThemes.length === 0 ? (
-            <View style={styles.emptyContainer}>
-              <ThemedText style={[styles.emptyText, { color: currentTheme.uiColors.secondary }]}>
-                No themes available
-              </ThemedText>
-            </View>
-          ) : (
-            <ScrollView 
-              style={styles.scrollView}
-              contentContainerStyle={styles.scrollContent}
-              showsVerticalScrollIndicator={true}
-              nestedScrollEnabled={true}
-              scrollEnabled={true}
-              bounces={true}
-              alwaysBounceVertical={false}
-              keyboardShouldPersistTaps="handled"
-            >
-              {/* Custom Theme Section */}
-              <View style={styles.customSection}>
-                <ThemedText 
-                  style={[
-                    styles.sectionTitle,
-                    { color: currentTheme.uiColors.text }
-                  ]}
-                >
-                  🎨 Custom Theme
+          {/* Content wrapper with flex: 1 */}
+          <View style={styles.contentWrapper}>
+            {/* Theme Grid */}
+            {isLoading ? (
+              <View style={styles.loadingContainer}>
+                <ThemedText style={[styles.loadingText, { color: currentTheme.uiColors.secondary }]}>
+                  Loading themes...
                 </ThemedText>
-                <View style={styles.customThemeContainer}>
-                  {/* Show existing custom theme if it exists */}
-                  {hasCustomTheme && customTheme && (
-                    <ThemePreviewCard
-                      theme={customTheme}
-                      isSelected={currentTheme.id === 'custom'}
-                      onSelect={() => handleThemeSelect('custom')}
-                    />
-                  )}
-                  {/* Create/Edit custom theme button */}
-                  <TouchableOpacity
+              </View>
+            ) : availableThemes.length === 0 ? (
+              <View style={styles.emptyContainer}>
+                <ThemedText style={[styles.emptyText, { color: currentTheme.uiColors.secondary }]}>
+                  No themes available
+                </ThemedText>
+              </View>
+            ) : (
+              <ScrollView 
+                style={styles.scrollView}
+                contentContainerStyle={[styles.scrollContent, { flexGrow: 1, minHeight: '100%' }]}
+                showsVerticalScrollIndicator={true}
+                nestedScrollEnabled={true}
+                scrollEnabled={true}
+                bounces={true}
+                alwaysBounceVertical={false}
+                keyboardShouldPersistTaps="always"
+              >
+                {/* Custom Theme Section */}
+                <View style={styles.customSection}>
+                  <ThemedText 
                     style={[
-                      styles.createCustomThemeButton,
-                      { 
-                        backgroundColor: currentTheme.uiColors.cardBackground,
-                        borderColor: currentTheme.uiColors.accent,
-                      }
-                    ]}
-                    onPress={handleCustomThemePress}
-                  >
-                    <ThemedText style={[
-                      styles.createCustomThemeIcon,
-                      { color: currentTheme.uiColors.accent }
-                    ]}>
-                      ⭐
-                    </ThemedText>
-                    <ThemedText style={[
-                      styles.createCustomThemeText,
+                      styles.sectionTitle,
                       { color: currentTheme.uiColors.text }
-                    ]}>
-                      {hasCustomTheme ? 'Edit Custom' : 'Create Custom'}
-                    </ThemedText>
-                  </TouchableOpacity>
+                    ]}
+                  >
+                    🎨 Custom Theme
+                  </ThemedText>
+                  <View style={styles.customThemeContainer}>
+                    {/* Show existing custom theme if it exists */}
+                    {hasCustomTheme && customTheme && (
+                      <ThemePreviewCard
+                        theme={customTheme}
+                        isSelected={currentTheme.id === 'custom'}
+                        onSelect={() => handleThemeSelect('custom')}
+                      />
+                    )}
+                    {/* Create/Edit custom theme button */}
+                    <TouchableOpacity
+                      style={[
+                        styles.createCustomThemeButton,
+                        { 
+                          backgroundColor: currentTheme.uiColors.cardBackground,
+                          borderColor: currentTheme.uiColors.accent,
+                        }
+                      ]}
+                      onPress={handleCustomThemePress}
+                    >
+                      <ThemedText style={[
+                        styles.createCustomThemeIcon,
+                        { color: currentTheme.uiColors.accent }
+                      ]}>
+                        ⭐
+                      </ThemedText>
+                      <ThemedText style={[
+                        styles.createCustomThemeText,
+                        { color: currentTheme.uiColors.text }
+                      ]}>
+                        {hasCustomTheme ? 'Edit Custom' : 'Create Custom'}
+                      </ThemedText>
+                    </TouchableOpacity>
+                  </View>
                 </View>
-              </View>
 
-              {/* Built-in Themes Section */}
-              <View style={styles.builtInSection}>
-                <ThemedText 
-                  style={[
-                    styles.sectionTitle,
-                    { color: currentTheme.uiColors.text }
-                  ]}
-                >
-                  🌟 Built-in Themes
-                </ThemedText>
-                <View style={styles.themeGrid}>
-                  {availableThemes.map((theme: ColorTheme) => (
-                    <ThemePreviewCard
-                      key={theme.id}
-                      theme={theme}
-                      isSelected={theme.id === currentTheme.id}
-                      onSelect={() => handleThemeSelect(theme.id)}
-                    />
-                  ))}
+                {/* Built-in Themes Section */}
+                <View style={styles.builtInSection}>
+                  <ThemedText 
+                    style={[
+                      styles.sectionTitle,
+                      { color: currentTheme.uiColors.text }
+                    ]}
+                  >
+                    🌟 Built-in Themes
+                  </ThemedText>
+                  <View style={styles.themeGrid}>
+                    {availableThemes.map((theme: ColorTheme) => (
+                      <ThemePreviewCard
+                        key={theme.id}
+                        theme={theme}
+                        isSelected={theme.id === currentTheme.id}
+                        onSelect={() => handleThemeSelect(theme.id)}
+                      />
+                    ))}
+                  </View>
                 </View>
-              </View>
-            </ScrollView>
-          )}
+              </ScrollView>
+            )}
+          </View>
 
-          {/* Footer */}
+          {/* Footer outside contentWrapper */}
           <View style={styles.footer}>
             <TouchableOpacity 
               style={[
@@ -211,7 +213,7 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
             </TouchableOpacity>
           </View>
         </View>
-      </TouchableOpacity>
+      </View>
 
       {/* Custom Theme Modal */}
       <CustomThemeModal
@@ -225,9 +227,17 @@ export const ThemeSelectionModal: React.FC<ThemeSelectionModalProps> = ({
 const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
+    padding: 16,
+  },
+  modalBackdrop: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalContainer: {
     borderRadius: 16,
@@ -264,6 +274,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: 'center',
     lineHeight: 20,
+  },
+  contentWrapper: {
+    flex: 1,
   },
   scrollView: {
     flex: 1,

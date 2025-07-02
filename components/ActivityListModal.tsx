@@ -197,13 +197,12 @@ export const ActivityListModal: React.FC<ActivityListModalProps> = ({
   const renderViewDeleteTab = () => (
     <ScrollView 
       style={styles.tabContent}
-      contentContainerStyle={styles.scrollContent}
+      contentContainerStyle={[styles.scrollContent, { flexGrow: 1, minHeight: '100%' }]}
       showsVerticalScrollIndicator={true}
       scrollEnabled={true}
-      nestedScrollEnabled={true}
       bounces={Platform.OS === 'ios'}
       alwaysBounceVertical={false}
-      keyboardShouldPersistTaps="handled"
+      keyboardShouldPersistTaps="always"
     >
       <Text allowFontScaling={false} style={[
         styles.tabDescription,
@@ -228,16 +227,7 @@ export const ActivityListModal: React.FC<ActivityListModalProps> = ({
           </Text>
         </View>
       ) : (
-        <ScrollView 
-          style={styles.activitiesList} 
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={true}
-          scrollEnabled={true}
-          nestedScrollEnabled={true}
-          bounces={Platform.OS === 'ios'}
-          alwaysBounceVertical={false}
-          keyboardShouldPersistTaps="handled"
-        >
+        <View style={styles.activitiesList}>
           {activities.map((activity) => (
             <TouchableOpacity
               key={activity.id}
@@ -264,7 +254,7 @@ export const ActivityListModal: React.FC<ActivityListModalProps> = ({
               </View>
             </TouchableOpacity>
           ))}
-        </ScrollView>
+        </View>
       )}
     </ScrollView>
   );
@@ -272,13 +262,12 @@ export const ActivityListModal: React.FC<ActivityListModalProps> = ({
   const renderAddMultipleTab = () => (
     <ScrollView 
       style={styles.tabContent}
-      contentContainerStyle={styles.scrollContent}
+      contentContainerStyle={[styles.scrollContent, { flexGrow: 1, minHeight: '100%' }]}
       showsVerticalScrollIndicator={true}
       scrollEnabled={true}
-      nestedScrollEnabled={true}
       bounces={Platform.OS === 'ios'}
       alwaysBounceVertical={false}
-      keyboardShouldPersistTaps="handled"
+      keyboardShouldPersistTaps="always"
     >
       <Text allowFontScaling={false} style={[
         styles.tabDescription,
@@ -358,13 +347,12 @@ export const ActivityListModal: React.FC<ActivityListModalProps> = ({
   const renderAISuggestionsTab = () => (
     <ScrollView 
       style={styles.tabContent}
-      contentContainerStyle={styles.scrollContent}
+      contentContainerStyle={[styles.scrollContent, { flexGrow: 1, minHeight: '100%' }]}
       showsVerticalScrollIndicator={true}
       scrollEnabled={true}
-      nestedScrollEnabled={true}
       bounces={Platform.OS === 'ios'}
       alwaysBounceVertical={false}
-      keyboardShouldPersistTaps="handled"
+      keyboardShouldPersistTaps="always"
     >
       <Text allowFontScaling={false} style={[
         styles.tabDescription,
@@ -617,8 +605,6 @@ export const ActivityListModal: React.FC<ActivityListModalProps> = ({
                 borderColor: currentTheme.uiColors.primary,
               }
             ]}
-            onStartShouldSetResponder={() => true}
-            onResponderGrant={() => {}}
           >
             {/* Header */}
             <View style={styles.header}>
@@ -637,12 +623,15 @@ export const ActivityListModal: React.FC<ActivityListModalProps> = ({
               {renderTabButton('ai', 'AI Suggest', '✨')}
             </View>
 
-            {/* Tab Content */}
-            {activeTab === 'view' && renderViewDeleteTab()}
-            {activeTab === 'add' && renderAddMultipleTab()}
-            {activeTab === 'ai' && renderAISuggestionsTab()}
+            {/* Content wrapper with flex: 1 */}
+            <View style={styles.contentWrapper}>
+              {/* Tab Content */}
+              {activeTab === 'view' && renderViewDeleteTab()}
+              {activeTab === 'add' && renderAddMultipleTab()}
+              {activeTab === 'ai' && renderAISuggestionsTab()}
+            </View>
 
-            {/* Footer */}
+            {/* Footer outside contentWrapper */}
             <View style={styles.footer}>
               <TouchableOpacity 
                 style={[
@@ -730,6 +719,9 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.jua,
     fontWeight: 'bold',
     textAlign: 'center',
+  },
+  contentWrapper: {
+    flex: 1,
   },
   tabContent: {
     flex: 1,

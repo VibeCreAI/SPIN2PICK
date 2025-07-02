@@ -37,7 +37,6 @@ interface SaveLoadModalProps {
 }
 
 const SAVE_SLOTS_KEY = 'SPIN2PICK_SAVE_SLOTS';
-const MAX_SAVE_NAME_LENGTH = 15;
 const MAX_SLOTS = 10;
 
 export const SaveLoadModal: React.FC<SaveLoadModalProps> = ({
@@ -127,8 +126,8 @@ export const SaveLoadModal: React.FC<SaveLoadModalProps> = ({
   };
 
   const handleSavePress = (slotIndex: number, isOverwrite = false) => {
-    const slot = saveSlots[slotIndex];
-    setSaveName(isOverwrite && slot ? slot.name : currentTitle);
+    // Always use current title for consistency, whether creating new save or overwriting
+    setSaveName(currentTitle);
     setSaveModal({ visible: true, slotIndex, isOverwrite });
   };
 
@@ -314,11 +313,7 @@ export const SaveLoadModal: React.FC<SaveLoadModalProps> = ({
             placeholderTextColor={currentTheme.uiColors.secondary}
             value={saveName}
             onChangeText={setSaveName}
-            maxLength={MAX_SAVE_NAME_LENGTH}
           />
-          <Text style={[styles.charCount, { color: currentTheme.uiColors.secondary }]}>
-            {MAX_SAVE_NAME_LENGTH - saveName.length} characters remaining
-          </Text>
           <View style={styles.confirmationActions}>
             <TouchableOpacity 
               style={[styles.confirmationButton, { backgroundColor: currentTheme.uiColors.secondary }]} 
@@ -374,13 +369,12 @@ export const SaveLoadModal: React.FC<SaveLoadModalProps> = ({
           <View style={styles.contentWrapper}>
             <ScrollView
               style={styles.content}
-              contentContainerStyle={styles.scrollContent}
+              contentContainerStyle={[styles.scrollContent, { flexGrow: 1, minHeight: '100%' }]}
               showsVerticalScrollIndicator={true}
               scrollEnabled={true}
-              nestedScrollEnabled={true}
               bounces={Platform.OS === 'ios'}
               alwaysBounceVertical={false}
-              keyboardShouldPersistTaps="handled"
+              keyboardShouldPersistTaps="always"
               keyboardDismissMode="on-drag"
               automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
               contentInsetAdjustmentBehavior={Platform.OS === 'ios' ? 'automatic' : undefined}

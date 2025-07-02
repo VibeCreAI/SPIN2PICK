@@ -12,6 +12,7 @@ import { SaveLoadModal } from '@/components/SaveLoadModal';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemeSelectionModal } from '@/components/ThemeSelectionModal';
 import { TitleManagementModal } from '@/components/TitleManagementModal';
+import { ThemedErrorModal } from '@/components/ThemedErrorModal';
 import { useTheme } from '@/hooks/useTheme';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -153,6 +154,7 @@ export default function HomeScreen() {
 
   // New state for first-time user welcome modal
   const [showFirstTimeWelcome, setShowFirstTimeWelcome] = useState(false);
+  const [errorModal, setErrorModal] = useState({ visible: false, title: '', message: '' });
   const [isFirstTimeUser, setIsFirstTimeUser] = useState(false);
 
   // New state for activity management modal
@@ -641,7 +643,11 @@ export default function HomeScreen() {
       setShowSuggestionPopup(true);
     } catch (error) {
       console.error('Error suggesting activity:', error);
-      alert('Sorry, I couldn&apos;t suggest an activity right now. Please try again!');
+      setErrorModal({
+        visible: true,
+        title: 'AI Suggestion Failed',
+        message: 'Sorry, I couldn\'t suggest an activity right now. Please try again!'
+      });
     } finally {
       setIsSuggestingActivity(false);
     }
@@ -1263,7 +1269,11 @@ export default function HomeScreen() {
       setBulkAISuggestions(suggestions);
       
       if (suggestions.length === 0) {
-        alert('Sorry, I couldn\'t generate activities right now. Please try again!');
+        setErrorModal({
+          visible: true,
+          title: 'AI Generation Failed',
+          message: 'Sorry, I couldn\'t generate activities right now. Please try again!'
+        });
       }
     } catch (error) {
       console.error('Error generating bulk AI suggestions:', error);
@@ -1306,6 +1316,7 @@ export default function HomeScreen() {
                 onClearBulkSuggestions={handleClearBulkSuggestions}
                 externalOpenActivityList={openActivityListExternal}
                 onExternalOpenHandled={() => setOpenActivityListExternal(false)}
+                onShowError={(title, message) => setErrorModal({ visible: true, title, message })}
               />
               
                               <ThemedText style={[styles.subtitle, { color: currentTheme.uiColors.secondary }]}>✨ for AI suggestions, 📃 to manage more!</ThemedText>
@@ -1601,6 +1612,14 @@ export default function HomeScreen() {
         visible={showFirstTimeWelcome}
         onClose={handleFirstTimeWelcomeClose}
         onSelectTitle={handleFirstTimeTitleSelect}
+      />
+
+      {/* Themed Error Modal */}
+      <ThemedErrorModal
+        visible={errorModal.visible}
+        title={errorModal.title}
+        message={errorModal.message}
+        onClose={() => setErrorModal({ visible: false, title: '', message: '' })}
       />
     </SafeAreaView>
   );

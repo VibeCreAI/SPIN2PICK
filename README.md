@@ -9,7 +9,11 @@ Transform boredom into joy with our interactive activity wheel that combines the
 ## ✨ **What Makes SPIN 2 PICK Special?**
 
 🎯 **Smart Activity Discovery** – Our AI suggests practical, recognizable activities tailored to your collection  
-🎨 **Theme Customization** – Choose from 6 beautiful themes to personalize your experience  
+🎨 **Theme Customization & Builder** – Choose from 6 presets or create unlimited custom themes with AI-powered color palettes  
+🖌️ **Custom Theme Builder** – Design personalized themes with a rich color picker or AI-generated suggestions  
+📋 **Wheel Templates & Title Management** – Jump-start with pre-made wheels or save your own templates  
+👋 **First-Time Onboarding** – Guided welcome modal recommends popular wheels for new users  
+⚠️ **Smart Error Handling** – Themed error modals keep you informed without breaking immersion  
 💾 **Save & Load Sets** – Create and manage up to 5 different activity collections  
 📱 **Bulk Activity Management** – Add multiple activities at once or delete them easily  
 🤖 **Bulk AI Suggestions** – Generate 3-10 activities instantly with AI  
@@ -72,6 +76,19 @@ Transform boredom into joy with our interactive activity wheel that combines the
 - **Smart color reassignment** when activities are added or removed
 - **High contrast text** – Ensures readability across all themes
 - **Visual variety** – Each activity gets a unique, vibrant color
+
+### 🖌️ **Custom Theme Builder & AI Colors**
+- **Unlimited Custom Themes** – Use an intuitive color picker to craft your own palette
+- **AI-Powered Palette Generator** – Let the AI suggest harmonious wheel colors and accessible text
+- **Live Preview & Editing** – See changes in real-time before saving
+- **Persistent Storage** – Your custom theme is saved and can be updated anytime
+
+### 📋 **Wheel Title Templates & Management**
+- **Dozens of Pre-Made Titles** – Family Fun, Food Roulette, Decision Makers, and more
+- **Custom Wheel Creation** – Build, name, and save your own wheel templates
+- **Organized Categories** – Browse titles by Family, Food, Games, Education, etc.
+- **Duplicate Protection** – Smart cleanup prevents redundant titles
+- **First-Time Welcome** – Friendly onboarding modal helps new users pick a starting wheel
 
 ---
 
@@ -193,7 +210,11 @@ Muted, classic tones for a timeless aesthetic
 ## 🎉 **Recent Updates**
 
 ### **v1.2.0 - Major Feature Expansion & Theme System**
-- 🎨 **Complete Theme System** – 6 beautiful themes with instant switching and persistent storage
+- 🎨 **Complete Theme System & Custom Builder** – 6 beautiful presets **plus unlimited custom themes** with AI-assisted color creation and persistent storage
+- 🖌️ **Custom Theme Builder** – Intuitive color picker and AI palette generator for personalized themes
+- 📋 **Wheel Title Templates & Management** – Browse, create, and organize wheel templates with smart duplicate protection
+- 👋 **First-Time Onboarding** – New users get a guided welcome experience with recommended wheels
+- ⚠️ **Themed Error Modals** – Improved error handling with consistent visuals across all themes
 - 📱 **Bulk Activity Management** – Add multiple activities at once via intuitive modal interface
 - 🤖 **Bulk AI Suggestions** – Generate 3-10 activities instantly with selectable AI recommendations
 - 📃 **Activity Management Modal** – Comprehensive activity viewing, organization, and deletion system

@@ -1,4 +1,4 @@
-// Vercel serverless function for AI option suggestions
+// Vercel serverless function for AI option suggestions (SIMPLIFIED VERSION)
 export default async function handler(req, res) {
   // 🌐 CORS headers for cross-origin requests (development)
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -39,311 +39,28 @@ export default async function handler(req, res) {
   }
 
   try {
-    const optionsList = existingActivities.length > 0 
-      ? existingActivities.join(', ') 
-      : 'No options yet';
-
-    const declinedList = declinedSuggestions.length > 0 
-      ? declinedSuggestions.join(', ') 
-      : 'None declined yet';
-
-    // Enhanced context analysis and pattern detection
-    const analyzeExistingOptions = (options) => {
-      if (!options || options.length === 0) {
-        return {
-          isEmpty: true,
-          patterns: [],
-          avgLength: 0,
-          complexity: 'unknown',
-          themes: [],
-          demographics: 'general'
-        };
-      }
-
-      const patterns = {
-        avgLength: options.reduce((sum, opt) => sum + opt.length, 0) / options.length,
-        hasNumbers: options.some(opt => /\d/.test(opt)),
-        hasEmojis: options.some(opt => /[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{1F700}-\u{1F77F}]|[\u{1F780}-\u{1F7FF}]|[\u{1F800}-\u{1F8FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/u.test(opt)),
-        complexity: options.length > 5 ? 'detailed' : options.length > 2 ? 'moderate' : 'simple',
-        commonWords: options.join(' ').toLowerCase().split(' ').reduce((acc, word) => {
-          if (word.length > 3) acc[word] = (acc[word] || 0) + 1;
-          return acc;
-        }, {}),
-        optionTypes: {
-          physical: options.some(opt => /run|jump|play|sport|exercise|walk|dance|swim/i.test(opt)),
-          creative: options.some(opt => /draw|paint|craft|art|music|sing|create|build/i.test(opt)),
-          social: options.some(opt => /together|friend|family|group|party|chat|talk/i.test(opt)),
-          indoor: options.some(opt => /indoor|home|inside|room|kitchen|living/i.test(opt)),
-          outdoor: options.some(opt => /outdoor|outside|park|garden|nature|beach|hiking/i.test(opt)),
-          educational: options.some(opt => /learn|study|read|book|school|teach|practice/i.test(opt))
-        }
-      };
-
-      return {
-        isEmpty: false,
-        patterns,
-        avgLength: patterns.avgLength,
-        complexity: patterns.complexity,
-        themes: Object.entries(patterns.optionTypes).filter(([_, value]) => value).map(([key, _]) => key),
-        demographics: patterns.optionTypes.family ? 'family' : patterns.optionTypes.educational ? 'educational' : 'general'
-      };
+    // Simple helper to format the option lists for the prompt
+    const formatOptionsList = (options) => {
+      return options.length > 0 ? options.join(', ') : 'None';
     };
 
-    // Enhanced context-aware prompt generation
-    const generateSystemPrompt = (category, titleName, description, optionAnalysis) => {
-      const baseInstructions = `You are an expert option suggestion assistant. Your goal is to provide contextually relevant, diverse, and engaging suggestions.`;
+    // Ultra-constrained prompt for better results
+    const userPrompt = `Generate ONE single option for a ${titleName} wheel.
 
-      const categoryPrompts = {
-        food: `${baseInstructions} Focus on culinary experiences ranging from simple snacks to elaborate meals.
-        
-EXPERTISE AREAS:
-- International cuisines and regional specialties
-- Dietary accommodations (vegetarian, gluten-free, quick prep)
-- Occasion-based suggestions (breakfast, lunch, dinner, snacks, desserts)
-- Cooking methods and complexity levels
-- Seasonal and fresh ingredient focus
+RULES:
+1. Respond with ONLY the option name, nothing else
+2. Keep it 1-5 words maximum  
+3. Make it relevant to: ${titleDescription}
+4. Do NOT include any of these existing options: [${formatOptionsList(existingActivities)}]
+5. Do NOT include any of these rejected options: [${formatOptionsList(declinedSuggestions)}]
 
-QUALITY STANDARDS:
-- Prioritize accessible, recognizable food options
-- Balance familiar favorites with discovery opportunities  
-- Consider preparation time and skill requirements
-- Include both homemade and dining options`,
+Examples of good responses:
+- "Swimming"
+- "Board Games"
+- "Cook Dinner" 
+- "Movie Night"
 
-        games: `${baseInstructions} Focus on entertainment, games, and recreational options for various settings and group sizes.
-        
-EXPERTISE AREAS:
-- Party games and social options
-- Sports and physical games (indoor/outdoor)
-- Board games, card games, and puzzles
-- Digital and traditional games
-- Team building and group options
-- Solo entertainment options
-
-QUALITY STANDARDS:
-- Consider required materials and setup complexity
-- Balance active and passive options
-- Include options for different skill levels and ages
-- Suggest both competitive and cooperative formats`,
-
-        numbers: `${baseInstructions} Focus on numerical selections for games, decisions, randomization, and mathematical contexts.
-        
-EXPERTISE AREAS:
-- Gaming numbers (dice, lottery, bingo)
-- Decision-making aids (rankings, quantities)
-- Mathematical sequences and patterns
-- Lucky numbers and cultural significance
-- Practical number applications
-
-QUALITY STANDARDS:
-- Provide numbers appropriate for the stated context
-- Consider cultural and psychological number preferences
-- Include both simple and complex numerical formats
-- Balance randomness with meaningful selections`,
-
-        entertainment: `${baseInstructions} Focus on media consumption, cultural experiences, and leisure activities.
-        
-EXPERTISE AREAS:
-- Movies, TV shows, documentaries across genres
-- Music discovery (artists, genres, playlists)
-- Books, podcasts, and digital content
-- Live entertainment and cultural events
-- Streaming platforms and content curation
-
-QUALITY STANDARDS:
-- Balance mainstream and niche recommendations
-- Consider different moods and occasions
-- Include both active and passive entertainment
-- Suggest discovery opportunities alongside familiar options`,
-
-        education: `${baseInstructions} Focus on learning opportunities, skill development, and intellectual growth.
-        
-EXPERTISE AREAS:
-- Academic subjects and curricula
-- Practical life skills and hobbies
-- Professional development and certifications
-- Creative and artistic learning
-- Technology and digital literacy
-- Language learning and cultural studies
-
-QUALITY STANDARDS:
-- Provide clear learning objectives and outcomes
-- Consider different learning styles and preferences
-- Balance theoretical knowledge with practical application
-- Include both structured and self-directed learning options`,
-
-        workplace: `${baseInstructions} Focus on professional development, workplace wellness, and productivity enhancement.
-        
-EXPERTISE AREAS:
-- Stress relief and mental health breaks
-- Team building and networking activities
-- Skill development and career growth
-- Office-appropriate physical activities
-- Professional social interactions
-- Quick productivity boosters
-
-QUALITY STANDARDS:
-- Ensure all suggestions are workplace-appropriate
-- Consider time constraints (5-30 minute activities)
-- Balance individual and group activities
-- Focus on activities that refresh and energize`,
-
-        family: `${baseInstructions} Focus on multi-generational activities that promote bonding, fun, and shared experiences.
-        
-EXPERTISE AREAS:
-- Age-inclusive activities for diverse family groups
-- Educational and entertaining combinations
-- Indoor and outdoor family adventures
-- Creative projects and collaborative activities
-- Seasonal and holiday-themed suggestions
-- Budget-friendly and accessible options
-
-QUALITY STANDARDS:
-- Ensure activities work for different age groups
-- Balance active and quiet activities
-- Consider varying attention spans and interests
-- Promote positive family interactions and memories`,
-
-        custom: `${baseInstructions} Based on the specific context "${titleName}" and description "${description}", provide highly relevant suggestions.
-        
-ANALYSIS APPROACH:
-1. Parse the title for key themes, demographics, and intent
-2. Extract context clues from the description
-3. Infer appropriate activity types and complexity levels
-4. Consider the specific use case and target audience
-
-QUALITY STANDARDS:
-- Maintain strict relevance to the stated theme
-- Demonstrate understanding of the specific context
-- Provide creative yet practical suggestions
-- Ensure suggestions align with the intended purpose`
-      };
-
-      const basePrompt = categoryPrompts[category] || categoryPrompts.custom;
-      
-      // Add pattern analysis insights
-      let patternInsights = '';
-      if (!optionAnalysis.isEmpty) {
-        const themes = optionAnalysis.themes.join(', ');
-        patternInsights = `
-EXISTING OPTION ANALYSIS:
-- Current collection has ${optionAnalysis.patterns ? Object.keys(optionAnalysis.patterns.commonWords || {}).length : 0} options
-- Average length: ${Math.round(optionAnalysis.avgLength || 0)} characters
-- Complexity level: ${optionAnalysis.complexity}
-- Detected themes: ${themes || 'general'}
-- Pattern consistency: Match the established style and complexity level`;
-      } else {
-        patternInsights = `
-EMPTY WHEEL CONTEXT:
-- This is a fresh start - no existing options to reference
-- Use title and description to infer appropriate suggestions
-- Establish a consistent style and theme for future additions
-- Consider the target demographic and intended use case`;
-      }
-
-      return `${basePrompt}
-
-CONTEXT: "${titleName}" - ${description}
-${patternInsights}
-
-SUGGESTION STRATEGY:
-1. ANALYZE: Study the existing patterns and context thoroughly
-2. DIFFERENTIATE: Ensure complete uniqueness from existing and declined items
-3. CONTEXTUALIZE: Match the established theme and style perfectly
-4. VALIDATE: Confirm relevance, appropriateness, and practical value
-
-OUTPUT FORMAT:
-- Return ONLY the suggestion (1-4 words maximum)
-- Keep it under 25 characters total
-- Make it clear, actionable, and memorable
-- NO explanations, quotes, or extra formatting
-- Match the style and complexity of existing items`;
-    };
-
-    // Analyze existing options for pattern recognition
-    const optionAnalysis = analyzeExistingOptions(existingActivities);
-    const systemPrompt = generateSystemPrompt(titleCategory, titleName, titleDescription, optionAnalysis);
-
-    // Enhanced semantic similarity checking for declined suggestions
-    const createSemanticExclusions = (declinedList) => {
-      if (declinedList.length === 0) return 'None declined yet';
-      
-      const exclusions = declinedSuggestions.map(item => {
-        const variations = [];
-        const words = item.toLowerCase().split(' ');
-        
-        // Add common variations and synonyms
-        words.forEach(word => {
-          const synonyms = {
-            'soccer': ['football', 'kick ball'],
-            'football': ['soccer', 'american football'],
-            'movie': ['film', 'cinema', 'video'],
-            'read': ['reading', 'book'],
-            'cook': ['cooking', 'chef', 'kitchen'],
-            'game': ['games', 'gaming', 'play'],
-            'music': ['song', 'singing', 'audio'],
-            'walk': ['walking', 'stroll', 'hike'],
-            'draw': ['drawing', 'sketch', 'art']
-          };
-          
-          if (synonyms[word]) {
-            variations.push(...synonyms[word]);
-          }
-        });
-        
-        return variations.length > 0 ? `${item} (avoid variations: ${variations.join(', ')})` : item;
-      });
-      
-      return exclusions.join('; ');
-    };
-
-    const enhancedDeclinedList = createSemanticExclusions(declinedSuggestions);
-
-    // Enhanced multi-step reasoning prompt
-    const basePrompt = `STEP 1 - CONTEXT ANALYSIS:
-Current wheel contents: ${optionsList}
-Previously declined suggestions: ${enhancedDeclinedList}
-Title context: "${titleName}" (Category: ${titleCategory})
-Description: ${titleDescription}
-
-STEP 2 - PATTERN RECOGNITION:
-${optionAnalysis.isEmpty ? 
-  `- Empty wheel: Focus on establishing strong thematic foundation
-   - Infer demographics and preferences from title/description
-   - Create gateway option that opens possibilities for future additions` :
-  `- Existing option count: ${existingActivities.length}
-   - Pattern themes detected: ${optionAnalysis.themes.join(', ') || 'general'}
-   - Complexity level: ${optionAnalysis.complexity}
-   - Average length: ${Math.round(optionAnalysis.avgLength)} characters
-   - Style consistency: Match established patterns`}
-
-STEP 3 - EXCLUSION VALIDATION:
-- Verify NO similarity to existing items (including partial matches)
-- Verify NO similarity to declined suggestions (including synonyms/variations)
-- Check for semantic duplicates, not just exact text matches
-
-STEP 4 - SUGGESTION GENERATION:
-Generate ONE suggestion that:
-1. FITS PERFECTLY within the established theme and category
-2. MAINTAINS CONSISTENCY with existing activity patterns and style
-3. PROVIDES MEANINGFUL DIVERSITY without breaking theme coherence
-4. OFFERS PRACTICAL VALUE and clear actionability
-5. RESPECTS ALL exclusions (existing + declined + variations)
-6. BALANCES FAMILIARITY with discovery potential`;
-
-    // Enhanced retry logic with pattern learning
-    const retryEnhancement = isRetry ? `
-
-🔄 CRITICAL RETRY - Previous attempts failed validation:
-- ANALYZE failures: Review what was rejected and why
-- AVOID ALL PATTERNS that led to previous rejections
-- INCREASE DIVERGENCE from both existing and declined items
-- DOUBLE-CHECK exclusions before finalizing suggestion
-- PRIORITIZE uniqueness while maintaining thematic relevance
-- Consider less obvious but highly relevant suggestions` : '';
-
-    const userPrompt = basePrompt + retryEnhancement + `
-
-FINAL OUTPUT: Return ONLY the option name (no explanations, formatting, or extra text):`;
+Generate ONE option now:`;
 
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
@@ -354,19 +71,15 @@ FINAL OUTPUT: Return ONLY the option name (no explanations, formatting, or extra
         "X-Title": "Spin2Pick App"
       },
       body: JSON.stringify({
-        model: "meta-llama/llama-3.2-3b-instruct", // Faster and cheaper model
+        model: "meta-llama/llama-3.2-3b-instruct",
         messages: [
-          {
-            role: "system",
-            content: systemPrompt
-          },
           {
             role: "user",
             content: userPrompt
           }
         ],
-        max_tokens: 75, // Increased for enhanced prompt processing
-        temperature: 0.6 // Slightly higher for creativity while maintaining relevance
+        max_tokens: 20, // Very limited for single option only
+        temperature: 0.7 // Balanced for creativity with consistency
       })
     });
 
@@ -383,4 +96,4 @@ FINAL OUTPUT: Return ONLY the option name (no explanations, formatting, or extra
     console.error('Error in suggest-activity API:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
-} 
+}

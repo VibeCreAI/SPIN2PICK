@@ -245,11 +245,8 @@ export default function HomeScreen() {
         } else {
           // For returning users, initialize title system normally (handles legacy migration)
           await initializeTitleSystem();
-          // If no activities were loaded by title system, use default activities
-          if (activities.length === 0) {
-            const themedDefaultActivities = reassignAllColors(DEFAULT_ACTIVITIES, currentTheme.wheelColors);
-            setActivities(themedDefaultActivities);
-          }
+          // NOTE: initializeTitleSystem() handles all fallback logic internally,
+          // no need to check activities.length here as state updates are asynchronous
         }
         
         // Load saved spin count
@@ -354,9 +351,18 @@ export default function HomeScreen() {
         if (title) {
           setCurrentTitle(title);
           
-          // Apply optimized count and theme colors during initialization
-          const optimalCount = getOptimalCountForCategory(title.category);
-          const itemsToUse = title.items.slice(0, Math.min(optimalCount, title.items.length));
+          // For loaded wheels, use ALL saved activities. For predetermined wheels, apply optimal count
+          let itemsToUse;
+          if (title.id.startsWith('loaded-')) {
+            // This is a loaded/saved wheel - use ALL activities that were saved
+            itemsToUse = title.items;
+            console.log(`🔄 Loading saved wheel with ${title.items.length} saved activities`);
+          } else {
+            // This is a predetermined wheel - apply optimal count restrictions
+            const optimalCount = getOptimalCountForCategory(title.category);
+            itemsToUse = title.items.slice(0, Math.min(optimalCount, title.items.length));
+            console.log(`🔄 Loading predetermined wheel with ${itemsToUse.length}/${title.items.length} activities`);
+          }
           
           const activitiesWithEmojis = await Promise.all(itemsToUse.map(async (item, index) => ({
             id: (index + 1).toString(),
@@ -432,9 +438,18 @@ export default function HomeScreen() {
       if (title) {
         setCurrentTitle(title);
         
-        // Apply optimized count for the category
-        const optimalCount = getOptimalCountForCategory(title.category);
-        const itemsToUse = title.items.slice(0, Math.min(optimalCount, title.items.length));
+        // For loaded wheels, use ALL saved activities. For predetermined wheels, apply optimal count
+        let itemsToUse;
+        if (title.id.startsWith('loaded-')) {
+          // This is a loaded/saved wheel - use ALL activities that were saved
+          itemsToUse = title.items;
+          console.log(`🔄 Switching to saved wheel with ${title.items.length} saved activities`);
+        } else {
+          // This is a predetermined wheel - apply optimal count restrictions
+          const optimalCount = getOptimalCountForCategory(title.category);
+          itemsToUse = title.items.slice(0, Math.min(optimalCount, title.items.length));
+          console.log(`🔄 Switching to predetermined wheel with ${itemsToUse.length}/${title.items.length} activities`);
+        }
         
         // Convert items to activities and add emojis if missing
         const activitiesWithEmojis = await Promise.all(itemsToUse.map(async (item, index) => ({
@@ -801,7 +816,7 @@ export default function HomeScreen() {
     setNewlyAddedActivityId(null);
   }, []);
 
-  const handleLoadActivities = async (loadedActivities: Activity[], title: string, titleEmoji?: string, themeInfo?: { themeId: string; customTheme?: any }) => {
+  const handleLoadActivities = async (loadedActivities: Activity[], title: string, titleEmoji?: string, titleDescription?: string, themeInfo?: { themeId: string; customTheme?: any }) => {
     // Handle theme restoration if theme info is provided
     if (themeInfo) {
       try {
@@ -830,28 +845,33 @@ export default function HomeScreen() {
       setActivities(rethemedActivities);
     }
     
-    if (currentTitle && title) {
-      setCurrentTitle({ 
-        ...currentTitle, 
-        name: title,
-        emoji: titleEmoji || currentTitle.emoji // Use saved emoji or fallback to current
-      });
-    } else if (title) {
-      // If no current title but we have title data, create a basic title object
-      setCurrentTitle({
-        id: 'loaded-title',
-        name: title,
-        emoji: titleEmoji || '🎯', // Use saved emoji or default
-        description: 'Loaded from save slot',
-        category: TitleCategory.CUSTOM,
-        items: loadedActivities,
-        isCustom: true,
-        isPredetermined: false,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        isActive: true,
-        spinCount: 0
-      });
+    // Create a new title object for the loaded wheel with unique ID
+    const uniqueLoadedId = `loaded-${Date.now()}`;
+    const loadedTitle = {
+      id: uniqueLoadedId,
+      name: title,
+      emoji: titleEmoji || '🎯',
+      description: titleDescription || 'Loaded from save slot',
+      category: TitleCategory.CUSTOM,
+      items: loadedActivities,
+      isCustom: true,
+      isPredetermined: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      isActive: true,
+      spinCount: 0
+    };
+
+    // Set the current title and persist it for refresh persistence
+    setCurrentTitle(loadedTitle);
+    
+    // 🔧 FIX BUG 1: Persist the loaded title as current title for refresh persistence
+    try {
+      await AsyncStorage.setItem(STORAGE_KEYS.CURRENT_TITLE_ID, uniqueLoadedId);
+      await TitleManager.saveTitle(loadedTitle);
+      console.log(`✅ Loaded wheel persisted successfully with ID: ${uniqueLoadedId}`);
+    } catch (error) {
+      console.error('Error persisting loaded wheel:', error);
     }
   };
 
@@ -1057,11 +1077,18 @@ export default function HomeScreen() {
     try {
       setCurrentTitle(title);
       
-      // Get optimal count for this category
-      const optimalCount = getOptimalCountForCategory(title.category);
-      
-      // Take only the optimal number of items from the title
-      const itemsToUse = title.items.slice(0, Math.min(optimalCount, title.items.length));
+      // For loaded wheels, use ALL saved activities. For predetermined wheels, apply optimal count
+      let itemsToUse;
+      if (title.id.startsWith('loaded-')) {
+        // This is a loaded/saved wheel - use ALL activities that were saved
+        itemsToUse = title.items;
+        console.log(`🎯 Selecting saved wheel with ${title.items.length} saved activities`);
+      } else {
+        // This is a predetermined wheel - apply optimal count restrictions
+        const optimalCount = getOptimalCountForCategory(title.category);
+        itemsToUse = title.items.slice(0, Math.min(optimalCount, title.items.length));
+        console.log(`🎯 Selecting predetermined wheel with ${itemsToUse.length}/${title.items.length} activities`);
+      }
       
       // Add emojis to items that don't have them and apply current theme colors
       const activitiesWithEmojis = await Promise.all(itemsToUse.map(async (item, index) => ({
@@ -1333,8 +1360,8 @@ export default function HomeScreen() {
                 <TouchableOpacity onPress={() => setShowTitleDescription(!showTitleDescription)}>
                   <ThemedText style={[styles.titleDescription, { color: currentTheme.uiColors.secondary }]}>
                     {showTitleDescription 
-                      ? (currentTitle?.description || 'Fun activities for kids of all ages') 
-                      : `${currentTitle?.items?.length || activities.length} activities • Tap for details`
+                      ? (currentTitle?.description || 'Fun options for everyone - spin to discover!') 
+                      : `${activities.length} options • Tap for details`
                     }
                   </ThemedText>
                 </TouchableOpacity>
@@ -1507,6 +1534,7 @@ export default function HomeScreen() {
         currentActivities={activities}
         currentTitle={currentTitle?.name || ''}
         currentTitleEmoji={currentTitle?.emoji}
+        currentTitleDescription={currentTitle?.description}
         onLoadActivities={handleLoadActivities}
         currentThemeId={currentTheme.id}
         getCurrentCustomThemeData={getCurrentCustomThemeData}

@@ -63,10 +63,10 @@ export const ActivityListModal: React.FC<ActivityListModalProps> = ({
     activityEmoji: '',
   });
 
-  // Get screen width for responsive design
+  // Get screen width for responsive design (following SaveLoadModal pattern)
   const screenWidth = Dimensions.get('window').width;
   const MODAL_MAX_WIDTH = 500;
-  const containerWidth = screenWidth < MODAL_MAX_WIDTH ? '95%' : MODAL_MAX_WIDTH;
+  const containerWidth = screenWidth < MODAL_MAX_WIDTH ? '90%' : MODAL_MAX_WIDTH;
 
 
 
@@ -677,6 +677,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    padding: Platform.OS === 'web' ? 20 : 16, // Add proper padding like SaveLoadModal
   },
   modalBackdrop: {
     position: 'absolute',
@@ -689,7 +690,7 @@ const styles = StyleSheet.create({
   modalContainer: {
     maxHeight: '90%',
     minHeight: Platform.OS === 'web' ? 500 : 600,
-    borderRadius: 12,
+    borderRadius: Platform.OS === 'web' ? 12 : 20, // Slightly more rounded on mobile like SaveLoadModal
     borderWidth: 2,
     padding: 0,
     elevation: 5,
@@ -998,19 +999,19 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
 
-  // Footer Styles (matching ThemeSelectionModal)
+  // Footer Styles (platform-specific, following SaveLoadModal pattern)
   footer: {
-    padding: 16,
+    padding: Platform.OS === 'web' ? 16 : 6, // Reduce padding on mobile for better fit
     alignItems: 'center',
     borderTopWidth: 1,
     borderTopColor: '#00000010',
   },
   closeButton: {
-    paddingHorizontal: 24,
-    paddingVertical: 12,
+    paddingHorizontal: Platform.OS === 'web' ? 24 : 16, // Reduce horizontal padding on mobile
+    paddingVertical: 10,
     borderRadius: 25,
     borderWidth: 2,
-    minWidth: 120,
+    minWidth: Platform.OS === 'web' ? 120 : 120, // Reduce minimum width on mobile
     alignItems: 'center',
     elevation: 2,
     shadowColor: '#000',
@@ -1019,7 +1020,7 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
   },
   closeButtonText: {
-    fontSize: 18,
+    fontSize: Platform.OS === 'web' ? 18 : 18, // Slightly smaller font on mobile for better fit
     fontWeight: 'bold',
     fontFamily: FONTS.jua,
   },

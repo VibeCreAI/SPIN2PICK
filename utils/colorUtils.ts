@@ -90,7 +90,12 @@ export interface Activity extends Item {
   // Activity is now just an alias for Item - maintains existing API
 }
 
-// Type alias for better readability and migration
+// 🆕 NEW TERMINOLOGY - Option interface as alias for Activity/Item
+export interface Option extends Item {
+  // Option is the new preferred terminology - same as Activity but clearer naming
+}
+
+// Type aliases for better readability and migration
 export type { Item } from './titleUtils';
 
 export interface ColorTheme {

@@ -861,7 +861,7 @@ export const PREDETERMINED_TITLES: Title[] = [
     id: 'kids-activities',
     name: 'Kids Activities',
     emoji: '🧸',
-    description: 'Fun activities for children and families - creative, active, and imaginative play',
+    description: 'Fun activities for children and families - creative, active, and imaginative play (49 total options)',
     category: TitleCategory.FAMILY,
     items: kidsActivityItems,
     isCustom: false,
@@ -875,7 +875,7 @@ export const PREDETERMINED_TITLES: Title[] = [
     id: 'whats-for-lunch',
     name: "What's for Lunch?",
     emoji: '🍽️',
-    description: 'Discover delicious meal ideas from quick snacks to hearty meals',
+    description: 'Discover delicious meal ideas from quick snacks to hearty meals (75 total options)',
     category: TitleCategory.FOOD,
     items: lunchItems,
     isCustom: false,
@@ -889,7 +889,7 @@ export const PREDETERMINED_TITLES: Title[] = [
     id: 'afternoon-activities',
     name: 'Afternoon Activities',
     emoji: '🏃',
-    description: 'Fun activities for any time of day - indoor, outdoor, social, and creative',
+    description: 'Fun activities for any time of day - indoor, outdoor, social, and creative (80 total options)',
     category: TitleCategory.FAMILY,
     items: activityItems,
     isCustom: false,
@@ -903,7 +903,7 @@ export const PREDETERMINED_TITLES: Title[] = [
     id: 'random-numbers',
     name: 'Random Numbers',
     emoji: '🎲',
-    description: 'Pick random numbers from 1-100 for games, decisions, or lottery fun',
+    description: 'Pick random numbers from 1-100 for games, decisions, or lottery fun (100 total options)',
     category: TitleCategory.NUMBERS,
     items: numberItems,
     isCustom: false,
@@ -917,7 +917,7 @@ export const PREDETERMINED_TITLES: Title[] = [
     id: 'truth-or-dare',
     name: 'Truth or Dare',
     emoji: '😈',
-    description: 'Fun party game with truths, dares, and creative challenges for all ages',
+    description: 'Fun party game with truths, dares, and creative challenges for all ages (60 total options)',
     category: TitleCategory.GAMES,
     items: truthOrDareItems,
     isCustom: false,
@@ -931,7 +931,7 @@ export const PREDETERMINED_TITLES: Title[] = [
     id: 'team-picker',
     name: 'Team Picker',
     emoji: '⚽',
-    description: 'Assign teams, roles, and positions for sports, projects, and group activities',
+    description: 'Assign teams, roles, and positions for sports, projects, and group activities (40 total options)',
     category: TitleCategory.GAMES,
     items: teamItems,
     isCustom: false,
@@ -945,7 +945,7 @@ export const PREDETERMINED_TITLES: Title[] = [
     id: 'dessert-roulette',
     name: 'Dessert Roulette',
     emoji: '🍰',
-    description: 'Sweet treats from classic to modern - satisfy your dessert cravings',
+    description: 'Sweet treats from classic to modern - satisfy your dessert cravings (60 total options)',
     category: TitleCategory.FOOD,
     items: dessertItems,
     isCustom: false,
@@ -1366,9 +1366,23 @@ export const installPredeterminedTitles = async (): Promise<void> => {
       if (!existsById && !existsByName) {
         await TitleManager.saveTitle(title);
         console.log(`✅ Installed title: ${title.name}`);
+      } else if (existsById) {
+        // Update existing predetermined titles to refresh descriptions
+        const existingTitle = existsById;
+        if (existingTitle.isPredetermined) {
+          const updatedTitle = {
+            ...title,
+            // Preserve original creation date and current usage stats
+            createdAt: existingTitle.createdAt,
+            spinCount: existingTitle.spinCount || 0,
+            lastUsed: existingTitle.lastUsed,
+            updatedAt: new Date(),
+          };
+          await TitleManager.saveTitle(updatedTitle);
+          console.log(`🔄 Updated predetermined title: ${title.name}`);
+        }
       } else {
-        const reason = existsById ? 'ID already exists' : 'Name already exists';
-        console.log(`⚠️ Title skipped (${reason}): ${title.name}`);
+        console.log(`⚠️ Title skipped (name exists): ${title.name}`);
       }
     }
     

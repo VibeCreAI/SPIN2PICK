@@ -1,4 +1,4 @@
-// Vercel serverless function for bulk AI option suggestions
+// Vercel serverless function for bulk AI option suggestions (SIMPLIFIED VERSION)
 export default async function handler(req, res) {
   // 🌐 CORS headers for cross-origin requests (development)
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -44,129 +44,29 @@ export default async function handler(req, res) {
   }
 
   try {
-    const optionsList = existingActivities.length > 0 
-      ? existingActivities.join(', ') 
-      : 'No options yet';
-
-    const declinedList = declinedSuggestions.length > 0 
-      ? declinedSuggestions.join(', ') 
-      : 'None declined yet';
-
-    // Generate context-aware prompt based on title category
-    const generateSystemPrompt = (category, titleName, description) => {
-      const categoryPrompts = {
-        food: `You are a culinary expert suggesting delicious food options. Focus on meals, snacks, cuisines, and food experiences.
-        
-GUIDELINES:
-- Suggest appetizing food options from different cuisines and meal types
-- Include quick snacks, full meals, beverages, and desserts
-- Consider dietary preferences, cooking methods, and occasions
-- Range from simple to elaborate options
-- Examples: "Thai Green Curry", "Grilled Sandwich", "Smoothie Bowl", "Fish Tacos"`,
-
-        games: `You are a game expert suggesting fun options and games. Focus on party games, sports, challenges, and entertainment.
-        
-GUIDELINES:
-- Suggest engaging games for various group sizes and ages
-- Include party games, sports, puzzles, challenges, and competitions
-- Consider indoor/outdoor options and required materials
-- Range from quick games to longer options
-- Examples: "Scavenger Hunt", "Word Association", "Frisbee", "Card Games"`,
-
-        numbers: `You are providing random numbers for various purposes. Focus on numerical selections for games, decisions, or randomization.
-        
-GUIDELINES:
-- Suggest numbers appropriate for the context
-- Consider ranges, sequences, and special number formats
-- Include lottery numbers, game numbers, or decision numbers
-- Keep numbers practical and useful
-- Examples: "42", "7", "100", "Lucky Number 13"`,
-
-        entertainment: `You are an entertainment expert suggesting movies, books, music, and media. Focus on discovery and enjoyment.
-        
-GUIDELINES:
-- Suggest diverse entertainment options across genres and formats
-- Include classic and modern options
-- Consider different moods, occasions, and preferences
-- Range from mainstream to niche discoveries
-- Examples: "Action Movie", "Jazz Music", "Mystery Novel", "Documentary"`,
-
-        education: `You are an educational expert suggesting learning topics and options. Focus on knowledge, skills, and personal development.
-        
-GUIDELINES:
-- Suggest educational topics and learning options
-- Include academic subjects, practical skills, and creative pursuits
-- Consider different learning styles and difficulty levels
-- Range from basic to advanced topics
-- Examples: "Spanish Language", "Photography", "Critical Thinking", "Science Experiment"`,
-
-        workplace: `You are a workplace wellness expert suggesting professional break options. Focus on office-appropriate stress relief and productivity.
-        
-GUIDELINES:
-- Suggest professional, office-appropriate options
-- Include stress relief, networking, and skill development options
-- Consider different time constraints (5-30 minutes)
-- Focus on options that refresh and energize
-- Examples: "Quick Walk", "Desk Yoga", "Team Coffee", "Brain Games"`,
-
-        family: `You are a family option expert suggesting engaging options for all ages. Focus on bonding, fun, and shared experiences.
-        
-GUIDELINES:
-- Suggest options suitable for families and groups
-- Include indoor/outdoor options and various skill levels
-- Consider bonding, learning, and entertainment value
-- Range from quiet to active options
-- Examples: "Board Game Night", "Nature Walk", "Cooking Together", "Craft Project"`,
-
-        custom: `You are a versatile suggestion expert. Based on the title "${titleName}" and description "${description}", provide relevant suggestions.
-        
-GUIDELINES:
-- Analyze the title and description to understand the context
-- Suggest items that fit the specific theme or purpose
-- Be creative but practical within the given context
-- Consider the variety and usefulness of suggestions
-- Examples will vary based on the specific title context`
-      };
-
-      const basePrompt = categoryPrompts[category] || categoryPrompts.custom;
-      
-      return `${basePrompt}
-
-CONTEXT: "${titleName}" - ${description}
-
-OUTPUT FORMAT:
-- Return ONLY a numbered list (1. Item Name)
-- Each suggestion should be 1-4 words maximum, under 25 characters
-- Make each item clear and actionable
-- NO explanations, quotes, or extra text
-- Ensure variety and uniqueness across all suggestions
-- Match the style and theme of existing items`;
+    // Simple helper to format the option lists for the prompt
+    const formatOptionsList = (options) => {
+      return options.length > 0 ? options.join(', ') : 'None';
     };
 
-    const systemPrompt = generateSystemPrompt(titleCategory, titleName, titleDescription);
+    // Ultra-constrained prompt for bulk suggestions
+    const userPrompt = `Generate ${count} options for a ${titleName} wheel.
 
-    const userPrompt = `Current items: ${optionsList}
-Previously declined suggestions: ${declinedList}
+RULES:
+1. Respond with ONLY a numbered list, nothing else
+2. Each option should be 1-5 words maximum
+3. Make them relevant to: ${titleDescription}  
+4. Do NOT include any of these existing options: [${formatOptionsList(existingActivities)}]
+5. Do NOT include any of these rejected options: [${formatOptionsList(declinedSuggestions)}]
 
-Generate ${count} appropriate items that:
-1. Are completely different from ALL existing items
-2. Are NOT any of the previously declined suggestions
-3. Fit perfectly with the theme "${titleName}"
-4. Match the context: ${titleDescription}
-5. Are practical and easily understood
-6. Provide variety within the theme
+Examples of good format:
+1. Swimming
+2. Board Games
+3. Cook Dinner
+4. Movie Night
+5. Reading Books
 
-IMPORTANT: 
-- Do not suggest any item from the declined list
-- Make sure all ${count} items are different from each other
-- Analyze the existing items to understand the pattern and style
-- Maintain consistency with the theme while adding diversity
-- Each suggestion should fit naturally within this category
-
-Return exactly ${count} items in this format:
-1. Item Name
-2. Item Name
-...`;
+Generate exactly ${count} options now:`;
 
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
@@ -177,19 +77,15 @@ Return exactly ${count} items in this format:
         "X-Title": "Spin2Pick App"
       },
       body: JSON.stringify({
-        model: "meta-llama/llama-3.2-3b-instruct", // Faster and cheaper model
+        model: "meta-llama/llama-3.2-3b-instruct",
         messages: [
-          {
-            role: "system",
-            content: systemPrompt
-          },
           {
             role: "user",
             content: userPrompt
           }
         ],
-        max_tokens: 150, // Increased for multiple activities
-        temperature: 0.7 // Slightly higher for more variety in bulk suggestions
+        max_tokens: 150, // Reduced for focused bulk response  
+        temperature: 0.7 // Balanced for variety with consistency
       })
     });
 
@@ -233,4 +129,4 @@ Return exactly ${count} items in this format:
     console.error('Error in suggest-multiple-activities API:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
-} 
+}

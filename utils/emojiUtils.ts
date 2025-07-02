@@ -1,4 +1,6 @@
 import Constants from 'expo-constants';
+import { PREDETERMINED_TITLES } from '../data/predeterminedTitles';
+import { TitleCategory } from './titleUtils';
 
 /**
  * Get the appropriate API base URL based on platform
@@ -132,9 +134,10 @@ export const getAISuggestedActivity = async (
   declinedSuggestions: string[] = [],
   titleName: string = 'Kids Activity',
   titleCategory: string = 'family',
-  titleDescription: string = 'Random activities'
+  titleDescription: string = 'Random activities',
+  titleId?: string
 ): Promise<string> => {
-  const maxRetries = 2; // Allow up to 3 total attempts (initial + 2 retries)
+  const maxRetries = 2; // Allow up to 3 total attempts (initial + 2 retries) for faster fallback
   let retryDeclinedSuggestions = [...declinedSuggestions]; // Copy to avoid mutating original
   
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
@@ -188,23 +191,45 @@ export const getAISuggestedActivity = async (
       
       let rawResponse = choice.message.content;
       
-      // More comprehensive cleaning
+      // Enhanced cleaning pipeline
       let suggestedActivity = rawResponse
         .trim()
-        .replace(/^["'`]|["'`]$/g, '') // Remove quotes and backticks
-        .replace(/^\.|\.$/g, '') // Remove leading/trailing periods
-        .replace(/^-\s*/, '') // Remove leading dashes
-        .replace(/^\d+\.\s*/, '') // Remove numbered list format
-        .split('\n')[0] // Take only first line
-        .split('.')[0] // Take only first sentence
-        .split(',')[0] // Take only first part before comma
+        .split('\n')[0]                    // First line only
+        .replace(/^["'`]|["'`]$/g, '')     // Remove quotes and backticks
+        .replace(/^\d+[.)]\s*/, '')        // Remove numbering (1. 1) )
+        .replace(/^[-*•]\s*/, '')          // Remove bullets
+        .replace(/^(Option|Suggestion):\s*/i, '') // Remove prefixes
+        .split(/[.!?]/)[0]                 // First sentence only
+        .split(',')[0]                     // First part before comma
         .trim();
 
-      // Very permissive validation - only reject truly invalid responses
-      if (/^[\s]*$/.test(suggestedActivity) || /[^\w\s&'.,!-]/.test(suggestedActivity)) {
-        console.error(`❌ AI suggestion validation failed: invalid characters or empty (attempt ${attempt + 1}/${maxRetries + 1})`);
+      // Smart validation - detect meta-responses and invalid formats
+      const isMetaResponse = (text) => {
+        const lower = text.toLowerCase();
+        return lower.includes('based on') || 
+               lower.includes('analysis') || 
+               lower.includes('suggest') ||
+               lower.includes('recommend') ||
+               lower.includes('consider') ||
+               lower.includes('would be') ||
+               lower.includes('you could') ||
+               lower.startsWith('here') ||
+               lower.startsWith('the ') && lower.includes('option');
+      };
+
+      const isValidOption = (text) => {
+        return text.length >= 2 && 
+               text.length <= 50 && 
+               /^[a-zA-Z0-9\s&'.,!-]+$/.test(text) &&
+               !isMetaResponse(text);
+      };
+
+      if (!isValidOption(suggestedActivity)) {
+        console.error(`❌ AI suggestion validation failed: "${suggestedActivity}" (attempt ${attempt + 1}/${maxRetries + 1})`);
         if (attempt === maxRetries) {
-          return getRandomFallbackActivity([...existingActivities, ...retryDeclinedSuggestions]);
+          // Use smart fallback system
+          const fallback = getSmartFallbackOption([...existingActivities, ...retryDeclinedSuggestions], retryDeclinedSuggestions, titleName, titleId);
+          return fallback.name;
         }
         continue;
       }
@@ -212,7 +237,8 @@ export const getAISuggestedActivity = async (
       if (existingActivities.includes(suggestedActivity)) {
         console.error(`❌ AI suggested duplicate activity: "${suggestedActivity}" (attempt ${attempt + 1}/${maxRetries + 1})`);
         if (attempt === maxRetries) {
-          return getRandomFallbackActivity([...existingActivities, ...retryDeclinedSuggestions]);
+          const fallback = getSmartFallbackOption([...existingActivities, ...retryDeclinedSuggestions], retryDeclinedSuggestions, titleName, titleId);
+          return fallback.name;
         }
         // Add duplicate to declined list for next retry
         retryDeclinedSuggestions.push(suggestedActivity);
@@ -222,7 +248,8 @@ export const getAISuggestedActivity = async (
       if (retryDeclinedSuggestions.includes(suggestedActivity)) {
         console.error(`❌ AI suggested previously declined activity: "${suggestedActivity}" (attempt ${attempt + 1}/${maxRetries + 1})`);
         if (attempt === maxRetries) {
-          return getRandomFallbackActivity([...existingActivities, ...retryDeclinedSuggestions]);
+          const fallback = getSmartFallbackOption([...existingActivities, ...retryDeclinedSuggestions], retryDeclinedSuggestions, titleName, titleId);
+          return fallback.name;
         }
         continue;
       }
@@ -236,13 +263,60 @@ export const getAISuggestedActivity = async (
     } catch (error: unknown) {
       console.error(`❌ AI suggestion failed (attempt ${attempt + 1}/${maxRetries + 1}):`, error instanceof Error ? error.message : String(error));
       if (attempt === maxRetries) {
-        return getRandomFallbackActivity([...existingActivities, ...retryDeclinedSuggestions]);
+        const categoryEnum = titleCategory as TitleCategory;
+        const fallback = getContextualFallbackOption([...existingActivities, ...retryDeclinedSuggestions], retryDeclinedSuggestions, categoryEnum);
+        return fallback.name;
       }
     }
   }
   
   // This should never be reached, but just in case
-  return getRandomFallbackActivity([...existingActivities, ...retryDeclinedSuggestions]);
+  const fallback = getSmartFallbackOption([...existingActivities, ...retryDeclinedSuggestions], retryDeclinedSuggestions, titleName, titleId);
+  return fallback.name;
+};
+
+/**
+ * 🆕 NEW TERMINOLOGY - Wrapper for getAISuggestedActivity using "option" terminology
+ * Get an AI-suggested option based on existing options
+ * @param existingOptions Array of existing option names
+ * @param declinedSuggestions Array of previously declined suggestion names
+ * @param titleName Name of the wheel (e.g., "Kids Options")
+ * @param titleCategory Category of the wheel (e.g., "family", "food", "games")
+ * @param titleDescription Description of the wheel
+ * @returns A promise that resolves to a suggested option name
+ */
+export const getAISuggestedOption = async (
+  existingOptions: string[], 
+  declinedSuggestions: string[] = [],
+  titleName: string = 'Kids Options',
+  titleCategory: string = 'family',
+  titleDescription: string = 'Random options',
+  titleId?: string
+): Promise<string> => {
+  // Call the existing function - maintains full compatibility
+  return getAISuggestedActivity(existingOptions, declinedSuggestions, titleName, titleCategory, titleDescription, titleId);
+};
+
+/**
+ * 🆕 NEW TERMINOLOGY - Wrapper for getRandomFallbackActivityPair using "option" terminology
+ * Get a random fallback option with its matching emoji
+ * @param existingOptions Array of existing option names
+ * @returns An object with name and emoji properties
+ */
+export const getRandomFallbackOptionPair = (existingOptions: string[]): { name: string; emoji: string } => {
+  // Call the existing function - maintains full compatibility
+  return getRandomFallbackActivityPair(existingOptions);
+};
+
+/**
+ * 🆕 NEW TERMINOLOGY - Wrapper for getEmojiForActivity using "option" terminology
+ * Get an appropriate emoji for an option using AI
+ * @param optionName The name of the option
+ * @returns A promise that resolves to an emoji string
+ */
+export const getEmojiForOption = async (optionName: string): Promise<string> => {
+  // Call the existing function - maintains full compatibility
+  return getEmojiForActivity(optionName);
 };
 
 /**
@@ -382,14 +456,14 @@ const getRandomFallbackActivity = (existingActivities: string[]): string => {
   );
   
   if (availableActivities.length === 0) {
-    // If all fallbacks are used, generate a simple numbered activity
+    // If all fallbacks are used, generate a simple numbered option
     let counter = 1;
-    let newActivity = `Fun Activity ${counter}`;
-    while (existingActivities.includes(newActivity)) {
+    let newOption = `Fun Option ${counter}`;
+    while (existingActivities.includes(newOption)) {
       counter++;
-      newActivity = `Fun Activity ${counter}`;
+      newOption = `Fun Option ${counter}`;
     }
-    return newActivity;
+    return newOption;
   }
   
   const randomIndex = Math.floor(Math.random() * availableActivities.length);
@@ -405,18 +479,93 @@ export const getRandomFallbackActivityPair = (existingActivities: string[]): { n
   );
   
   if (availablePairs.length === 0) {
-    // If all fallbacks are used, generate a simple numbered activity
+    // If all fallbacks are used, generate a simple numbered option
     let counter = 1;
-    let newActivity = `Fun Activity ${counter}`;
-    while (existingActivities.includes(newActivity)) {
+    let newOption = `Fun Option ${counter}`;
+    while (existingActivities.includes(newOption)) {
       counter++;
-      newActivity = `Fun Activity ${counter}`;
+      newOption = `Fun Option ${counter}`;
     }
-    return { name: newActivity, emoji: getRandomFallbackEmoji() };
+    return { name: newOption, emoji: getRandomFallbackEmoji() };
   }
   
   const randomIndex = Math.floor(Math.random() * availablePairs.length);
   return availablePairs[randomIndex];
+};
+
+/**
+ * 🆕 SMART FALLBACK SYSTEM - Handles predetermined vs custom wheels intelligently
+ * @param existingOptions Array of existing option names on the wheel
+ * @param declinedSuggestions Array of previously declined suggestion names
+ * @param titleName Current wheel title name
+ * @param titleId Current wheel title ID (if from predetermined titles)
+ * @returns Smart fallback result
+ */
+export const getSmartFallbackOption = (
+  existingOptions: string[], 
+  declinedSuggestions: string[] = [], 
+  titleName: string = '',
+  titleId?: string
+): { name: string; emoji: string; source: 'predetermined' | 'tryagain' } => {
+  const exclusionList = [...existingOptions, ...declinedSuggestions];
+  
+  // Check if this is a predetermined wheel by matching title ID or name
+  const predeterminedWheel = PREDETERMINED_TITLES.find(title => 
+    (titleId && title.id === titleId) || 
+    title.name.toLowerCase() === titleName.toLowerCase()
+  );
+  
+  if (predeterminedWheel) {
+    console.log(`🔍 Checking predetermined wheel: "${predeterminedWheel.name}"`);
+    
+    // Find unused options from this specific predetermined wheel
+    const availableOptions: { name: string; emoji: string }[] = [];
+    predeterminedWheel.items.forEach(item => {
+      if (!exclusionList.includes(item.name)) {
+        availableOptions.push({
+          name: item.name,
+          emoji: item.emoji || '🎯'
+        });
+      }
+    });
+    
+    if (availableOptions.length > 0) {
+      const randomIndex = Math.floor(Math.random() * availableOptions.length);
+      console.log(`✅ Predetermined fallback: Found ${availableOptions.length} unused options from wheel "${predeterminedWheel.name}"`);
+      return {
+        ...availableOptions[randomIndex],
+        source: 'predetermined'
+      };
+    } else {
+      console.log(`🚫 All options exhausted from predetermined wheel "${predeterminedWheel.name}"`);
+      return {
+        name: 'Try again',
+        emoji: '🔄',
+        source: 'tryagain'
+      };
+    }
+  }
+  
+  // For custom wheels, always return "Try again"
+  console.log(`🎨 Custom wheel detected: "${titleName}" - returning try again`);
+  return {
+    name: 'Try again',
+    emoji: '🔄',
+    source: 'tryagain'
+  };
+};
+
+/**
+ * LEGACY - Enhanced fallback system (kept for backward compatibility)
+ */
+export const getContextualFallbackOption = (
+  existingOptions: string[], 
+  declinedSuggestions: string[] = [], 
+  category?: TitleCategory
+): { name: string; emoji: string } => {
+  // Use the new smart system but return just the name/emoji for compatibility
+  const result = getSmartFallbackOption(existingOptions, declinedSuggestions, '', undefined);
+  return { name: result.name, emoji: result.emoji };
 };
 
 /**

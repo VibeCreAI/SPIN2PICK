@@ -1,23 +1,20 @@
 import { FONTS } from '@/app/_layout';
-import { PREDETERMINED_TITLES } from '@/data/predeterminedTitles';
 import { useTheme } from '@/hooks/useTheme';
 import {
-    Title,
-    TitleManager,
-    TitleCategory
+  Title,
+  TitleCategory,
+  TitleManager
 } from '@/utils/titleUtils';
 import React, { useEffect, useState } from 'react';
 import {
-    ActivityIndicator,
-    Alert,
-    Dimensions,
-    Modal,
-    Platform,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    TouchableOpacity,
-    View
+  ActivityIndicator,
+  Dimensions,
+  Modal,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CustomWheelCreationModal } from './CustomWheelCreationModal';
@@ -247,7 +244,7 @@ export const TitleManagementModal: React.FC<TitleManagementModalProps> = ({
             {title.description}
           </Text>
           <Text style={[styles.titleDetails, { color: currentTheme.uiColors.secondary }]}>
-            {title.items.length} activities • {title.category}
+            {title.items.length} options • {title.category}
           </Text>
         </View>
       </TouchableOpacity>
@@ -453,7 +450,7 @@ export const TitleManagementModal: React.FC<TitleManagementModalProps> = ({
                 {savedTitles.length === 0 && (
                   <View style={styles.emptyState}>
                     <Text style={[styles.emptyStateText, { color: currentTheme.uiColors.secondary }]}>
-                      No custom wheels yet.{'\n'}Create your own using the activities list!
+                      No custom wheels yet.{'\n'}Create your own custom wheel!
                     </Text>
                   </View>
                 )}

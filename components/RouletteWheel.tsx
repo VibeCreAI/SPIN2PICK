@@ -467,6 +467,7 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
           y={CENTER + 20}
           textAnchor="middle"
           fontSize={20}
+          fontFamily={FONTS.jua}
           fill={getTextColorForTheme(currentTheme.name)}
           stroke={getStrokeColorForTheme(currentTheme.name)}
           strokeWidth={0.2}

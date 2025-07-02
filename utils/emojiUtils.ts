@@ -137,7 +137,7 @@ export const getAISuggestedActivity = async (
   titleDescription: string = 'Random activities',
   titleId?: string
 ): Promise<string> => {
-  const maxRetries = 2; // Allow up to 3 total attempts (initial + 2 retries) for faster fallback
+  const maxRetries = 4; // Allow up to 5 total attempts (initial + 4 retries) for better AI success rate
   let retryDeclinedSuggestions = [...declinedSuggestions]; // Copy to avoid mutating original
   
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
@@ -261,6 +261,9 @@ export const getAISuggestedActivity = async (
         if (attempt === maxRetries) {
           // Use smart fallback system
           const fallback = getSmartFallbackOption([...existingActivities, ...retryDeclinedSuggestions], retryDeclinedSuggestions, titleName, titleId);
+          if (fallback.source === 'tryagain') {
+            throw new Error('AI suggestion failed after maximum attempts. Please try again later.');
+          }
           return fallback.name;
         }
         continue;
@@ -270,6 +273,9 @@ export const getAISuggestedActivity = async (
         console.error(`❌ AI suggested duplicate activity: "${suggestedActivity}" (attempt ${attempt + 1}/${maxRetries + 1})`);
         if (attempt === maxRetries) {
           const fallback = getSmartFallbackOption([...existingActivities, ...retryDeclinedSuggestions], retryDeclinedSuggestions, titleName, titleId);
+          if (fallback.source === 'tryagain') {
+            throw new Error('AI suggestion failed after maximum attempts. Please try again later.');
+          }
           return fallback.name;
         }
         // Add duplicate to declined list for next retry
@@ -281,6 +287,9 @@ export const getAISuggestedActivity = async (
         console.error(`❌ AI suggested previously declined activity: "${suggestedActivity}" (attempt ${attempt + 1}/${maxRetries + 1})`);
         if (attempt === maxRetries) {
           const fallback = getSmartFallbackOption([...existingActivities, ...retryDeclinedSuggestions], retryDeclinedSuggestions, titleName, titleId);
+          if (fallback.source === 'tryagain') {
+            throw new Error('AI suggestion failed after maximum attempts. Please try again later.');
+          }
           return fallback.name;
         }
         continue;
@@ -295,8 +304,10 @@ export const getAISuggestedActivity = async (
     } catch (error: unknown) {
       console.error(`❌ AI suggestion failed (attempt ${attempt + 1}/${maxRetries + 1}):`, error instanceof Error ? error.message : String(error));
       if (attempt === maxRetries) {
-        const categoryEnum = titleCategory as TitleCategory;
-        const fallback = getContextualFallbackOption([...existingActivities, ...retryDeclinedSuggestions], retryDeclinedSuggestions, categoryEnum);
+        const fallback = getSmartFallbackOption([...existingActivities, ...retryDeclinedSuggestions], retryDeclinedSuggestions, titleName, titleId);
+        if (fallback.source === 'tryagain') {
+          throw new Error('AI suggestion failed after maximum attempts. Please try again later.');
+        }
         return fallback.name;
       }
     }
@@ -304,6 +315,9 @@ export const getAISuggestedActivity = async (
   
   // This should never be reached, but just in case
   const fallback = getSmartFallbackOption([...existingActivities, ...retryDeclinedSuggestions], retryDeclinedSuggestions, titleName, titleId);
+  if (fallback.source === 'tryagain') {
+    throw new Error('AI suggestion failed after maximum attempts. Please try again later.');
+  }
   return fallback.name;
 };
 

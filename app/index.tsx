@@ -750,13 +750,19 @@ export default function HomeScreen() {
         })));
         
         newActivities = activitiesWithEmojis;
-      } else if (currentTitle && currentTitle.isCustomUserCreated) {
-        // For custom user-created wheels, only allow reducing the current activities
-        // Take subset of current activities (no fallback data)
-        const currentActivitiesWithTheme = activities.slice(0, Math.min(resetCount, activities.length));
-        newActivities = reassignAllColors(currentActivitiesWithTheme, currentTheme.wheelColors);
+      } else if (currentTitle && (currentTitle.isCustomUserCreated || currentTitle.isCustom || currentTitle.category === TitleCategory.CUSTOM)) {
+        // For ALL custom wheels (user-created, loaded, or custom category), use existing activities only
+        // Take subset of current activities (no fallback to random data)
+        if (activities.length === 0) {
+          // If no activities exist, can't reset - stay empty
+          newActivities = [];
+        } else {
+          // Use existing activities from the wheel, limited by resetCount
+          const activitiesToUse = activities.slice(0, Math.min(resetCount, activities.length));
+          newActivities = reassignAllColors(activitiesToUse, currentTheme.wheelColors);
+        }
       } else {
-        // For legacy "Kids Activity" or other custom titles, generate random activities
+        // For legacy "Kids Activity" or other titles without clear type, generate random activities
         const newDefaultActivities = generateDefaultActivities(resetCount);
         newActivities = reassignAllColors(newDefaultActivities, currentTheme.wheelColors);
       }
@@ -855,6 +861,7 @@ export default function HomeScreen() {
       category: TitleCategory.CUSTOM,
       items: loadedActivities,
       isCustom: true,
+      isCustomUserCreated: true, // Mark loaded wheels as custom user-created
       isPredetermined: false,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -1018,8 +1025,8 @@ export default function HomeScreen() {
 
   // Helper function to get maximum items available for current wheel
   const getMaxItemsForCurrentWheel = (): number => {
-    if (currentTitle && currentTitle.isCustomUserCreated) {
-      // For custom user-created wheels, max is current activities count
+    if (currentTitle && (currentTitle.isCustomUserCreated || currentTitle.isCustom || currentTitle.category === TitleCategory.CUSTOM)) {
+      // For ALL custom wheels, max is current activities count (since custom wheels use existing activities)
       return activities.length;
     } else if (currentTitle && currentTitle.items) {
       // For predetermined wheels, max is total items in the title
@@ -1462,7 +1469,7 @@ export default function HomeScreen() {
             <Text allowFontScaling={false} style={[styles.popupMessage, { color: currentTheme.uiColors.secondary }]}>
               {currentTitle && currentTitle.isPredetermined 
                 ? `How many random slices from "${currentTitle.name}"?`
-                : currentTitle && currentTitle.isCustomUserCreated
+                : currentTitle && (currentTitle.isCustomUserCreated || currentTitle.isCustom || currentTitle.category === TitleCategory.CUSTOM)
                 ? `How many slices to keep? (reducing from ${activities.length})`
                 : 'How many random slices do you want?'}
             </Text>
@@ -1497,7 +1504,7 @@ export default function HomeScreen() {
             }]}>
               {currentTitle && currentTitle.isPredetermined 
                 ? `Current wheel will be replaced with ${resetCount} slices from "${currentTitle.name}".`
-                : currentTitle && currentTitle.isCustomUserCreated
+                : currentTitle && (currentTitle.isCustomUserCreated || currentTitle.isCustom || currentTitle.category === TitleCategory.CUSTOM)
                 ? `Only the first ${resetCount} slices will be kept. Other slices will be removed.`
                 : `Current wheel will be deleted and replaced with ${resetCount} random slices.`}
             </Text>

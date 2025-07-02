@@ -203,25 +203,57 @@ export const getAISuggestedActivity = async (
         .split(',')[0]                     // First part before comma
         .trim();
 
-      // Smart validation - detect meta-responses and invalid formats
-      const isMetaResponse = (text) => {
-        const lower = text.toLowerCase();
-        return lower.includes('based on') || 
-               lower.includes('analysis') || 
-               lower.includes('suggest') ||
-               lower.includes('recommend') ||
-               lower.includes('consider') ||
-               lower.includes('would be') ||
-               lower.includes('you could') ||
-               lower.startsWith('here') ||
-               lower.startsWith('the ') && lower.includes('option');
+      // Enhanced meta-response detection - content-based rather than character-based
+      const isMetaResponse = (text: string) => {
+        const lower = text.toLowerCase().trim();
+        
+        // Analytical phrases that indicate meta-responses
+        const analyticalPhrases = [
+          'based on', 'analysis', 'suggest', 'recommend',
+          'consider', 'would be', 'you could', 'here are',
+          'i think', 'perhaps', 'maybe', 'could be',
+          'for example', 'such as', 'like:', 'including',
+          'depending on', 'according to', 'in conclusion',
+          'to summarize', 'overall', 'in general'
+        ];
+
+        // Check for analytical phrases
+        if (analyticalPhrases.some(phrase => lower.includes(phrase))) {
+          return true;
+        }
+
+        // Check for response-like patterns
+        if ((lower.startsWith('the ') && lower.includes('option')) ||
+            lower.includes('response') ||
+            lower.includes('answer') ||
+            lower.includes('result') ||
+            lower.startsWith('here') ||
+            lower.startsWith('these') ||
+            lower.startsWith('some')) {
+          return true;
+        }
+
+        return false;
       };
 
-      const isValidOption = (text) => {
-        return text.length >= 2 && 
-               text.length <= 50 && 
-               /^[a-zA-Z0-9\s&'.,!-]+$/.test(text) &&
-               !isMetaResponse(text);
+      // Relaxed validation - focus on format rather than character restrictions
+      const isValidOption = (text: string) => {
+        // Length check
+        if (text.length < 2 || text.length > 80) return false;
+
+        // Reject if it's clearly analytical text
+        if (isMetaResponse(text)) return false;
+
+        // Allow almost all characters except control characters
+        if (/[\x00-\x1F\x7F]/.test(text)) return false;
+
+        // Must contain at least one letter or number
+        if (!/[a-zA-Z0-9]/.test(text)) return false;
+
+        // Reject if it's just punctuation or whitespace
+        if (/^[\s\W]*$/.test(text)) return false;
+
+        return true;
       };
 
       if (!isValidOption(suggestedActivity)) {

@@ -84,8 +84,8 @@ Generate exactly ${count} options now:`;
             content: userPrompt
           }
         ],
-        max_tokens: 150, // Reduced for focused bulk response  
-        temperature: 0.7 // Balanced for variety with consistency
+        max_tokens: 500, // Reduced for focused bulk response  
+        temperature: 0.8 // Balanced for variety with consistency
       })
     });
 

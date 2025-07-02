@@ -78,8 +78,8 @@ Generate ONE option now:`;
             content: userPrompt
           }
         ],
-        max_tokens: 20, // Very limited for single option only
-        temperature: 0.7 // Balanced for creativity with consistency
+        max_tokens: 100, // Very limited for single option only
+        temperature: 0.8 // Balanced for creativity with consistency
       })
     });
 

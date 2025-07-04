@@ -1451,8 +1451,8 @@ const styles = StyleSheet.create({
   lastActivityContainer: {
     width: '100%', // Match ActivityInput width within contentWrapper
     marginVertical: 8, // Added to match ActivityInput
-    marginTop: 5,
-    marginBottom: 7, // Added to match ActivityInput
+    marginTop: 0,
+    marginBottom: 5, // Added to match ActivityInput
     padding: 16, // Changed from 15 to match ActivityInput
     // backgroundColor moved to inline styles for theme support
     borderRadius: 12,

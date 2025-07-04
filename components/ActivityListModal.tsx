@@ -197,7 +197,7 @@ export const ActivityListModal: React.FC<ActivityListModalProps> = ({
   const renderViewDeleteTab = () => (
     <ScrollView 
       style={styles.tabContent}
-      contentContainerStyle={[styles.scrollContent, { flexGrow: 1, minHeight: '100%' }]}
+      contentContainerStyle={styles.scrollContent}
       showsVerticalScrollIndicator={true}
       scrollEnabled={true}
       bounces={Platform.OS === 'ios'}
@@ -262,7 +262,7 @@ export const ActivityListModal: React.FC<ActivityListModalProps> = ({
   const renderAddMultipleTab = () => (
     <ScrollView 
       style={styles.tabContent}
-      contentContainerStyle={[styles.scrollContent, { flexGrow: 1, minHeight: '100%' }]}
+      contentContainerStyle={styles.scrollContent}
       showsVerticalScrollIndicator={true}
       scrollEnabled={true}
       bounces={Platform.OS === 'ios'}
@@ -332,7 +332,7 @@ export const ActivityListModal: React.FC<ActivityListModalProps> = ({
   const renderAISuggestionsTab = () => (
     <ScrollView 
       style={styles.tabContent}
-      contentContainerStyle={[styles.scrollContent, { flexGrow: 1, minHeight: '100%' }]}
+      contentContainerStyle={styles.scrollContent}
       showsVerticalScrollIndicator={true}
       scrollEnabled={true}
       bounces={Platform.OS === 'ios'}
@@ -686,7 +686,7 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     maxHeight: '90%',
-    minHeight: Platform.OS === 'web' ? 500 : 600,
+    minHeight: Platform.OS === 'web' ? 500 : 700, // Increased mobile height for better usability
     borderRadius: Platform.OS === 'web' ? 12 : 20, // Slightly more rounded on mobile like SaveLoadModal
     borderWidth: 2,
     padding: 0,
@@ -730,12 +730,12 @@ const styles = StyleSheet.create({
   },
   contentWrapper: {
     flex: 1,
+    flexDirection: 'column',
   },
   tabContent: {
     flex: 1,
     padding: 16,
-    minHeight: Platform.OS === 'web' ? 300 : 400,
-    maxHeight: Platform.OS === 'web' ? 400 : 500,
+    // Remove fixed maxHeight to allow proper flex layout and prevent overlaps
   },
   tabDescription: {
     fontSize: 16,
@@ -765,7 +765,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    paddingBottom: 10,
+    paddingBottom: Platform.OS === 'web' ? 10 : 20, // Extra bottom padding on mobile to prevent content overlap
   },
   activityItem: {
     marginVertical: 4,
@@ -968,12 +968,13 @@ const styles = StyleSheet.create({
   // Action Footer Styles (for tab-specific buttons)
   actionFooter: {
     flexDirection: 'row',
-    padding: Platform.OS === 'web' ? 12 : 8,
+    padding: Platform.OS === 'web' ? 12 : 12, // Increased mobile padding for better spacing
     gap: 8,
     alignItems: 'center',
     justifyContent: 'center',
     borderTopWidth: 1,
     borderTopColor: '#00000010',
+    flexShrink: 0, // Prevent shrinking
   },
   actionButton: {
     flex: 1,
@@ -1002,10 +1003,11 @@ const styles = StyleSheet.create({
 
   // Footer Styles (platform-specific, following SaveLoadModal pattern)
   footer: {
-    padding: Platform.OS === 'web' ? 16 : 6, // Reduce padding on mobile for better fit
+    padding: Platform.OS === 'web' ? 16 : 12, // Consistent padding for mobile
     alignItems: 'center',
     borderTopWidth: 1,
     borderTopColor: '#00000010',
+    flexShrink: 0, // Prevent shrinking
   },
   closeButton: {
     paddingHorizontal: Platform.OS === 'web' ? 24 : 16, // Reduce horizontal padding on mobile

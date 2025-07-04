@@ -9,6 +9,7 @@ import { FirstTimeWelcomeModal } from '@/components/FirstTimeWelcomeModal';
 import { HamburgerMenu } from '@/components/HamburgerMenu';
 import { RouletteWheel } from '@/components/RouletteWheel';
 import { CustomWheelsModal } from '@/components/CustomWheelsModal';
+import { CustomWheelCreationModal } from '@/components/CustomWheelCreationModal';
 import { SaveLoadModal } from '@/components/SaveLoadModal';
 import { ThemedErrorModal } from '@/components/ThemedErrorModal';
 import { ThemedText } from '@/components/ThemedText';
@@ -165,6 +166,9 @@ export default function HomeScreen() {
   const [showFirstTimeWelcome, setShowFirstTimeWelcome] = useState(false);
   const [errorModal, setErrorModal] = useState({ visible: false, title: '', message: '' });
   const [isFirstTimeUser, setIsFirstTimeUser] = useState(false);
+  
+  // New state for custom wheel creation modal (for first-time users)
+  const [showCustomWheelCreationModal, setShowCustomWheelCreationModal] = useState(false);
 
   // New state for activity management modal
   const [showActivityManagementModal, setShowActivityManagementModal] = useState(false);
@@ -1022,6 +1026,18 @@ export default function HomeScreen() {
   const handleFirstTimeWelcomeClose = () => {
     setShowFirstTimeWelcome(false);
   };
+  
+  const handleOpenCustomWheelCreationFromWelcome = async () => {
+    // Close the welcome modal
+    setShowFirstTimeWelcome(false);
+    
+    // Mark first-time experience as completed
+    await AsyncStorage.setItem(FIRST_TIME_USER_KEY, 'true');
+    setIsFirstTimeUser(false);
+    
+    // Open custom wheel creation modal
+    setShowCustomWheelCreationModal(true);
+  };
 
   const handleFirstTimeTitleSelect = async (title: Title) => {
     try {
@@ -1289,6 +1305,16 @@ export default function HomeScreen() {
       const activitiesWithCurrentTheme = reassignAllColors(title.items, currentTheme.wheelColors);
       setActivities(activitiesWithCurrentTheme);
     }
+  };
+
+  // Custom Wheel Creation Modal Handlers
+  const handleCloseCustomWheelCreationModal = () => {
+    setShowCustomWheelCreationModal(false);
+  };
+  
+  const handleCreateCustomWheelFromWelcome = async (title: string, description: string, category: TitleCategory) => {
+    await handleCreateCustomWheel(title, description, category);
+    setShowCustomWheelCreationModal(false);
   };
 
   // Custom Wheel Creation Handler
@@ -1767,6 +1793,14 @@ export default function HomeScreen() {
         visible={showFirstTimeWelcome}
         onClose={handleFirstTimeWelcomeClose}
         onSelectTitle={handleFirstTimeTitleSelect}
+        onOpenCustomWheelCreation={handleOpenCustomWheelCreationFromWelcome}
+      />
+
+      {/* Custom Wheel Creation Modal (for first-time users) */}
+      <CustomWheelCreationModal
+        visible={showCustomWheelCreationModal}
+        onClose={handleCloseCustomWheelCreationModal}
+        onCreateWheel={handleCreateCustomWheelFromWelcome}
       />
 
       {/* Themed Error Modal */}

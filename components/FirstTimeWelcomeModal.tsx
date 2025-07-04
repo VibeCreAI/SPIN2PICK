@@ -2,32 +2,33 @@ import { FONTS } from '@/app/_layout';
 import { PREDETERMINED_TITLES } from '@/data/predeterminedTitles';
 import { useTheme } from '@/hooks/useTheme';
 import {
-    Title
+  Title
 } from '@/utils/titleUtils';
 import React, { useEffect, useState } from 'react';
 import {
-    ActivityIndicator,
-    Dimensions,
-    Modal,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    TouchableOpacity,
-    View
+  ActivityIndicator,
+  Dimensions,
+  Modal,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  View
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text } from './Text';
 
 interface FirstTimeWelcomeModalProps {
   visible: boolean;
   onClose: () => void;
   onSelectTitle: (title: Title) => void;
+  onOpenCustomWheelCreation: () => void;
 }
 
 export const FirstTimeWelcomeModal: React.FC<FirstTimeWelcomeModalProps> = ({
   visible,
   onClose,
-  onSelectTitle
+  onSelectTitle,
+  onOpenCustomWheelCreation
 }) => {
   const { currentTheme } = useTheme();
   const [titlesByCategory, setTitlesByCategory] = useState<Record<string, Title[]>>({
@@ -90,13 +91,8 @@ export const FirstTimeWelcomeModal: React.FC<FirstTimeWelcomeModalProps> = ({
     onClose();
   };
 
-  const handleSkipToKidsActivities = () => {
-    // Find Kids Activities title
-    const kidsActivitiesTitle = PREDETERMINED_TITLES.find(title => title.id === 'kids-activities');
-    if (kidsActivitiesTitle) {
-      onSelectTitle(kidsActivitiesTitle);
-    }
-    onClose();
+  const handleSkipToCustomWheelCreation = () => {
+    onOpenCustomWheelCreation();
   };
 
   const toggleCategory = (category: string) => {
@@ -176,7 +172,7 @@ export const FirstTimeWelcomeModal: React.FC<FirstTimeWelcomeModalProps> = ({
           allowFontScaling={false}
           style={[styles.activityCount, { color: currentTheme.uiColors.accent }]}
         >
-          {title.items.length} activities
+          {title.items.length} options
         </Text>
         <View style={[styles.selectButton, { backgroundColor: currentTheme.uiColors.accent }]}>
           <Text 
@@ -261,13 +257,13 @@ export const FirstTimeWelcomeModal: React.FC<FirstTimeWelcomeModalProps> = ({
               allowFontScaling={false}
               style={[styles.title, { color: currentTheme.uiColors.primary }]}
             >
-              🎉 Welcome! Choose Your First Wheel
+              🎉 Welcome!\n\nChoose Your First Wheel!
             </Text>
             <Text 
               allowFontScaling={false}
               style={[styles.subtitle, { color: currentTheme.uiColors.secondary }]}
             >
-              Pick a category to get started with Spin2Pick
+              Pick a wheel to get started with Spin2Pick!
             </Text>
           </View>
 
@@ -308,15 +304,15 @@ export const FirstTimeWelcomeModal: React.FC<FirstTimeWelcomeModalProps> = ({
           {/* Footer */}
           <View style={[styles.footer, { borderTopColor: currentTheme.uiColors.secondary }]}>
             <TouchableOpacity 
-              style={[styles.skipButton, { backgroundColor: currentTheme.uiColors.secondary }]}
-              onPress={handleSkipToKidsActivities}
+              style={[styles.skipButton, { backgroundColor: currentTheme.uiColors.accent }]}
+              onPress={handleSkipToCustomWheelCreation}
               activeOpacity={0.7}
             >
               <Text 
                 allowFontScaling={false}
                 style={[styles.skipButtonText, { color: currentTheme.uiColors.buttonText }]}
               >
-                Skip - Start with Kids Activities
+                🎨 Create Your Own Custom Wheel
               </Text>
             </TouchableOpacity>
           </View>
@@ -483,14 +479,19 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
   },
   skipButton: {
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 25,
-    minWidth: 200,
+    paddingHorizontal: 28,
+    paddingVertical: 16,
+    borderRadius: 30,
+    minWidth: 250,
     alignItems: 'center',
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
   },
   skipButtonText: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: 'bold',
     fontFamily: FONTS.nunito,
   },

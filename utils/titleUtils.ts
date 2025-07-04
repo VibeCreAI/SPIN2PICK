@@ -342,6 +342,37 @@ export class TitleManager {
       return [];
     }
   }
+
+  // Sync current activities with current title for persistence
+  static async syncActivitiesWithCurrentTitle(activities: Item[]): Promise<boolean> {
+    try {
+      const currentTitleId = await this.getCurrentTitleId();
+      if (!currentTitleId) {
+        console.warn('⚠️ No current title to sync activities with');
+        return false;
+      }
+
+      const currentTitle = await this.getTitle(currentTitleId);
+      if (!currentTitle) {
+        console.warn(`⚠️ Current title ${currentTitleId} not found`);
+        return false;
+      }
+
+      // Update the title with new activities
+      const updatedTitle: Title = {
+        ...currentTitle,
+        items: activities,
+        updatedAt: new Date(),
+      };
+
+      await this.saveTitle(updatedTitle);
+      console.log(`💾 Synced ${activities.length} activities with title "${currentTitle.name}"`);
+      return true;
+    } catch (error) {
+      console.error('Error syncing activities with current title:', error);
+      return false;
+    }
+  }
 }
 
 // User preferences management

@@ -67,6 +67,7 @@ const SPIN_COUNT_KEY = 'SPIN2PICK_SPIN_COUNT';
 const DECLINED_SUGGESTIONS_KEY = 'SPIN2PICK_DECLINED_SUGGESTIONS';
 const SETTINGS_KEY = 'SPIN2PICK_SETTINGS';
 const FIRST_TIME_USER_KEY = 'SPIN2PICK_FIRST_TIME_COMPLETED';
+const PREBUILT_CUSTOMIZATIONS_KEY = 'SPIN2PICK_PREBUILT_CUSTOMIZATIONS';
 
 // App settings interface
 interface AppSettings {
@@ -271,20 +272,52 @@ export default function HomeScreen() {
     };
   }, []);
   
-  // Save activities whenever they change
+  // Save activities whenever they change - use appropriate storage based on wheel type
   useEffect(() => {
-    const saveActivities = async () => {
+    const saveActivitiesBasedOnWheelType = async () => {
       try {
-        if (!isLoading) {
-          await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(activities));
+        if (!isLoading && currentTitle) {
+          if (currentTitle.isPredetermined) {
+            // For pre-built wheels, save customizations separately (don't overwrite original title)
+            await savePrebuiltCustomization(currentTitle.id, activities);
+            // Also save to legacy storage for backward compatibility
+            await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(activities));
+          } else if (currentTitle.isCustomUserCreated || currentTitle.isCustom || currentTitle.category === TitleCategory.CUSTOM) {
+            // For custom wheels, update the title directly as before
+            const updatedTitle = {
+              ...currentTitle,
+              items: activities,
+              updatedAt: new Date(),
+            };
+            
+            await TitleManager.saveTitle(updatedTitle);
+            setCurrentTitle(updatedTitle); // Update local state
+            
+            // Also save to legacy storage for backward compatibility
+            await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(activities));
+            
+            console.log(`💾 Activities saved to custom title "${currentTitle.name}" (${activities.length} items)`);
+          } else {
+            // For legacy or unknown wheel types, just save to legacy storage
+            await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(activities));
+            console.log(`💾 Activities saved to legacy storage for "${currentTitle.name}" (${activities.length} items)`);
+          }
         }
       } catch (error) {
         console.error('Error saving activities:', error);
+        // Fallback to legacy storage on error
+        try {
+          if (!isLoading) {
+            await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(activities));
+          }
+        } catch (fallbackError) {
+          console.error('Error in fallback save:', fallbackError);
+        }
       }
     };
     
-    saveActivities();
-  }, [activities, isLoading]);
+    saveActivitiesBasedOnWheelType();
+  }, [activities, isLoading, currentTitle?.id]); // Include currentTitle.id to avoid infinite loops
 
   // Save spin count whenever it changes
   useEffect(() => {
@@ -300,6 +333,38 @@ export default function HomeScreen() {
     
     saveSpinCount();
   }, [spinCount, isLoading]);
+
+  // Helper functions for managing pre-built wheel customizations
+  const getPrebuiltCustomizations = async (): Promise<Record<string, Activity[]>> => {
+    try {
+      const stored = await AsyncStorage.getItem(PREBUILT_CUSTOMIZATIONS_KEY);
+      return stored ? JSON.parse(stored) : {};
+    } catch (error) {
+      console.error('Error loading pre-built customizations:', error);
+      return {};
+    }
+  };
+
+  const savePrebuiltCustomization = async (titleId: string, activities: Activity[]): Promise<void> => {
+    try {
+      const customizations = await getPrebuiltCustomizations();
+      customizations[titleId] = activities;
+      await AsyncStorage.setItem(PREBUILT_CUSTOMIZATIONS_KEY, JSON.stringify(customizations));
+      console.log(`💾 Saved customization for pre-built wheel "${titleId}" (${activities.length} items)`);
+    } catch (error) {
+      console.error('Error saving pre-built customization:', error);
+    }
+  };
+
+  const loadPrebuiltCustomization = async (titleId: string): Promise<Activity[] | null> => {
+    try {
+      const customizations = await getPrebuiltCustomizations();
+      return customizations[titleId] || null;
+    } catch (error) {
+      console.error('Error loading pre-built customization:', error);
+      return null;
+    }
+  };
 
   // Helper functions for managing declined suggestions
   const getDeclinedSuggestions = async (): Promise<string[]> => {
@@ -353,17 +418,29 @@ export default function HomeScreen() {
         if (title) {
           setCurrentTitle(title);
           
-          // For loaded wheels, use ALL saved activities. For predetermined wheels, apply optimal count
+          // Load activities based on wheel type
           let itemsToUse;
-          if (title.id.startsWith('loaded-')) {
-            // This is a loaded/saved wheel - use ALL activities that were saved
+          if (title.id.startsWith('loaded-') || title.isCustomUserCreated || title.category === TitleCategory.CUSTOM) {
+            // This is a loaded/saved/custom wheel - use ALL activities that were saved
             itemsToUse = title.items;
-            console.log(`🔄 Loading saved wheel with ${title.items.length} saved activities`);
+            console.log(`🔄 Loading saved/custom wheel "${title.name}" with ${title.items.length} saved activities`);
+          } else if (title.isPredetermined) {
+            // This is a predetermined wheel - check for saved customizations first
+            const savedCustomizations = await loadPrebuiltCustomization(title.id);
+            if (savedCustomizations && savedCustomizations.length > 0) {
+              // Use saved customizations
+              itemsToUse = savedCustomizations;
+              console.log(`🔄 Loading predetermined wheel "${title.name}" with ${savedCustomizations.length} saved customizations`);
+            } else {
+              // Use default optimal count for this wheel
+              const optimalCount = getOptimalCountForCategory(title.category);
+              itemsToUse = title.items.slice(0, Math.min(optimalCount, title.items.length));
+              console.log(`🔄 Loading predetermined wheel "${title.name}" with ${itemsToUse.length}/${title.items.length} default activities (optimal for ${title.category})`);
+            }
           } else {
-            // This is a predetermined wheel - apply optimal count restrictions
-            const optimalCount = getOptimalCountForCategory(title.category);
-            itemsToUse = title.items.slice(0, Math.min(optimalCount, title.items.length));
-            console.log(`🔄 Loading predetermined wheel with ${itemsToUse.length}/${title.items.length} activities`);
+            // Fallback: use all items but log this unexpected case
+            itemsToUse = title.items;
+            console.log(`⚠️ Loading wheel "${title.name}" with all ${title.items.length} items (unexpected wheel type)`);
           }
           
           const activitiesWithEmojis = await Promise.all(itemsToUse.map(async (item, index) => ({
@@ -440,17 +517,29 @@ export default function HomeScreen() {
       if (title) {
         setCurrentTitle(title);
         
-        // For loaded wheels, use ALL saved activities. For predetermined wheels, apply optimal count
+        // Load activities based on wheel type
         let itemsToUse;
-        if (title.id.startsWith('loaded-')) {
-          // This is a loaded/saved wheel - use ALL activities that were saved
+        if (title.id.startsWith('loaded-') || title.isCustomUserCreated || title.category === TitleCategory.CUSTOM) {
+          // This is a loaded/saved/custom wheel - use ALL activities that were saved
           itemsToUse = title.items;
-          console.log(`🔄 Switching to saved wheel with ${title.items.length} saved activities`);
+          console.log(`🔄 Switching to saved/custom wheel "${title.name}" with ${title.items.length} saved activities`);
+        } else if (title.isPredetermined) {
+          // This is a predetermined wheel - check for saved customizations first
+          const savedCustomizations = await loadPrebuiltCustomization(title.id);
+          if (savedCustomizations && savedCustomizations.length > 0) {
+            // Use saved customizations
+            itemsToUse = savedCustomizations;
+            console.log(`🔄 Switching to predetermined wheel "${title.name}" with ${savedCustomizations.length} saved customizations`);
+          } else {
+            // Use default optimal count for this wheel
+            const optimalCount = getOptimalCountForCategory(title.category);
+            itemsToUse = title.items.slice(0, Math.min(optimalCount, title.items.length));
+            console.log(`🔄 Switching to predetermined wheel "${title.name}" with ${itemsToUse.length}/${title.items.length} default activities (optimal for ${title.category})`);
+          }
         } else {
-          // This is a predetermined wheel - apply optimal count restrictions
-          const optimalCount = getOptimalCountForCategory(title.category);
-          itemsToUse = title.items.slice(0, Math.min(optimalCount, title.items.length));
-          console.log(`🔄 Switching to predetermined wheel with ${itemsToUse.length}/${title.items.length} activities`);
+          // Fallback: use all items but log this unexpected case
+          itemsToUse = title.items;
+          console.log(`⚠️ Switching to wheel "${title.name}" with all ${title.items.length} items (unexpected wheel type)`);
         }
         
         // Convert items to activities and add emojis if missing
@@ -857,8 +946,11 @@ export default function HomeScreen() {
       setActivities(rethemedActivities);
     }
     
-    // Create a new title object for the loaded wheel with unique ID
-    const uniqueLoadedId = `loaded-${Date.now()}`;
+    // Create a new title object for the loaded wheel with unique but stable ID
+    // Use a hash-based ID that will be consistent for the same title+activities combination
+    const titleHash = `${title.toLowerCase().replace(/[^a-z0-9]/g, '')}-${loadedActivities.length}`;
+    const uniqueLoadedId = `loaded-${titleHash}-${Date.now()}`;
+    
     const loadedTitle = {
       id: uniqueLoadedId,
       name: title,
@@ -878,13 +970,19 @@ export default function HomeScreen() {
     // Set the current title and persist it for refresh persistence
     setCurrentTitle(loadedTitle);
     
-    // 🔧 FIX BUG 1: Persist the loaded title as current title for refresh persistence
+    // 🔧 FIX: Persist the loaded title as current title for refresh persistence
     try {
-      await AsyncStorage.setItem(STORAGE_KEYS.CURRENT_TITLE_ID, uniqueLoadedId);
       await TitleManager.saveTitle(loadedTitle);
-      console.log(`✅ Loaded wheel persisted successfully with ID: ${uniqueLoadedId}`);
+      await AsyncStorage.setItem(STORAGE_KEYS.CURRENT_TITLE_ID, uniqueLoadedId);
+      console.log(`✅ Loaded wheel "${title}" persisted successfully with ID: ${uniqueLoadedId}`);
+      
+      // Also save to legacy storage for immediate backup
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(loadedActivities));
     } catch (error) {
       console.error('Error persisting loaded wheel:', error);
+      // Fallback to just setting activities if title persistence fails
+      const rethemedActivities = reassignAllColors(loadedActivities, currentTheme.wheelColors);
+      setActivities(rethemedActivities);
     }
   };
 
@@ -1031,12 +1129,12 @@ export default function HomeScreen() {
 
   // Helper function to get maximum items available for current wheel
   const getMaxItemsForCurrentWheel = (): number => {
-    if (currentTitle && (currentTitle.isCustomUserCreated || currentTitle.isCustom || currentTitle.category === TitleCategory.CUSTOM)) {
-      // For ALL custom wheels, max is current activities count (since custom wheels use existing activities)
-      return activities.length;
-    } else if (currentTitle && currentTitle.items) {
-      // For predetermined wheels, max is total items in the title
+    if (currentTitle && currentTitle.isPredetermined) {
+      // For predetermined wheels, max is total items available in the original wheel
       return currentTitle.items.length;
+    } else if (currentTitle && (currentTitle.isCustomUserCreated || currentTitle.isCustom || currentTitle.category === TitleCategory.CUSTOM)) {
+      // For custom wheels, max is current activities count (since custom wheels use existing activities)
+      return activities.length;
     }
     // Fallback to 100 for legacy or undefined cases
     return 100;
@@ -1113,17 +1211,29 @@ export default function HomeScreen() {
     try {
       setCurrentTitle(title);
       
-      // For loaded wheels, use ALL saved activities. For predetermined wheels, apply optimal count
+      // Load activities based on wheel type
       let itemsToUse;
-      if (title.id.startsWith('loaded-')) {
-        // This is a loaded/saved wheel - use ALL activities that were saved
+      if (title.id.startsWith('loaded-') || title.isCustomUserCreated || title.category === TitleCategory.CUSTOM) {
+        // This is a loaded/saved/custom wheel - use ALL activities that were saved
         itemsToUse = title.items;
-        console.log(`🎯 Selecting saved wheel with ${title.items.length} saved activities`);
+        console.log(`🎯 Selecting saved/custom wheel "${title.name}" with ${title.items.length} saved activities`);
+      } else if (title.isPredetermined) {
+        // This is a predetermined wheel - check for saved customizations first
+        const savedCustomizations = await loadPrebuiltCustomization(title.id);
+        if (savedCustomizations && savedCustomizations.length > 0) {
+          // Use saved customizations
+          itemsToUse = savedCustomizations;
+          console.log(`🎯 Selecting predetermined wheel "${title.name}" with ${savedCustomizations.length} saved customizations`);
+        } else {
+          // Use default optimal count for this wheel
+          const optimalCount = getOptimalCountForCategory(title.category);
+          itemsToUse = title.items.slice(0, Math.min(optimalCount, title.items.length));
+          console.log(`🎯 Selecting predetermined wheel "${title.name}" with ${itemsToUse.length}/${title.items.length} default activities (optimal for ${title.category})`);
+        }
       } else {
-        // This is a predetermined wheel - apply optimal count restrictions
-        const optimalCount = getOptimalCountForCategory(title.category);
-        itemsToUse = title.items.slice(0, Math.min(optimalCount, title.items.length));
-        console.log(`🎯 Selecting predetermined wheel with ${itemsToUse.length}/${title.items.length} activities`);
+        // Fallback: use all items but log this unexpected case
+        itemsToUse = title.items;
+        console.log(`⚠️ Selecting wheel "${title.name}" with all ${title.items.length} items (unexpected wheel type)`);
       }
       
       // Add emojis to items that don't have them and apply current theme colors

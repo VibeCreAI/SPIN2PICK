@@ -247,11 +247,11 @@ export const getAISuggestedActivity = async (
         // Allow almost all characters except control characters
         if (/[\x00-\x1F\x7F]/.test(text)) return false;
 
-        // Must contain at least one letter or number
-        if (!/[a-zA-Z0-9]/.test(text)) return false;
+        // Must contain at least one letter or number (Unicode-aware for international languages)
+        if (!/[\p{L}\p{N}]/u.test(text)) return false;
 
-        // Reject if it's just punctuation or whitespace
-        if (/^[\s\W]*$/.test(text)) return false;
+        // Reject if it's just punctuation or whitespace (but allow Unicode letters)
+        if (/^[\s\p{P}\p{S}]*$/u.test(text)) return false;
 
         return true;
       };

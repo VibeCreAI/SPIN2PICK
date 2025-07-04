@@ -78,7 +78,7 @@ Generate exactly ${count} options for "${titleName}" (${titleDescription}):`;
         "X-Title": "Spin2Pick App"
       },
       body: JSON.stringify({
-        model: "meta-llama/llama-3.2-3b-instruct",
+        model: "mistralai/mistral-nemo",
         messages: [
           {
             role: "user",

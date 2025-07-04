@@ -308,7 +308,7 @@ export const CustomThemeModal: React.FC<CustomThemeModalProps> = ({
       // Track successful AI usage
       setAiUsageCount(prev => prev + 1);
       
-      // Track AI usage for interstitial ad system
+      // Track AI usage for AI color generation (2 points - moderate token usage)
       await trackAIUsage(AIFeatureType.AI_COLORS, `${selectedAIStyle} color style`);
       
       console.log('🤖 AI generated colors:', aiColors);

@@ -90,20 +90,32 @@ export const getAIUsageStats = async (): Promise<AIUsageStats> => {
 };
 
 /**
- * Increment AI usage count and check if ad should be shown
+ * Point values for different AI features based on token consumption
+ */
+export const AI_FEATURE_POINTS = {
+  [AIFeatureType.SINGLE_SUGGESTION]: 1,    // Low token usage - single suggestion
+  [AIFeatureType.BULK_SUGGESTION]: 3,      // High token usage - multiple suggestions  
+  [AIFeatureType.AI_COLORS]: 2,            // Medium token usage - color generation
+  [AIFeatureType.CUSTOM_WHEEL_CREATION]: 1 // Low token usage - simple processing
+};
+
+/**
+ * Increment AI usage count with weighted points and check if ad should be shown
  */
 export const trackAIUsage = async (
   featureType: AIFeatureType,
-  context?: string
+  context?: string,
+  points?: number
 ): Promise<boolean> => {
   try {
     const stats = await getAIUsageStats();
-    const newUsage = stats.totalUsage + 1;
+    const usagePoints = points || AI_FEATURE_POINTS[featureType] || 1;
+    const newUsage = stats.totalUsage + usagePoints;
     
-    // Update usage count
+    // Update usage count with weighted points
     await AsyncStorage.setItem(AI_USAGE_KEY, newUsage.toString());
     
-    console.log(`🤖 AI ${featureType} used (${newUsage} total uses)${context ? ` - ${context}` : ''}`);
+    console.log(`🤖 AI ${featureType} used (+${usagePoints} points, ${newUsage} total)${context ? ` - ${context}` : ''}`);
     
     // Check if we should show an interstitial ad
     const shouldShowAd = newUsage >= stats.nextAdThreshold;

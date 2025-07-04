@@ -120,7 +120,7 @@ Provide detailed moderation analysis.`;
         "X-Title": "Spin2Pick App - Content Moderation"
       },
       body: JSON.stringify({
-        model: "meta-llama/llama-3.2-3b-instruct",
+        model: "mistralai/mistral-nemo",
         messages: [
           {
             role: "system",

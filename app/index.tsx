@@ -738,7 +738,7 @@ export default function HomeScreen() {
         currentTitle?.description || 'Random activities'
       );
       
-      // Track AI usage for single suggestion
+      // Track AI usage for single suggestion (1 point - light token usage)
       await trackAIUsage(AIFeatureType.SINGLE_SUGGESTION, `${currentTitle?.name || 'Unknown'} wheel`);
       
       // Show popup with suggestion instead of directly adding
@@ -1407,7 +1407,7 @@ export default function HomeScreen() {
       
       setBulkAISuggestions(suggestions);
       
-      // Track AI usage for bulk suggestions (only if successful)
+      // Track AI usage for bulk suggestions (3 points - heavy token usage)
       if (suggestions.length > 0) {
         await trackAIUsage(AIFeatureType.BULK_SUGGESTION, `${suggestions.length} suggestions for ${currentTitle?.name || 'Unknown'} wheel`);
       }

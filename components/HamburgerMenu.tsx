@@ -21,6 +21,7 @@ interface HamburgerMenuProps {
     onClose: () => void;
     // Navigation props
     onNavigateToTitleManagement: () => void;
+    onNavigateToCustomWheels: () => void;
     onNavigateToActivityManagement: () => void;
     onNavigateToSettings: () => void;
     onNavigateToThemes: () => void;
@@ -39,6 +40,7 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
     visible,
     onClose,
     onNavigateToTitleManagement,
+    onNavigateToCustomWheels,
     onNavigateToActivityManagement,
     onNavigateToSettings,
     onNavigateToThemes,
@@ -269,9 +271,18 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
                         showsVerticalScrollIndicator={false}
                         keyboardShouldPersistTaps="handled"
                     >
-                        {/* Manage Section */}
+                        {/* Wheels Section */}
                         <View style={styles.navigationSection}>
-                            <Text style={styles.sectionTitle}>Manage</Text>
+                            <Text style={styles.sectionTitle}>🎡 Wheels</Text>
+                            <TouchableOpacity
+                                style={styles.navItem}
+                                onPress={() => {
+                                    onNavigateToCustomWheels();
+                                    onClose();
+                                }}
+                            >
+                                <Text style={styles.navText}>⭐ Create Custom Wheel</Text>
+                            </TouchableOpacity>
                             <TouchableOpacity
                                 style={styles.navItem}
                                 onPress={() => {
@@ -279,8 +290,13 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
                                     onClose();
                                 }}
                             >
-                                <Text style={styles.navText}>🎯 Manage Wheels</Text>
+                                <Text style={styles.navText}>🎯 Choose Pre-built Wheel</Text>
                             </TouchableOpacity>
+                        </View>
+
+                        {/* Current Wheel Section */}
+                        <View style={styles.navigationSection}>
+                            <Text style={styles.sectionTitle}>🔧 Current Wheel</Text>
                             <TouchableOpacity
                                 style={styles.navItem}
                                 onPress={() => {

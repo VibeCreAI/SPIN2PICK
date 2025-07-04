@@ -8,6 +8,7 @@ import { Celebration } from '@/components/Celebration';
 import { FirstTimeWelcomeModal } from '@/components/FirstTimeWelcomeModal';
 import { HamburgerMenu } from '@/components/HamburgerMenu';
 import { RouletteWheel } from '@/components/RouletteWheel';
+import { CustomWheelsModal } from '@/components/CustomWheelsModal';
 import { SaveLoadModal } from '@/components/SaveLoadModal';
 import { ThemedErrorModal } from '@/components/ThemedErrorModal';
 import { ThemedText } from '@/components/ThemedText';
@@ -136,6 +137,12 @@ export default function HomeScreen() {
 
   // New state for title management
   const [showTitleManagementModal, setShowTitleManagementModal] = useState(false);
+  
+  // New state for custom wheels modal
+  const [showCustomWheelsModal, setShowCustomWheelsModal] = useState(false);
+  
+  // State for title management modal mode
+  const [titleManagementMode, setTitleManagementMode] = useState<'all' | 'prebuilt'>('all');
 
   // Title management state
   const [currentTitle, setCurrentTitle] = useState<Title | null>(null);
@@ -1088,13 +1095,28 @@ export default function HomeScreen() {
     }
   };
 
-  const handleOpenTitleManagement = () => {
+  const handleOpenTitleManagement = (mode: 'all' | 'prebuilt' = 'all') => {
     setShowTitleManagementModal(true);
     setShowHamburgerMenu(false); // Close hamburger menu
+    // Store the mode for the modal (we'll add this to modal props)
+    setTitleManagementMode(mode);
   };
 
   const handleCloseTitleManagement = () => {
     setShowTitleManagementModal(false);
+  };
+
+  const handleOpenCustomWheels = () => {
+    setShowCustomWheelsModal(true);
+    setShowHamburgerMenu(false); // Close hamburger menu
+  };
+
+  const handleCloseCustomWheels = () => {
+    setShowCustomWheelsModal(false);
+  };
+
+  const handleOpenPrebuiltWheels = () => {
+    handleOpenTitleManagement('prebuilt');
   };
 
   const handleOpenActivityManagement = () => {
@@ -1695,7 +1717,8 @@ export default function HomeScreen() {
       <HamburgerMenu
         visible={showHamburgerMenu}
         onClose={() => setShowHamburgerMenu(false)}
-        onNavigateToTitleManagement={handleOpenTitleManagement}
+        onNavigateToTitleManagement={handleOpenPrebuiltWheels}
+        onNavigateToCustomWheels={handleOpenCustomWheels}
         onNavigateToActivityManagement={handleOpenActivityManagement}
         onNavigateToSettings={() => {/* TODO: Implement */}}
         onNavigateToThemes={() => setShowThemeModal(true)}
@@ -1712,6 +1735,16 @@ export default function HomeScreen() {
       <TitleManagementModal
         visible={showTitleManagementModal}
         onClose={handleCloseTitleManagement}
+        onSelectTitle={handleSelectTitle}
+        currentTitle={currentTitle}
+        onCreateCustomWheel={handleCreateCustomWheel}
+        mode={titleManagementMode}
+      />
+
+      {/* Custom Wheels Modal */}
+      <CustomWheelsModal
+        visible={showCustomWheelsModal}
+        onClose={handleCloseCustomWheels}
         onSelectTitle={handleSelectTitle}
         currentTitle={currentTitle}
         onCreateCustomWheel={handleCreateCustomWheel}

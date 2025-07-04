@@ -26,6 +26,7 @@ interface TitleManagementModalProps {
   onSelectTitle: (title: Title) => void;
   currentTitle?: Title | null;
   onCreateCustomWheel?: (title: string, description: string, category: TitleCategory) => void;
+  mode?: 'all' | 'prebuilt'; // New prop to control filtering
 }
 
 // Helper function to remove duplicate titles
@@ -57,7 +58,8 @@ export const TitleManagementModal: React.FC<TitleManagementModalProps> = ({
   onClose,
   onSelectTitle,
   currentTitle,
-  onCreateCustomWheel
+  onCreateCustomWheel,
+  mode = 'all' // Default to 'all' for backward compatibility
 }) => {
   const { currentTheme } = useTheme();
   const [savedTitles, setSavedTitles] = useState<Title[]>([]);
@@ -115,7 +117,19 @@ export const TitleManagementModal: React.FC<TitleManagementModalProps> = ({
       
       // Filter out duplicates and legacy titles
       const filteredTitles = removeDuplicatesTitles(allTitles);
-      setSavedTitles(filteredTitles.filter(title => title.isCustom));
+      
+      // Filter based on mode
+      let titlesToShow = filteredTitles;
+      if (mode === 'prebuilt') {
+        // Only show predetermined/prebuilt wheels, exclude custom wheels
+        titlesToShow = filteredTitles.filter(title => 
+          title.isPredetermined && !title.isCustom && !title.isCustomUserCreated && title.category !== TitleCategory.CUSTOM
+        );
+        setSavedTitles([]); // No custom titles in prebuilt mode
+      } else {
+        // Show all titles (default behavior)
+        setSavedTitles(filteredTitles.filter(title => title.isCustom));
+      }
       
       // Categorize titles (only show predetermined titles in categories, not in Featured section)
       const categorized: Record<string, Title[]> = {
@@ -130,7 +144,7 @@ export const TitleManagementModal: React.FC<TitleManagementModalProps> = ({
         'entertainment': [],
       };
       
-      filteredTitles.forEach(title => {
+      titlesToShow.forEach(title => {
         if (categorized[title.category]) {
           categorized[title.category].push(title);
         }
@@ -285,7 +299,7 @@ export const TitleManagementModal: React.FC<TitleManagementModalProps> = ({
           {/* Header */}
           <View style={[styles.header, { borderBottomColor: currentTheme.uiColors.secondary + '40' }]}>
             <Text style={[styles.headerTitle, { color: currentTheme.uiColors.primary }]}>
-              🎯 Manage Wheels
+              {mode === 'prebuilt' ? '🎯 Choose Pre-built Wheel' : '🎯 Manage Wheels'}
             </Text>
           </View>
 
@@ -316,39 +330,49 @@ export const TitleManagementModal: React.FC<TitleManagementModalProps> = ({
                   </>
                 )}
 
-                {/* Create Custom Wheel Section */}
-                <View style={styles.customWheelSection}>
-                  <TouchableOpacity
-                    style={[styles.createCustomWheelButton, {
-                      backgroundColor: currentTheme.uiColors.accent,
-                      borderColor: currentTheme.uiColors.primary,
-                    }]}
-                    onPress={() => setShowCustomWheelModal(true)}
-                  >
-                    <View style={styles.createCustomWheelContent}>
-                      <Text style={[styles.createCustomWheelIcon]}>
-                        🎨
-                      </Text>
-                      <View style={styles.createCustomWheelTextContainer}>
-                        <Text style={[styles.createCustomWheelTitle, { color: currentTheme.uiColors.buttonText }]}>
-                          Create Custom Wheel
+                {/* Create Custom Wheel Section - Only show in 'all' mode */}
+                {mode === 'all' && (
+                  <View style={styles.customWheelSection}>
+                    <TouchableOpacity
+                      style={[styles.createCustomWheelButton, {
+                        backgroundColor: currentTheme.uiColors.accent,
+                        borderColor: currentTheme.uiColors.primary,
+                      }]}
+                      onPress={() => setShowCustomWheelModal(true)}
+                    >
+                      <View style={styles.createCustomWheelContent}>
+                        <Text style={[styles.createCustomWheelIcon]}>
+                          🎨
                         </Text>
-                        <Text style={[styles.createCustomWheelSubtitle, { color: currentTheme.uiColors.buttonText + 'CC' }]}>
-                          AI-powered suggestions for your unique ideas
+                        <View style={styles.createCustomWheelTextContainer}>
+                          <Text style={[styles.createCustomWheelTitle, { color: currentTheme.uiColors.buttonText }]}>
+                            Create Custom Wheel
+                          </Text>
+                          <Text style={[styles.createCustomWheelSubtitle, { color: currentTheme.uiColors.buttonText + 'CC' }]}>
+                            AI-powered suggestions for your unique ideas
+                          </Text>
+                        </View>
+                        <Text style={[styles.createCustomWheelArrow, { color: currentTheme.uiColors.buttonText }]}>
+                          →
                         </Text>
                       </View>
-                      <Text style={[styles.createCustomWheelArrow, { color: currentTheme.uiColors.buttonText }]}>
-                        →
-                      </Text>
-                    </View>
-                  </TouchableOpacity>
-                </View>
+                    </TouchableOpacity>
+                  </View>
+                )}
 
                 {/* Quick Title Selection by Category */}
                 <Text style={[styles.sectionTitle, { color: currentTheme.uiColors.text }]}>
-                  🎯 Quick Wheel Selection
+                  {mode === 'prebuilt' ? '🎯 Pre-built Wheels by Category' : '🎯 Quick Wheel Selection'}
                 </Text>
-                {Object.entries(titlesByCategory).map(([category, titles]) => (
+                {Object.entries(titlesByCategory)
+                  .filter(([category]) => {
+                    // In prebuilt mode, filter out the 'custom' category
+                    if (mode === 'prebuilt' && category === 'custom') {
+                      return false;
+                    }
+                    return true;
+                  })
+                  .map(([category, titles]) => (
                   <View key={category} style={styles.categorySection}>
                     <TouchableOpacity
                       style={[styles.categoryHeader, {
@@ -436,23 +460,27 @@ export const TitleManagementModal: React.FC<TitleManagementModalProps> = ({
                 ))}
 
 
-                {/* Custom Wheels Section */}
-                {savedTitles.length > 0 && (
+                {/* Custom Wheels Section - Only show in 'all' mode */}
+                {mode === 'all' && (
                   <>
-                    <Text style={[styles.sectionTitle, { color: currentTheme.uiColors.text }]}>
-                      Your Custom Wheels
-                    </Text>
-                    {savedTitles.map((title) => renderTitleCard(title, false))}
-                  </>
-                )}
+                    {savedTitles.length > 0 && (
+                      <>
+                        <Text style={[styles.sectionTitle, { color: currentTheme.uiColors.text }]}>
+                          Your Custom Wheels
+                        </Text>
+                        {savedTitles.map((title) => renderTitleCard(title, false))}
+                      </>
+                    )}
 
-                {/* Empty state for custom wheels */}
-                {savedTitles.length === 0 && (
-                  <View style={styles.emptyState}>
-                    <Text style={[styles.emptyStateText, { color: currentTheme.uiColors.secondary }]}>
-                      No custom wheels yet.{'\n'}Create your own custom wheel!
-                    </Text>
-                  </View>
+                    {/* Empty state for custom wheels */}
+                    {savedTitles.length === 0 && (
+                      <View style={styles.emptyState}>
+                        <Text style={[styles.emptyStateText, { color: currentTheme.uiColors.secondary }]}>
+                          No custom wheels yet.{'\n'}Create your own custom wheel!
+                        </Text>
+                      </View>
+                    )}
+                  </>
                 )}
               </ScrollView>
             )}

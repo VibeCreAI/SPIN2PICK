@@ -324,21 +324,6 @@ export const ActivityListModal: React.FC<ActivityListModalProps> = ({
               </View>
             ))}
           </View>
-          
-          <TouchableOpacity
-            style={[
-              styles.addButton,
-              { backgroundColor: currentTheme.uiColors.accent }
-            ]}
-            onPress={handleAddBulkActivities}
-          >
-            <Text allowFontScaling={false} style={[
-              styles.addButtonText,
-              { color: currentTheme.uiColors.buttonText }
-            ]}>
-              ➕ Add All Slices
-            </Text>
-          </TouchableOpacity>
         </View>
       )}
     </ScrollView>
@@ -453,45 +438,6 @@ export const ActivityListModal: React.FC<ActivityListModalProps> = ({
                 </Text>
               </TouchableOpacity>
             ))}
-          </View>
-          
-          <View style={styles.suggestionActions}>
-            <TouchableOpacity
-              style={[
-                styles.suggestionActionButton,
-                styles.clearButton,
-                { backgroundColor: currentTheme.uiColors.secondary }
-              ]}
-              onPress={() => {
-                onClearBulkSuggestions();
-                setSelectedSuggestions([]);
-              }}
-            >
-              <Text allowFontScaling={false} style={[
-                styles.suggestionActionButtonText,
-                { color: currentTheme.uiColors.buttonText }
-              ]}>
-                🔄 Generate New
-              </Text>
-            </TouchableOpacity>
-            
-            {selectedSuggestions.length > 0 && (
-              <TouchableOpacity
-                style={[
-                  styles.suggestionActionButton,
-                  styles.acceptButton,
-                  { backgroundColor: currentTheme.uiColors.accent }
-                ]}
-                onPress={handleAcceptSelectedSuggestions}
-              >
-                <Text allowFontScaling={false} style={[
-                  styles.suggestionActionButtonText,
-                  { color: currentTheme.uiColors.buttonText }
-                ]}>
-                  ➕ Add Selected ({selectedSuggestions.length})
-                </Text>
-              </TouchableOpacity>
-            )}
           </View>
         </View>
       )}
@@ -631,7 +577,69 @@ export const ActivityListModal: React.FC<ActivityListModalProps> = ({
               {activeTab === 'ai' && renderAISuggestionsTab()}
             </View>
 
-            {/* Footer outside contentWrapper */}
+            {/* Dynamic Footer System */}
+            {/* Tab-specific action buttons */}
+            {(activeTab === 'add' && parsedActivities.length > 0) && (
+              <View style={styles.actionFooter}>
+                <TouchableOpacity 
+                  style={[
+                    styles.actionButton,
+                    { backgroundColor: currentTheme.uiColors.accent }
+                  ]}
+                  onPress={handleAddBulkActivities}
+                >
+                  <Text allowFontScaling={false} style={[
+                    styles.actionButtonText,
+                    { color: currentTheme.uiColors.buttonText }
+                  ]}>
+                    ➕ Add All Slices ({parsedActivities.length})
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )}
+            
+            {(activeTab === 'ai' && bulkAISuggestions.length > 0) && (
+              <View style={styles.actionFooter}>
+                <TouchableOpacity 
+                  style={[
+                    styles.actionButton,
+                    styles.generateNewButton,
+                    { backgroundColor: currentTheme.uiColors.secondary }
+                  ]}
+                  onPress={() => {
+                    onClearBulkSuggestions();
+                    setSelectedSuggestions([]);
+                  }}
+                >
+                  <Text allowFontScaling={false} style={[
+                    styles.actionButtonText,
+                    { color: currentTheme.uiColors.buttonText }
+                  ]}>
+                    🔄 Generate New
+                  </Text>
+                </TouchableOpacity>
+                
+                {selectedSuggestions.length > 0 && (
+                  <TouchableOpacity 
+                    style={[
+                      styles.actionButton,
+                      styles.addSelectedButton,
+                      { backgroundColor: currentTheme.uiColors.accent }
+                    ]}
+                    onPress={handleAcceptSelectedSuggestions}
+                  >
+                    <Text allowFontScaling={false} style={[
+                      styles.actionButtonText,
+                      { color: currentTheme.uiColors.buttonText }
+                    ]}>
+                      ➕ Add Selected ({selectedSuggestions.length})
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            )}
+
+            {/* Always visible Done button footer */}
             <View style={styles.footer}>
               <TouchableOpacity 
                 style={[
@@ -818,17 +826,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: FONTS.nunito,
   },
-  addButton: {
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  addButtonText: {
-    fontSize: 16,
-    fontFamily: FONTS.jua,
-    fontWeight: 'bold',
-  },
   
   // AI Suggestions Tab Styles
   aiControls: {
@@ -895,29 +892,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: FONTS.nunito,
     textAlign: 'center',
-  },
-  suggestionActions: {
-    flexDirection: 'row',
-    gap: 8,
-    justifyContent: 'space-between',
-  },
-  suggestionActionButton: {
-    flex: 1,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 6,
-    alignItems: 'center',
-  },
-  suggestionActionButtonText: {
-    fontSize: 14,
-    fontFamily: FONTS.jua,
-    fontWeight: 'bold',
-  },
-  clearButton: {
-    // Additional styles for clear button if needed
-  },
-  acceptButton: {
-    // Additional styles for accept button if needed
   },
   
   // Confirmation Modal Styles
@@ -989,6 +963,41 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.jua,
     fontWeight: 'bold',
     color: '#fff',
+  },
+
+  // Action Footer Styles (for tab-specific buttons)
+  actionFooter: {
+    flexDirection: 'row',
+    padding: Platform.OS === 'web' ? 12 : 8,
+    gap: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderTopWidth: 1,
+    borderTopColor: '#00000010',
+  },
+  actionButton: {
+    flex: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+  },
+  actionButtonText: {
+    fontSize: 14,
+    fontFamily: FONTS.jua,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  generateNewButton: {
+    // Specific styles for generate new button if needed
+  },
+  addSelectedButton: {
+    // Specific styles for add selected button if needed
   },
 
   // Footer Styles (platform-specific, following SaveLoadModal pattern)

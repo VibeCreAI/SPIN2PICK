@@ -203,12 +203,34 @@ export const getAISuggestedActivity = async (
         .split(',')[0]                     // First part before comma
         .trim();
 
-      // Enhanced meta-response detection - content-based rather than character-based
+      // Language detection utilities for multilingual validation
+      const detectLanguageScript = (text: string) => {
+        // Chinese (Simplified/Traditional)
+        if (/[\u4e00-\u9fff]/u.test(text)) return 'chinese';
+        
+        // Japanese (Hiragana, Katakana, Kanji)
+        if (/[\u3040-\u309f\u30a0-\u30ff\u4e00-\u9faf]/u.test(text)) return 'japanese';
+        
+        // Korean (Hangul)
+        if (/[\uac00-\ud7af]/u.test(text)) return 'korean';
+        
+        // Arabic
+        if (/[\u0600-\u06ff]/u.test(text)) return 'arabic';
+        
+        // Hindi (Devanagari)
+        if (/[\u0900-\u097f]/u.test(text)) return 'hindi';
+        
+        // Default to latin-based (English, French, German, Spanish, Italian, Portuguese)
+        return 'latin';
+      };
+
+      // Enhanced multilingual meta-response detection
       const isMetaResponse = (text: string) => {
         const lower = text.toLowerCase().trim();
+        const script = detectLanguageScript(text);
         
-        // Analytical phrases that indicate meta-responses
-        const analyticalPhrases = [
+        // English analytical phrases
+        const englishAnalyticalPhrases = [
           'based on', 'analysis', 'suggest', 'recommend',
           'consider', 'would be', 'you could', 'here are',
           'i think', 'perhaps', 'maybe', 'could be',
@@ -217,12 +239,37 @@ export const getAISuggestedActivity = async (
           'to summarize', 'overall', 'in general'
         ];
 
-        // Check for analytical phrases
-        if (analyticalPhrases.some(phrase => lower.includes(phrase))) {
+        // Multilingual analytical phrases (common meta-response indicators)
+        const multilingualPhrases = [
+          // Chinese
+          '基于', '建议', '推荐', '考虑', '例如', '比如', '总的来说',
+          // Japanese  
+          'に基づいて', 'おすすめ', '提案', '考慮', '例えば', '全体的に',
+          // Arabic
+          'بناء على', 'اقتراح', 'توصية', 'مثال', 'بشكل عام',
+          // Hindi
+          'के आधार पर', 'सुझाव', 'सिफारिश', 'उदाहरण', 'सामान्य तौर पर',
+          // French
+          'basé sur', 'suggère', 'recommande', 'par exemple', 'en général',
+          // German
+          'basierend auf', 'vorschlagen', 'empfehlen', 'zum beispiel', 'im allgemeinen',
+          // Spanish
+          'basado en', 'sugerir', 'recomendar', 'por ejemplo', 'en general',
+          // Portuguese
+          'baseado em', 'sugerir', 'recomendar', 'por exemplo', 'em geral'
+        ];
+
+        // Check for analytical phrases (English)
+        if (englishAnalyticalPhrases.some(phrase => lower.includes(phrase))) {
+          return true;
+        }
+        
+        // Check for multilingual analytical phrases
+        if (multilingualPhrases.some(phrase => text.includes(phrase))) {
           return true;
         }
 
-        // Check for response-like patterns
+        // Check for response-like patterns (English)
         if ((lower.startsWith('the ') && lower.includes('option')) ||
             lower.includes('response') ||
             lower.includes('answer') ||
@@ -236,10 +283,34 @@ export const getAISuggestedActivity = async (
         return false;
       };
 
-      // Relaxed validation - focus on format rather than character restrictions
+      // Enhanced multilingual validation with script-aware length handling
       const isValidOption = (text: string) => {
-        // Length check
-        if (text.length < 2 || text.length > 80) return false;
+        const script = detectLanguageScript(text);
+        
+        // Visual length calculation for combining characters
+        const getVisualLength = (str: string) => {
+          // For Arabic and Hindi, account for combining characters
+          if (script === 'arabic' || script === 'hindi') {
+            // Remove combining marks for length calculation
+            return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').length;
+          }
+          return str.length;
+        };
+        
+        const visualLength = getVisualLength(text);
+        
+        // Script-aware length validation
+        let minLength = 2; // Default for Latin scripts
+        
+        // Logographic languages can have valid single-character suggestions
+        if (script === 'chinese' || script === 'japanese') {
+          minLength = 1; // Allow single character foods like "茶" (tea)
+        }
+        
+        // Length check with script awareness
+        if (visualLength < minLength || visualLength > 80) {
+          return false;
+        }
 
         // Reject if it's clearly analytical text
         if (isMetaResponse(text)) return false;

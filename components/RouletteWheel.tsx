@@ -1230,12 +1230,12 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
             { color: currentTheme.uiColors.secondary }
           ]}>
             {activities.length === 1
-              ? "Tap to remove activity or add more to spin!"
+              ? "Tap to remove slice or add more to spin!"
               : activities.length === 2 
-                ? "Tap activity text to remove 🗑️" 
+                ? "Tap slice to remove 🗑️" 
                 : activities.length > 2 
-                  ? "Tap activity name to remove 🗑️"
-                  : "Add activities to get started!"
+                  ? "Tap slice to remove 🗑️"
+                  : "Add slices to get started!"
             }
           </ThemedText>
           
@@ -1292,7 +1292,7 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
             <Text allowFontScaling={false} style={[
               styles.lastActivityLabel,
               { color: currentTheme.uiColors.secondary }
-            ]}>Last selected activity:</Text>
+            ]}>Last selected option:</Text>
           </ThemedView>
           <ThemedView 
             lightColor={currentTheme.uiColors.cardBackground}

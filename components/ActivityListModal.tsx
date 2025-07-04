@@ -411,7 +411,7 @@ export const ActivityListModal: React.FC<ActivityListModalProps> = ({
               styles.generateButtonText,
               { color: currentTheme.uiColors.buttonText }
             ]}>
-              {isLoadingBulkAI ? '🤔 Thinking...' : '🤖 Generate Slices'}
+              {isLoadingBulkAI ? '🤔 Thinking...' : '✨ Generate Slices'}
             </Text>
           </TouchableOpacity>
         </View>

@@ -9,10 +9,10 @@ import { FirstTimeWelcomeModal } from '@/components/FirstTimeWelcomeModal';
 import { HamburgerMenu } from '@/components/HamburgerMenu';
 import { RouletteWheel } from '@/components/RouletteWheel';
 import { SaveLoadModal } from '@/components/SaveLoadModal';
+import { ThemedErrorModal } from '@/components/ThemedErrorModal';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemeSelectionModal } from '@/components/ThemeSelectionModal';
 import { TitleManagementModal } from '@/components/TitleManagementModal';
-import { ThemedErrorModal } from '@/components/ThemedErrorModal';
 import { useTheme } from '@/hooks/useTheme';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -1319,7 +1319,7 @@ export default function HomeScreen() {
                 onShowError={(title, message) => setErrorModal({ visible: true, title, message })}
               />
               
-                              <ThemedText style={[styles.subtitle, { color: currentTheme.uiColors.secondary }]}>✨ for AI suggestions, 📃 to manage more!</ThemedText>
+                              <ThemedText style={[styles.subtitle, { color: currentTheme.uiColors.secondary }]}>✨ for AI suggestions, 📃 for more options!</ThemedText>
 
               {containerWidth > 0 ? (
                 isFirstTimeUser && activities.length === 0 ? (

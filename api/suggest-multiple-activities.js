@@ -26,8 +26,8 @@ export default async function handler(req, res) {
     declinedSuggestions = [], 
     count = 5, 
     category,
-    titleName = 'Kids Options',
-    titleCategory = 'family',
+    titleName = 'Random Options',
+    titleCategory = 'general',
     titleDescription = 'Random options'
   } = req.body;
 
@@ -49,24 +49,25 @@ export default async function handler(req, res) {
       return options.length > 0 ? options.join(', ') : 'None';
     };
 
-    // Ultra-constrained prompt for bulk suggestions
-    const userPrompt = `Generate ${count} options for a ${titleName} wheel.
+    // Generic prompt for bulk suggestions that adapts to any wheel type
+    const userPrompt = `Generate ${count} options for a "${titleName}" wheel.
+
+WHEEL PURPOSE: ${titleDescription}
 
 RULES:
 1. Respond with ONLY a numbered list, nothing else
 2. Each option should be 1-5 words maximum
-3. Make them relevant to: ${titleDescription}  
+3. Make them relevant to the wheel's purpose: ${titleDescription}
 4. Do NOT include any of these existing options: [${formatOptionsList(existingActivities)}]
 5. Do NOT include any of these rejected options: [${formatOptionsList(declinedSuggestions)}]
 
-Examples of good format:
-1. Swimming
-2. Board Games
-3. Cook Dinner
-4. Movie Night
-5. Reading Books
+Examples for different wheel types:
+- Car Brand wheel: "1. BMW", "2. Toyota", "3. Honda"
+- Food wheel: "1. Pizza", "2. Burgers", "3. Tacos"
+- Color wheel: "1. Red", "2. Blue", "3. Green"
+- Movie Genre wheel: "1. Action", "2. Comedy", "3. Drama"
 
-Generate exactly ${count} options now:`;
+Generate exactly ${count} options for "${titleName}" (${titleDescription}):`;
 
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",

@@ -32,7 +32,7 @@ export const getEmojiForActivity = async (activityName: string): Promise<string>
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ activityName })
+      body: JSON.stringify({ optionName: activityName })
     });
 
     if (!response.ok) {

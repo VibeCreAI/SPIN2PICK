@@ -175,7 +175,7 @@ export const ActivityInput: React.FC<ActivityInputProps> = ({
               ]}
               value={inputText}
               onChangeText={setInputText}
-              placeholder="Add new to wheel..."
+              placeholder="Add new slice..."
               placeholderTextColor={currentTheme.uiColors.secondary}
               onSubmitEditing={handleSubmit}
               returnKeyType="done"
@@ -266,7 +266,7 @@ export const ActivityInput: React.FC<ActivityInputProps> = ({
             <Text allowFontScaling={false} style={[
               styles.popupMessage,
               { color: currentTheme.uiColors.secondary }
-            ]}>How about this activity?</Text>
+            ]}>How about adding this slice?</Text>
             <Text allowFontScaling={false} style={[
               styles.suggestionText,
               { 

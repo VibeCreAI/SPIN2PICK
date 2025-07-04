@@ -21,10 +21,11 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'API key not configured' });
   }
 
-  const { activityName } = req.body;
+  const { optionName, activityName } = req.body;
+  const itemName = optionName || activityName; // Accept both for compatibility
 
-  if (!activityName) {
-    return res.status(400).json({ error: 'Activity name is required' });
+  if (!itemName) {
+    return res.status(400).json({ error: 'Option name is required' });
   }
 
   try {
@@ -41,14 +42,14 @@ export default async function handler(req, res) {
         messages: [
           {
             role: "system",
-            content: 'Return only one emoji for kids\' activities. Choose clear, directly related emojis. Examples: "Sing Songs"→🎤, "Draw"→🎨, "Soccer"→⚽, "Read"→📚, "Dance"→💃, "Bake"→🍪'
+            content: 'Return only one emoji that best represents the given item. Choose clear, directly related emojis. Examples: "BMW"→🚗, "Pizza"→🍕, "Red"→🔴, "Soccer"→⚽, "Draw"→🎨, "Apple"→🍎, "Happy"→😊, "Cat"→🐱, "Coffee"→☕, "Music"→🎵'
           },
           {
             role: "user",
-            content: `Emoji for: "${activityName}"`
+            content: `Emoji for: "${itemName}"`
           }
         ],
-        max_tokens: 10
+        max_tokens: 50
       })
     });
 

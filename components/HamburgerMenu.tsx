@@ -29,6 +29,7 @@ interface HamburgerMenuProps {
     onExportData: () => void;
     onOpenPrivacyPolicy: () => void;
     onToggleSoundMute: () => void;
+    onResetSlices: () => void;
     recentlyUsedTitles: Title[];
     onSelectTitle: (title: Title) => void;
     isSoundMuted: boolean;
@@ -48,6 +49,7 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
     onExportData,
     onOpenPrivacyPolicy,
     onToggleSoundMute,
+    onResetSlices,
     recentlyUsedTitles,
     onSelectTitle,
     isSoundMuted,
@@ -273,7 +275,7 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
                     >
                         {/* Wheels Section */}
                         <View style={styles.navigationSection}>
-                            <Text style={styles.sectionTitle}>🎡 Wheels</Text>
+                            <Text style={styles.sectionTitle}>🎯 Wheels</Text>
                             <TouchableOpacity
                                 style={styles.navItem}
                                 onPress={() => {
@@ -296,7 +298,7 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
 
                         {/* Current Wheel Section */}
                         <View style={styles.navigationSection}>
-                            <Text style={styles.sectionTitle}>🔧 Current Wheel</Text>
+                            <Text style={styles.sectionTitle}>🍕 Slices</Text>
                             <TouchableOpacity
                                 style={styles.navItem}
                                 onPress={() => {
@@ -305,6 +307,15 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
                                 }}
                             >
                                 <Text style={styles.navText}>📃 Manage Slices</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={styles.navItem}
+                                onPress={() => {
+                                    onResetSlices();
+                                    onClose();
+                                }}
+                            >
+                                <Text style={styles.navText}>🔄 Reset Slices</Text>
                             </TouchableOpacity>
                         </View>
 

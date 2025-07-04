@@ -1512,7 +1512,6 @@ export default function HomeScreen() {
                       selectedActivity={selectedActivity}
                       newlyAddedActivityId={newlyAddedActivityId}
                       onNewActivityIndicatorComplete={handleNewActivityIndicatorComplete}
-                      onReset={() => setShowResetConfirmation(true)}
                     />
                   </ErrorBoundary>
                 )
@@ -1764,6 +1763,7 @@ export default function HomeScreen() {
         onExportData={() => {/* Disabled - will be "Share with Friend" feature later */}}
         onOpenPrivacyPolicy={handleOpenPrivacyPolicy}
         onToggleSoundMute={toggleSoundMute}
+        onResetSlices={() => setShowResetConfirmation(true)}
         recentlyUsedTitles={recentlyUsedTitles}
         onSelectTitle={handleSelectTitle}
         isSoundMuted={appSettings.soundMuted}

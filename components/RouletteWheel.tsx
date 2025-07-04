@@ -80,7 +80,6 @@ interface RouletteWheelProps {
   selectedActivity: Activity | null;
   newlyAddedActivityId?: string | null; // ID of the newly added activity to highlight
   onNewActivityIndicatorComplete?: () => void; // Callback when indicator animation completes
-  onReset?: () => void; // Callback for reset button
   onOpenTheme?: () => void; // Callback for theme button
 }
 
@@ -93,7 +92,6 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
   selectedActivity,
   newlyAddedActivityId,
   onNewActivityIndicatorComplete,
-  onReset,
   onOpenTheme,
 }) => {
   const { currentTheme } = useTheme();
@@ -1255,25 +1253,6 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
           
           {/* Buttons row */}
           <ThemedView lightColor="transparent" darkColor="transparent" style={styles.buttonsRow}>
-            {onReset && (
-              <TouchableOpacity
-                style={[
-                  styles.actionButton,
-                  { 
-                    backgroundColor: currentTheme.uiColors.accent,
-                    borderColor: currentTheme.uiColors.primary,
-                  }
-                ]}
-                onPress={onReset}
-                activeOpacity={0.8}
-              >
-                <ThemedText style={[
-                  styles.actionButtonText,
-                  { color: currentTheme.uiColors.buttonText }
-                ]}>🔄 Reset Wheel</ThemedText>
-              </TouchableOpacity>
-            )}
-
             {onOpenTheme && (
               <ThemeButton onPress={onOpenTheme} />
             )}

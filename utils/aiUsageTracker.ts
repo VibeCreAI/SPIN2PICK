@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { showInterstitialAd, canShowInterstitialAd } from './adMobUtils';
+import { canShowInterstitialAd, showInterstitialAd } from './adMobUtils';
 
 // Storage keys for AI usage tracking
 const AI_USAGE_KEY = 'SPIN2PICK_AI_USAGE_COUNT';
@@ -132,10 +132,10 @@ export const trackAIUsage = async (
         } else {
           console.log('⚠️ Ad failed to show - will retry on next threshold');
         }
-      } else if (canShowInterstitialAd) {
+      } else if (canShowInterstitialAd && typeof canShowInterstitialAd === 'function') {
         console.log('⏳ Ad blocked by session limits/cooldown');
       } else {
-        console.log('📱 AdMob not available in development environment');
+        console.log('📱 AdMob not available in development and web environment');
       }
     } else {
       const remaining = stats.nextAdThreshold - newUsage;

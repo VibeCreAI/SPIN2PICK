@@ -17,6 +17,7 @@ import {
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useTheme } from '../hooks/useTheme';
 import { CustomThemeData, DEFAULT_CUSTOM_COLORS, generateRandomBackgroundColor, generateRandomColors, getStyleBackground } from '../utils/colorUtils';
+import { trackAIUsage, AIFeatureType } from '../utils/aiUsageTracker';
 import ColorPicker from './ColorPicker';
 
 /**
@@ -306,6 +307,9 @@ export const CustomThemeModal: React.FC<CustomThemeModalProps> = ({
       
       // Track successful AI usage
       setAiUsageCount(prev => prev + 1);
+      
+      // Track AI usage for interstitial ad system
+      await trackAIUsage(AIFeatureType.AI_COLORS, `${selectedAIStyle} color style`);
       
       console.log('🤖 AI generated colors:', aiColors);
       console.log('🎨 Background color:', aiBackground);

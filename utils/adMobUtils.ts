@@ -49,12 +49,16 @@ export const getAdUnitIds = () => {
   
   return {
     banner: 'ca-app-pub-7239598551330509/4053464457', // Your real banner ID
-    interstitial: 'ca-app-pub-7239598551330509/1234567890' // Replace with your interstitial ID
+    interstitial: 'ca-app-pub-7239598551330509/6947827311' // Your real interstitial ID
   };
 };
 
-// Interstitial ad instance
+// Interstitial ad instance and session management
 let interstitialAd: any = null;
+let lastAdShownTime: number = 0;
+let adsShownThisSession: number = 0;
+const AD_COOLDOWN_MINUTES = 5;
+const MAX_ADS_PER_SESSION = 2;
 
 export const initializeInterstitialAd = () => {
   if (!isAdMobAvailable() || !InterstitialAd) {
@@ -67,15 +71,30 @@ export const initializeInterstitialAd = () => {
     interstitialAd = InterstitialAd.createForAdRequest(adUnitIds.interstitial);
     
     interstitialAd.addAdEventListener(AdEventType.LOADED, () => {
-      console.log('Interstitial ad loaded');
+      console.log('✅ Interstitial ad loaded successfully');
     });
     
     interstitialAd.addAdEventListener(AdEventType.ERROR, (error: any) => {
-      console.error('Interstitial ad error:', error);
+      console.error('❌ Interstitial ad error:', error);
+      // Auto-retry loading after error
+      setTimeout(() => {
+        if (interstitialAd && !interstitialAd.loaded) {
+          console.log('🔄 Retrying interstitial ad load...');
+          loadInterstitialAd();
+        }
+      }, 5000);
+    });
+    
+    interstitialAd.addAdEventListener(AdEventType.CLOSED, () => {
+      console.log('📺 Interstitial ad closed - loading next ad');
+      lastAdShownTime = Date.now();
+      adsShownThisSession++;
+      // Preload next ad for future use
+      setTimeout(() => loadInterstitialAd(), 1000);
     });
     
     interstitialAd.load();
-    console.log('AdMob interstitial initialized');
+    console.log('🚀 AdMob interstitial initialized');
   } catch (error) {
     console.error('Error initializing interstitial ad:', error);
   }
@@ -94,6 +113,26 @@ export const loadInterstitialAd = () => {
   }
 };
 
+// Enhanced interstitial showing with session management
+export const canShowInterstitialAd = (): boolean => {
+  // Check session limits
+  if (adsShownThisSession >= MAX_ADS_PER_SESSION) {
+    console.log('📺 Session ad limit reached');
+    return false;
+  }
+  
+  // Check cooldown period
+  const timeSinceLastAd = Date.now() - lastAdShownTime;
+  const cooldownMs = AD_COOLDOWN_MINUTES * 60 * 1000;
+  if (timeSinceLastAd < cooldownMs) {
+    const remainingMinutes = Math.ceil((cooldownMs - timeSinceLastAd) / 60000);
+    console.log(`⏱️ Ad cooldown: ${remainingMinutes} minutes remaining`);
+    return false;
+  }
+  
+  return true;
+};
+
 export const showInterstitialAd = (): Promise<boolean> => {
   return new Promise((resolve) => {
     if (!isAdMobAvailable() || !interstitialAd) {
@@ -102,12 +141,21 @@ export const showInterstitialAd = (): Promise<boolean> => {
       return;
     }
     
+    // Check session limits and cooldown
+    if (!canShowInterstitialAd()) {
+      resolve(false);
+      return;
+    }
+    
     try {
       if (interstitialAd.loaded) {
+        console.log('📺 Showing interstitial ad');
         interstitialAd.show();
         resolve(true);
       } else {
-        console.log('Interstitial ad not loaded yet');
+        console.log('⏳ Interstitial ad not loaded yet');
+        // Try to load and show after a short delay
+        loadInterstitialAd();
         resolve(false);
       }
     } catch (error) {

@@ -25,6 +25,7 @@ import { getThemeById, loadCustomTheme, PASTEL_COLORS, reassignAllColors, type A
 import { getAISuggestedActivity, getEmoji } from '../utils/emojiUtils';
 import { initSounds, setSoundMuted, unloadSounds } from '../utils/soundUtils';
 import { STORAGE_KEYS, Title, TitleCategory, TitleManager } from '../utils/titleUtils';
+import { trackAIUsage, AIFeatureType, initializeAIUsageTracking } from '../utils/aiUsageTracker';
 // Conditional import for AdMob - only in development builds, not Expo Go
 let initializeInterstitialAd: (() => void) | null = null;
 let showInterstitialAd: (() => Promise<boolean>) | null = null;
@@ -241,6 +242,9 @@ export default function HomeScreen() {
         if (initializeInterstitialAd) {
           initializeInterstitialAd();
         }
+        
+        // Initialize AI usage tracking
+        await initializeAIUsageTracking();
         
         // Check if this is a first-time user first
         const isFirstTime = await checkFirstTimeUser();
@@ -733,6 +737,9 @@ export default function HomeScreen() {
         currentTitle?.category || 'family',
         currentTitle?.description || 'Random activities'
       );
+      
+      // Track AI usage for single suggestion
+      await trackAIUsage(AIFeatureType.SINGLE_SUGGESTION, `${currentTitle?.name || 'Unknown'} wheel`);
       
       // Show popup with suggestion instead of directly adding
       setPendingSuggestion(suggestedActivityName);
@@ -1399,6 +1406,11 @@ export default function HomeScreen() {
       }
       
       setBulkAISuggestions(suggestions);
+      
+      // Track AI usage for bulk suggestions (only if successful)
+      if (suggestions.length > 0) {
+        await trackAIUsage(AIFeatureType.BULK_SUGGESTION, `${suggestions.length} suggestions for ${currentTitle?.name || 'Unknown'} wheel`);
+      }
       
       if (suggestions.length === 0) {
         setErrorModal({

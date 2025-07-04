@@ -414,18 +414,32 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
   const wheelContent = useMemo(() => {
     // Handle case with no activities
     if (activities.length === 0) {
-      return (
+      return [
+        // Transparent background circle
+        <Circle 
+          key="wheel-bg" 
+          cx={CENTER} 
+          cy={CENTER} 
+          r={CENTER * 0.95} 
+          fill="transparent"
+          stroke={currentTheme.uiColors.secondary}
+          strokeWidth={2} 
+          strokeOpacity={0.3}
+        />,
+        
+        // Instructional text
         <SvgText 
+          key="empty-instruction"
           x={CENTER} 
           y={CENTER} 
           textAnchor="middle" 
           fontSize="16" 
-                                fill={currentTheme.uiColors.text}
+          fill={currentTheme.uiColors.text}
           fontFamily={FONTS.jua}
         >
-          Add at least 2 activities!
+          Add slices to get started!
         </SvgText>
-      );
+      ];
     }
     
     // For 1 activity, render a full circle wheel to show the remaining activity
@@ -1028,7 +1042,7 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
   }
   
   const canSpin = activities.length >= 2;
-  const showWheel = activities.length > 0; // Always show wheel if there are activities
+  const showWheel = true; // Always show wheel, even when empty
 
   return (
     <ThemedView lightColor="transparent" darkColor="transparent" style={styles.container}>

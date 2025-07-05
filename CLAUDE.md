@@ -187,6 +187,13 @@ const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
 
 ## 🎯 Development Guidelines
 
+### **Development Workflow & Responsibilities**
+- **Git Management**: All git operations (commits, pushes, branches) are handled by the user
+- **Development Server**: User runs `npx expo start` continuously - Claude should never start/stop the dev server
+- **Code Changes Only**: Claude should focus on code implementation and file modifications
+- **No Git Commands**: Claude should not execute git add, commit, push, or any other git operations
+- **Assume Dev Server Running**: All code changes can be tested immediately as the Expo dev server is always active
+
 ### **Code Style & Patterns**
 - **TypeScript strict mode** with comprehensive typing
 - **React 19 features** using new hooks and concurrent features
@@ -381,6 +388,263 @@ vercel --prod
 // ✅ Solution: Use React.memo for expensive components
 const MemoizedWheel = React.memo(RouletteWheel);
 ```
+
+---
+
+## 📱 Modal Popup Best Practices
+
+The SPIN2PICK app follows consistent patterns for modal components to ensure theme integration, responsive design, and excellent user experience across all platforms.
+
+### **Core Modal Architecture**
+```typescript
+// ✅ Standard modal component structure
+interface ModalProps {
+  visible: boolean;
+  onClose: () => void;
+  // Additional props as needed
+}
+
+export const ExampleModal: React.FC<ModalProps> = ({ visible, onClose }) => {
+  const { currentTheme } = useTheme();
+  
+  return (
+    <Modal
+      visible={visible}
+      transparent={true}
+      animationType="fade"
+      onRequestClose={onClose}
+    >
+      {/* Modal content */}
+    </Modal>
+  );
+};
+```
+
+### **Essential Modal Components**
+
+#### **Backdrop & Touch Handling**
+```typescript
+// ✅ Proper backdrop implementation
+<TouchableOpacity 
+  style={styles.modalOverlay}
+  activeOpacity={1}
+  onPress={onClose} // Allows dismissal by tapping backdrop
+>
+  <TouchableOpacity 
+    style={[styles.modalContainer, {
+      backgroundColor: currentTheme.uiColors.modalBackground,
+      borderColor: currentTheme.uiColors.primary,
+    }]}
+    activeOpacity={1}
+    onPress={() => {}} // Prevents dismissal when tapping modal content
+  >
+    {/* Modal content here */}
+  </TouchableOpacity>
+</TouchableOpacity>
+```
+
+#### **Responsive Design**
+```typescript
+// ✅ Responsive modal sizing
+const screenWidth = Dimensions.get('window').width;
+const MODAL_MAX_WIDTH = 500;
+const containerWidth = screenWidth < MODAL_MAX_WIDTH ? '95%' : MODAL_MAX_WIDTH;
+
+const styles = StyleSheet.create({
+  modalContainer: {
+    width: containerWidth,
+    maxWidth: 500,
+    maxHeight: '90%',
+    borderRadius: 20,
+    padding: 20,
+    marginHorizontal: 16,
+  }
+});
+```
+
+#### **Theme Integration**
+```typescript
+// ✅ Complete theme integration
+const themedStyles = {
+  modalBackground: currentTheme.uiColors.modalBackground,
+  cardBackground: currentTheme.uiColors.cardBackground,
+  primaryColor: currentTheme.uiColors.primary,
+  secondaryColor: currentTheme.uiColors.secondary,
+  accentColor: currentTheme.uiColors.accent,
+  textColor: currentTheme.uiColors.text,
+  buttonBackground: currentTheme.uiColors.buttonBackground,
+  buttonText: currentTheme.uiColors.buttonText,
+};
+```
+
+#### **Typography Standards**
+```typescript
+// ✅ Consistent typography
+<Text 
+  allowFontScaling={false} 
+  style={[styles.title, { color: currentTheme.uiColors.primary }]}
+>
+  Modal Title
+</Text>
+
+<Text 
+  allowFontScaling={false} 
+  style={[styles.content, { color: currentTheme.uiColors.text }]}
+>
+  Modal content text
+</Text>
+
+const styles = StyleSheet.create({
+  title: {
+    fontSize: 20,
+    fontFamily: FONTS.jua,
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  content: {
+    fontSize: 16,
+    fontFamily: FONTS.jua,
+    lineHeight: 22,
+  }
+});
+```
+
+#### **Scrollable Content**
+```typescript
+// ✅ Proper scrollable modal content
+<ScrollView
+  style={styles.scrollContainer}
+  contentContainerStyle={styles.scrollContent}
+  showsVerticalScrollIndicator={true}
+  scrollEnabled={true}
+  nestedScrollEnabled={true}
+  bounces={Platform.OS === 'ios'}
+  alwaysBounceVertical={false}
+  keyboardShouldPersistTaps="handled"
+>
+  {/* Scrollable content */}
+</ScrollView>
+```
+
+#### **Loading States**
+```typescript
+// ✅ Loading indicator with theme colors
+{isLoading ? (
+  <View style={styles.loadingContainer}>
+    <ActivityIndicator 
+      size="large" 
+      color={currentTheme.uiColors.accent} 
+    />
+    <Text 
+      allowFontScaling={false}
+      style={[styles.loadingText, { color: currentTheme.uiColors.text }]}
+    >
+      Loading...
+    </Text>
+  </View>
+) : (
+  {/* Normal content */}
+)}
+```
+
+#### **Button Patterns**
+```typescript
+// ✅ Themed button implementation
+<TouchableOpacity 
+  style={[styles.actionButton, { backgroundColor: currentTheme.uiColors.accent }]} 
+  onPress={handleAction}
+  activeOpacity={0.7}
+>
+  <Text 
+    allowFontScaling={false} 
+    style={[styles.buttonText, { color: currentTheme.uiColors.buttonText }]}
+  >
+    Action Button
+  </Text>
+</TouchableOpacity>
+
+const styles = StyleSheet.create({
+  actionButton: {
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 25,
+    alignItems: 'center',
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+  },
+  buttonText: {
+    fontSize: 16,
+    fontFamily: FONTS.jua,
+    fontWeight: 'bold',
+  }
+});
+```
+
+### **Standard Modal Styles**
+```typescript
+// ✅ Reusable modal style patterns
+const modalStyles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  container: {
+    borderRadius: 20,
+    padding: 20,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  header: {
+    alignItems: 'center',
+    marginBottom: 20,
+    borderBottomWidth: 1,
+    paddingBottom: 16,
+  },
+  content: {
+    flex: 1,
+    minHeight: 200,
+  },
+  footer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 20,
+    paddingTop: 16,
+    borderTopWidth: 1,
+  }
+});
+```
+
+### **Accessibility & Platform Considerations**
+- **Modal Dismissal**: Always support `onRequestClose` for Android back button
+- **Keyboard Handling**: Use `keyboardShouldPersistTaps="handled"` for proper input handling
+- **Platform Differences**: Account for iOS vs Android behavior (bounces, scrolling)
+- **Touch Targets**: Ensure minimum 44x44 touch targets for buttons
+- **Focus Management**: Proper focus handling for screen readers
+
+### **Performance Best Practices**
+- **Lazy Loading**: Use dynamic imports for heavy modal components
+- **Memoization**: Apply `React.memo` for complex modal content
+- **Animation Optimization**: Use native driver when possible
+- **Memory Management**: Proper cleanup of subscriptions and timers
+
+### **Common Modal Types in SPIN2PICK**
+1. **Error Modals**: `ThemedErrorModal` - Simple message display
+2. **Confirmation Modals**: Two-button confirm/cancel pattern
+3. **Content Modals**: `SaveLoadModal` - Complex scrollable content
+4. **Selection Modals**: `ThemeSelectionModal` - Grid/list selection interface
+5. **Input Modals**: Form-based data entry with validation
+
+These patterns ensure consistent user experience, proper theme integration, and optimal performance across all platforms.
 
 ---
 

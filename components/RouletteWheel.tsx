@@ -1,10 +1,12 @@
 import { FONTS } from '@/app/_layout';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, Dimensions, Easing, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Svg, { Circle, G, Path, Text as SvgText } from 'react-native-svg';
 import { useTheme } from '../hooks/useTheme';
 import { playClickSound, playSpinningSound, playSuccessSound, stopSpinningSound } from '../utils/soundUtils';
+import { SpinHistoryModal } from './SpinHistoryModal';
 import { ThemeButton } from './ThemeButton';
 import { ThemedText } from './ThemedText';
 import { ThemedView } from './ThemedView';
@@ -71,6 +73,15 @@ interface Activity {
   emoji?: string; // Added emoji field
 }
 
+interface SpinHistoryEntry {
+  activity: Activity;
+  timestamp: Date;
+}
+
+// Storage key for spin history
+const SPIN_HISTORY_KEY = 'SPIN2PICK_SPIN_HISTORY';
+const MAX_HISTORY_SIZE = 5;
+
 interface RouletteWheelProps {
   activities: Activity[];
   onActivitySelect: (activity: Activity) => void;
@@ -123,6 +134,10 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
   const [highlightedSlice, setHighlightedSlice] = useState<string | null>(null);
   const [previousSelectedActivity, setPreviousSelectedActivity] = useState<Activity | null>(null);
   
+  // Spin history state
+  const [spinHistory, setSpinHistory] = useState<SpinHistoryEntry[]>([]);
+  const [showSpinHistoryModal, setShowSpinHistoryModal] = useState(false);
+  
   // Animation values
   const pulseValue = useRef(new Animated.Value(1)).current;
   const bounceAnim = useRef(new Animated.Value(0)).current;
@@ -139,6 +154,72 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
   const lastFrameTime = useRef(0);
   const animationFrameId = useRef<number | null>(null);
   const pulseAnimationRef = useRef<any>(null);
+
+  // Load spin history from storage
+  const loadSpinHistory = useCallback(async () => {
+    try {
+      const historyJson = await AsyncStorage.getItem(SPIN_HISTORY_KEY);
+      if (historyJson) {
+        const parsedHistory: SpinHistoryEntry[] = JSON.parse(historyJson).map((entry: any) => ({
+          ...entry,
+          timestamp: new Date(entry.timestamp)
+        }));
+        setSpinHistory(parsedHistory);
+      }
+    } catch (error) {
+      console.error('Error loading spin history:', error);
+    }
+  }, []);
+
+  // Save spin history to storage
+  const saveSpinHistory = useCallback(async (history: SpinHistoryEntry[]) => {
+    try {
+      await AsyncStorage.setItem(SPIN_HISTORY_KEY, JSON.stringify(history));
+    } catch (error) {
+      console.error('Error saving spin history:', error);
+    }
+  }, []);
+
+  // Add activity to spin history
+  const addToSpinHistory = useCallback(async (activity: Activity) => {
+    const newEntry: SpinHistoryEntry = {
+      activity,
+      timestamp: new Date(),
+    };
+
+    setSpinHistory(prevHistory => {
+      // Add to beginning and limit to MAX_HISTORY_SIZE
+      const updatedHistory = [newEntry, ...prevHistory].slice(0, MAX_HISTORY_SIZE);
+      saveSpinHistory(updatedHistory);
+      return updatedHistory;
+    });
+  }, [saveSpinHistory]);
+
+  // Clear spin history
+  const clearSpinHistory = useCallback(async () => {
+    setSpinHistory([]);
+    try {
+      await AsyncStorage.removeItem(SPIN_HISTORY_KEY);
+    } catch (error) {
+      console.error('Error clearing spin history:', error);
+    }
+    setShowSpinHistoryModal(false);
+  }, []);
+
+  // Handle clicking on the last selected slice box to show history
+  const handleShowSpinHistory = useCallback(() => {
+    // Add haptic feedback
+    try {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    } catch (error) {
+      // Ignore if haptics not available
+    }
+    
+    // Play click sound
+    playClickSound();
+    
+    setShowSpinHistoryModal(true);
+  }, []);
 
   // Optimize rotation listener with throttling to reduce flickering
   const updateRotation = useCallback((value: number) => {
@@ -268,7 +349,7 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
     pulseAnimationRef.current.start();
   }, [isSpinning, pulseValue]);
 
-  // Initialize animations when component mounts
+  // Initialize animations and load history when component mounts
   useEffect(() => {
     // Start scale animation for wheel appearance
     Animated.spring(scaleAnim, {
@@ -281,11 +362,14 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
     // Start the SPIN button pulsing animation (removed wheel pulse)
     startSpinButtonPulse();
     
+    // Load spin history from storage
+    loadSpinHistory();
+    
     // Cleanup function to prevent memory leaks
     return () => {
       pulseValue.stopAnimation();
     };
-  }, [startSpinButtonPulse, pulseValue, scaleAnim]);
+  }, [startSpinButtonPulse, pulseValue, scaleAnim, loadSpinHistory]);
 
   const spinWheel = useCallback(() => {
     if (isSpinning || activities.length < 2) return;
@@ -352,10 +436,13 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
       selectedIndex = Math.min(selectedIndex, activities.length - 1); // Ensure index is within bounds
 
       if (activities[selectedIndex]) {
-        onActivitySelect(activities[selectedIndex]);
+        const selectedActivity = activities[selectedIndex];
+        // Add to history before notifying parent
+        addToSpinHistory(selectedActivity);
+        onActivitySelect(selectedActivity);
       }
     });
-  }, [isSpinning, activities.length, pulseValue, bounceAnim, rotation, activities, onActivitySelect, startSpinButtonPulse, showNewIndicator, newIndicatorAnim, newIndicatorPulse, onNewActivityIndicatorComplete]);
+  }, [isSpinning, activities.length, pulseValue, bounceAnim, rotation, activities, onActivitySelect, startSpinButtonPulse, showNewIndicator, newIndicatorAnim, newIndicatorPulse, onNewActivityIndicatorComplete, addToSpinHistory]);
 
   // Memoize rotation interpolation to prevent flickering
   const rotationInterpolation = useMemo(() => {
@@ -1257,10 +1344,8 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
         </ThemedView>
       </ThemedView>
 
-      {/* Last selected activity box - positioned relative to avoid flickering */}
-      <ThemedView 
-        lightColor={currentTheme.uiColors.cardBackground}
-        darkColor={currentTheme.uiColors.cardBackground}
+      {/* Last selected activity box - clickable to show history */}
+      <TouchableOpacity
         style={[
           styles.lastActivityContainer, 
           {
@@ -1268,27 +1353,25 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
             borderColor: currentTheme.uiColors.primary,
           }
         ]}
+        onPress={handleShowSpinHistory}
+        activeOpacity={0.7}
+        disabled={!previousSelectedActivity && spinHistory.length === 0}
       >
-        <ThemedView 
-          lightColor={currentTheme.uiColors.cardBackground}
-          darkColor={currentTheme.uiColors.cardBackground}
-          style={styles.lastActivityContent}
-        >
-          <ThemedView 
-            lightColor={currentTheme.uiColors.cardBackground}
-            darkColor={currentTheme.uiColors.cardBackground}
-            style={styles.labelContainer}
-          >
+        <View style={styles.lastActivityContent}>
+          <View style={styles.labelContainer}>
             <Text allowFontScaling={false} style={[
               styles.lastActivityLabel,
               { color: currentTheme.uiColors.secondary }
-            ]}>Last selected slice:</Text>
-          </ThemedView>
-          <ThemedView 
-            lightColor={currentTheme.uiColors.cardBackground}
-            darkColor={currentTheme.uiColors.cardBackground}
-            style={styles.activityTextContainer}
-          >
+            ]}>
+              Last selected slice: 
+              {(previousSelectedActivity || spinHistory.length > 0) && (
+                <Text style={[styles.historyHint, { color: currentTheme.uiColors.accent }]}>
+                  {" "}(tap for history)
+                </Text>
+              )}
+            </Text>
+          </View>
+          <View style={styles.activityTextContainer}>
             <Text allowFontScaling={false} style={[
               styles.lastActivityText,
               { color: currentTheme.uiColors.primary }
@@ -1298,9 +1381,17 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
                 : ""
               }
             </Text>
-          </ThemedView>
-        </ThemedView>
-      </ThemedView>
+            {(previousSelectedActivity || spinHistory.length > 0) && (
+              <Text allowFontScaling={false} style={[
+                styles.historyIndicator,
+                { color: currentTheme.uiColors.accent }
+              ]}>
+                📋
+              </Text>
+            )}
+          </View>
+        </View>
+      </TouchableOpacity>
 
       {/* Copyright text - positioned relative to avoid flickering */}
       <ThemedView lightColor="transparent" darkColor="transparent" style={styles.copyrightContainer}>
@@ -1308,6 +1399,14 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
           © {new Date().getFullYear()} VibeCreAI - All rights reserved
         </ThemedText>
       </ThemedView>
+
+      {/* Spin History Modal */}
+      <SpinHistoryModal
+        visible={showSpinHistoryModal}
+        onClose={() => setShowSpinHistoryModal(false)}
+        history={spinHistory}
+        onClearHistory={clearSpinHistory}
+      />
 
     </ThemedView>
   );
@@ -1484,6 +1583,8 @@ const styles = StyleSheet.create({
     width: '100%',
     alignItems: 'center',
     justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 8,
   },
   lastActivityText: {
     fontSize: 22,
@@ -1491,6 +1592,16 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.jua, // Back to original font
     marginTop: 4,
     textAlign: 'center',
+    flex: 1,
+  },
+  historyHint: {
+    fontSize: 12,
+    fontFamily: FONTS.jua,
+    fontStyle: 'italic',
+  },
+  historyIndicator: {
+    fontSize: 16,
+    marginTop: 4,
   },
   copyrightContainer: {
     marginTop: 10, // Fixed margin instead of absolute positioning

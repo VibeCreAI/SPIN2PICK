@@ -905,6 +905,29 @@ export default function HomeScreen() {
     setShowResetConfirmation(false);
   };
 
+  // Helper function to calculate confetti origin from winner slice position
+  const calculateSlicePosition = (activity: Activity, containerWidth: number): { x: number; y: number } => {
+    const activityIndex = activities.findIndex(a => a.id === activity.id);
+    if (activityIndex === -1) return { x: containerWidth / 2, y: 100 };
+    
+    // Calculate wheel center position
+    const wheelSize = containerWidth * 0.9;
+    const center = wheelSize / 2;
+    const screenCenterX = containerWidth / 2;
+    const screenCenterY = 200; // Approximate wheel center Y position
+    
+    // Calculate angle for this slice (activities are arranged clockwise from top)
+    const sliceAngle = (360 / activities.length) * activityIndex;
+    const angleInRadians = (sliceAngle - 90) * (Math.PI / 180); // -90 to start from top
+    
+    // Calculate position on the wheel edge where confetti should originate
+    const radius = wheelSize * 0.4; // Radius from center to slice edge
+    const sliceX = screenCenterX + radius * Math.cos(angleInRadians);
+    const sliceY = screenCenterY + radius * Math.sin(angleInRadians);
+    
+    return { x: sliceX, y: sliceY };
+  };
+
   const handleActivitySelect = async (activity: Activity) => {
     setSelectedActivity(activity);
     setShowCelebration(true);
@@ -1519,7 +1542,13 @@ export default function HomeScreen() {
                 <ThemedText style={{textAlign: 'center', marginVertical: 20, color: currentTheme.uiColors.text}}>Loading wheel...</ThemedText>
               )}
 
-              {showCelebration && <Celebration onComplete={handleCelebrationComplete} />}
+              {showCelebration && selectedActivity && (
+                <Celebration 
+                  onComplete={handleCelebrationComplete}
+                  winnerActivity={selectedActivity}
+                  slicePosition={calculateSlicePosition(selectedActivity, containerWidth)}
+                />
+              )}
             </View>
           </View>
   );

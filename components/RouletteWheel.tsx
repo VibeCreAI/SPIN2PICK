@@ -307,29 +307,32 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
     playClickSound();
     playSpinningSound();
     
-    // Generate random extra rotations (between 2-4 full rotations)
-    const randomExtraRotations = Math.floor(Math.random() * 3) + 2;
+    // Generate random extra rotations (between 4-8 full rotations for more variety)
+    const randomExtraRotations = Math.floor(Math.random() * 5) + 4;
     
     // Generate random degrees for the final position (0-360)
     const randomFinalDegrees = Math.random() * 360;
     
     // Calculate total rotation with randomness
     const totalRandomDegrees = randomFinalDegrees + (360 * randomExtraRotations);
-    spinValue.current += totalRandomDegrees;
+    const startRotation = spinValue.current;
+    const finalRotation = startRotation + totalRandomDegrees;
+    spinValue.current = finalRotation;
     
-    // Randomize initial spin speed and duration
-    // Random factor between 0.7 (faster) and 1.3 (slower)
-    const speedFactor = 0.7 + (Math.random() * 0.6);
+    // Add duration randomness for more variety (3.8-4.8 seconds)
+    const baseDuration = 3800; // Base duration increased
+    const durationVariation = Math.random() * 1000; // 0-1 second variation
+    const spinDuration = baseDuration + durationVariation;
     
-    // Base duration is 4000ms, but adjust based on speed factor
-    // Faster initial speed (smaller speedFactor) = longer spin duration
-    const spinDuration = Math.round(4000 * (2 - speedFactor));
+    // Use a custom easing curve that mimics realistic wheel physics
+    // This prevents jumping by ensuring smooth, continuous deceleration
+    const physicsEasing = Easing.bezier(0.25, 0.1, 0.25, 1); // Custom physics-like curve
     
-    // Improved easing curve for smoother deceleration
+    // Execute single smooth animation
     Animated.timing(rotation, {
-      toValue: spinValue.current,
+      toValue: finalRotation,
       duration: spinDuration,
-      easing: Easing.bezier(0.25, 0.46, 0.45, 0.94), // More realistic deceleration
+      easing: physicsEasing,
       useNativeDriver: Platform.OS !== 'web',
     }).start(() => {
       setIsSpinning(false);
@@ -341,8 +344,8 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
       stopSpinningSound();
       playSuccessSound();
       
-      const finalRotation = spinValue.current % 360;
-      const normalizedRotation = (360 - finalRotation) % 360;
+      const finalRotationNormalized = spinValue.current % 360;
+      const normalizedRotation = (360 - finalRotationNormalized) % 360;
       
       const sliceAngle = 360 / activities.length;
       let selectedIndex = Math.floor(normalizedRotation / sliceAngle);
@@ -1216,12 +1219,6 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
               }
             ]}
           >
-            <ThemedText style={[
-              styles.resultSubtext,
-              { color: currentTheme.uiColors.text }
-            ]}>
-              Let&apos;s play:
-            </ThemedText>
             <ThemedText style={[
               styles.resultCenterText,
               { color: currentTheme.uiColors.primary }

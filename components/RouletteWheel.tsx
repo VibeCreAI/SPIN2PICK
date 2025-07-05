@@ -1282,7 +1282,7 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
             <Text allowFontScaling={false} style={[
               styles.lastActivityLabel,
               { color: currentTheme.uiColors.secondary }
-            ]}>Last selected option:</Text>
+            ]}>Last selected slice:</Text>
           </ThemedView>
           <ThemedView 
             lightColor={currentTheme.uiColors.cardBackground}
